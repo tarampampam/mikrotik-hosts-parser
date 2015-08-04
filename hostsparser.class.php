@@ -7,7 +7,7 @@
  * @copyright 2015 <github.com/tarampampam>
  * @license   MIT <http://opensource.org/licenses/MIT>
  * @github    <https://github.com/tarampampam/mikrotik-hosts-parser>
- * @version   0.0.3
+ * @version   0.0.4
  * @depends   PHP 5.x + curl
  */
 
@@ -359,7 +359,7 @@ class HostsParser {
     }
     if(is_array($routes) && !empty($routes)) {
       foreach($routes as $route) {
-        $route = explode(' ', preg_replace('/[^a-zа-яё0-9\s\.\*]/i', '', trim(preg_replace('/\s+/', ' ', $route))));
+        $route = explode(' ', preg_replace('/[^a-zа-яё0-9\-\s\.\*]/i', '', trim(preg_replace('/\s+/', ' ', $route))));
         if(
           isset($route[0]) && !empty($route[0]) && $this->is_valid_ip($route[0]) &&
           isset($route[1]) && !empty($route[1]) && $this->is_valid_domain($route[1])
@@ -381,7 +381,7 @@ class HostsParser {
     }
     if(is_array($domains) && !empty($domains)) {
       foreach($domains as $domain) {
-        $domain = preg_replace('/[^a-zа-яё0-9\.\*]/i', '', $domain);
+        $domain = preg_replace('/[^a-zа-яё0-9\-\.\*]/i', '', $domain);
         if(!empty($this->hosts[$domain])) {
           unset($this->hosts[$domain]);
         }
