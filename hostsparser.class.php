@@ -7,7 +7,7 @@
  * @copyright 2015 <github.com/tarampampam>
  * @license   MIT <http://opensource.org/licenses/MIT>
  * @github    <https://github.com/tarampampam/mikrotik-hosts-parser>
- * @version   0.0.4
+ * @version   0.1.0
  * @depends   PHP 5.x + curl
  */
 
@@ -32,13 +32,17 @@ class HostsParser {
   
   // Checking regex-s
   private $regex = array(
-    'ip' => '(([01][0-9][0-9]\.|2[0-4][0-9]\.|[0-9][0-9]\.|25[0-5]\.|[0-9]\.)([01][0-9][0-9]\.|2[0-4][0-9]\.|[0-9][0-9]\.|25[0-5]\.|[0-9]\.)([01][0-9][0-9]\.|2[0-4][0-9]\.|[0-9][0-9]\.|25[0-5]\.|[0-9]\.)([01][0-9][0-9]|2[0-4][0-9]|25[0-5]|[0-9][0-9]|[0-9]))',
+    'ip_v4'  => '(([01][0-9][0-9]\.|2[0-4][0-9]\.|[0-9][0-9]\.|25[0-5]\.|[0-9]\.)([01][0-9][0-9]\.|2[0-4][0-9]\.|[0-9][0-9]\.|25[0-5]\.|[0-9]\.)([01][0-9][0-9]\.|2[0-4][0-9]\.|[0-9][0-9]\.|25[0-5]\.|[0-9]\.)([01][0-9][0-9]|2[0-4][0-9]|25[0-5]|[0-9][0-9]|[0-9]))',
+    'ip_v6'  => '((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))',
     'domain' => '((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))',
     'url'    => '(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?'
   );
   
   // User-agent for cURL
   private $useragent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.32 (KHTML, like Gecko) Chrome/36.0.2026.47 Safari/537.32';
+  
+  // Route ID comment (Only alpha-chars, please)
+  public $AD_ID = 'ADBlock';
   
   // Debug flag, show extended output
   public $debug = false;
@@ -221,13 +225,23 @@ class HostsParser {
   }
   
   /**
-   * Validate IP address
+   * Validate IP v4 address
    *
    * @param (string) IP address for test
    * @return (bool)  Validate result (true|false)
    */
-  public function is_valid_ip($ip) {
-    return preg_match('/^'.$this->regex['ip'].'$/', $ip);
+  public function is_valid_ip_v4($ip) {
+    return preg_match('/^'.$this->regex['ip_v4'].'$/', $ip);
+  }
+  
+  /**
+   * Validate IP v6 address
+   *
+   * @param (string) IP address for test
+   * @return (bool)  Validate result (true|false)
+   */
+  public function is_valid_ip_v6($ip) {
+    return preg_match('/^'.$this->regex['ip_v6'].'$/', $ip);
   }
   
   /**
@@ -361,7 +375,7 @@ class HostsParser {
       foreach($routes as $route) {
         $route = explode(' ', preg_replace('/[^a-zа-яё0-9\-\s\.\*]/i', '', trim(preg_replace('/\s+/', ' ', $route))));
         if(
-          isset($route[0]) && !empty($route[0]) && $this->is_valid_ip($route[0]) &&
+          isset($route[0]) && !empty($route[0]) && $this->is_valid_ip_v4($route[0]) &&
           isset($route[1]) && !empty($route[1]) && $this->is_valid_domain($route[1])
         ) {
           $this->hosts[$route[1]] = $route[0];
@@ -397,7 +411,7 @@ class HostsParser {
   public function routes_get() {
     $routes = array();
     foreach($this->hosts as $key => $val) {
-      if($this->is_valid_domain($key) && $this->is_valid_ip($val)) {
+      if($this->is_valid_domain($key) && $this->is_valid_ip_v4($val)) {
         $routes[$key] = $val;
       }
     }
@@ -413,7 +427,7 @@ class HostsParser {
     if(is_string($ip) && in_array($ip, array('localhost', 'loopback'))) {
       $ip = '127.0.0.1';
     }
-    if(is_string($ip) && !empty($ip) && $this->is_valid_ip($ip)) {
+    if(is_string($ip) && !empty($ip) && ($this->is_valid_ip_v4($ip) || $this->is_valid_ip_v6($ip))) {
       $this->redirect_to = $ip;
     }
   }
@@ -477,7 +491,7 @@ class HostsParser {
    */
   private function parse_hosts_file_data($hosts_data) {
     $hosts_raw = array();
-    preg_match_all('#^'.$this->regex['ip'].'[\s\t]+'.$this->regex['domain'].'$#m', $hosts_data, $hosts_raw, PREG_SET_ORDER);
+    preg_match_all('#^'.$this->regex['ip_v4'].'[\s\t]+'.$this->regex['domain'].'$#m', $hosts_data, $hosts_raw, PREG_SET_ORDER);
     foreach($hosts_raw as $hosts_entry) {
     //$ip   = $hosts_entry[1];
       $host = $hosts_entry[6];
@@ -514,6 +528,10 @@ class HostsParser {
       }
     }
     
+    //if(!empty($this->redirect_to)) { // TODO: Comment after testing
+    //  $result .= "##\n".'## Redirect to: '.$this->redirect_to."\n";
+    //}
+    
     if(!empty($this->exceptions)) {
       $result .= "##\n".'## Exception hosts:'."\n";
       foreach($this->exceptions as $host) {
@@ -529,10 +547,10 @@ class HostsParser {
     }
     
     foreach($this->hosts as $key => $value) {
-      if(!is_numeric($key) && $this->is_valid_ip($value) && $this->is_valid_domain($key)) {
+      if(!is_numeric($key) && $this->is_valid_ip_v4($value) && $this->is_valid_domain($key)) {
         $result .= 'add address='.$value.' name='.$key."\n";
       } elseif(!empty($key)) {
-        $result .= 'add address='.$this->redirect_to.' name='.$value."\n";
+        $result .= 'add address='.$this->redirect_to.' name='.$value.' comment='.str_replace(' ', '', $this->AD_ID)."\n";
       }
     }
     return $result;
