@@ -1,0 +1,37 @@
+{
+    "name": "tarampampam/mikrotik-hosts-parser",
+    "description": "Application for generating ADBlock script for MikroTik routers, based on Lumen framework",
+    "keywords": ["mikrotik", "lumen"],
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "php": ">=5.6.4",
+        "ext-curl": "*",
+        "laravel/lumen-framework": "5.4.*",
+        "vlucas/phpdotenv": "~2.2",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "require-dev": {
+        "fzaninotto/faker": "~1.4",
+        "phpunit/phpunit": "~5.0",
+        "mockery/mockery": "~0.9",
+        "symfony/var-dumper": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests/"
+        ]
+    },
+    "scripts": {
+        "post-root-package-install": [
+            "php -r \"copy('.env.example', '.env');\""
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

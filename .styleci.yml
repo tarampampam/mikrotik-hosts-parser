@@ -1,0 +1,24 @@
+preset: laravel
+
+enabled:
+  - strict
+  - align_double_arrow
+  - dir_constant
+  - linebreak_after_opening_tag
+  - mb_str_functions
+  - no_short_echo_tag
+  - non_printable_character
+  - ordered_class_elements
+  - phpdoc_add_missing_param_annotation
+  - phpdoc_align
+  - phpdoc_annotation_without_dot
+  - phpdoc_order
+  - phpdoc_separation
+  - phpdoc_return_self_reference
+  - align_equals
+  - concat_with_spaces
+
+disabled:
+  - unalign_equals
+  - concat_without_spaces
+
