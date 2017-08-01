@@ -2,8 +2,8 @@
 
 namespace App\Services\HostsParser;
 
-use Carbon\Carbon;
 use Exception;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
@@ -118,7 +118,7 @@ class HostsParser
 
         foreach ((array) $source_uri as $uri) {
             $uri = urldecode($uri);
-            if ($this->isValidUri($uri) && !in_array($uri, $this->sources_list)) {
+            if ($this->isValidUri($uri) && ! in_array($uri, $this->sources_list)) {
                 array_push($this->sources_list, $uri);
             }
         }
@@ -139,43 +139,6 @@ class HostsParser
     }
 
     /**
-     * @param string          $value
-     * @param string|string[] $rules
-     *
-     * @return bool
-     */
-    protected function validate($value, $rules)
-    {
-        static $stack = [];
-
-        if (is_array($rules) && !empty($rules)) {
-            $rules = implode('|', $rules);
-        }
-
-        if (is_string($value) && !empty($value) && is_string($rules) && !empty($rules)) {
-            if (!isset($stack[$value])) {
-                $stack[$value] = !$this->getValidationFactory()
-                                       ->make(['value' => $value], ['value' => 'required|' . $rules])
-                                       ->fails();
-            }
-
-            return (bool) $stack[$value];
-        }
-
-        return false;
-    }
-
-    /**
-     * Get a validation factory instance.
-     *
-     * @return \Illuminate\Contracts\Validation\Factory
-     */
-    protected function getValidationFactory()
-    {
-        return app('validator');
-    }
-
-    /**
      * Add hostname to the excluded hosts stack.
      *
      * @param string[]|string $hosts_names
@@ -190,7 +153,7 @@ class HostsParser
 
         foreach ((array) $hosts_names as $hostname) {
             $hostname = urldecode(trim($hostname));
-            if ($this->isValidHostname($hostname) && !in_array($hostname, $this->excluded_hosts)) {
+            if ($this->isValidHostname($hostname) && ! in_array($hostname, $this->excluded_hosts)) {
                 array_push($this->excluded_hosts, $hostname);
             }
         }
@@ -209,8 +172,8 @@ class HostsParser
     {
         //static $regexp = '((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*'
         //    . '([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))';
-        if (is_string($hostname) && !empty($hostname)) {
-            if (strpos($hostname, ' ') === false) { // It's faster
+        if (is_string($hostname) && ! empty($hostname)) {
+            if (mb_strpos($hostname, ' ') === false) { // It's faster
                 //if ((bool) preg_match('/^' . $regexp . '$/', $hostname)) {
                 return true;
             }
@@ -275,7 +238,7 @@ class HostsParser
                 $http_client = new Client($this->getDefaultHttpClientOptions());
                 $response    = $http_client->request('get', $uri);
                 $content     = $this->normalizeNewLineCodes($response->getBody()->getContents());
-                if (is_string($content) && !empty($content)) {
+                if (is_string($content) && ! empty($content)) {
                     if ($this->cache_enabled) {
                         $this->getCacheRepository()
                              ->put($cache_key, $content, (int) config('limits.source.cache.lifetime', 600));
@@ -287,22 +250,6 @@ class HostsParser
         }
 
         return false;
-    }
-
-    /**
-     * Get a cache repository instance.
-     *
-     * @return \Illuminate\Cache\Repository
-     */
-    protected function getCacheRepository()
-    {
-        static $instance = null;
-
-        if (is_null($instance)) {
-            $instance = app('cache');
-        }
-
-        return $instance;
     }
 
     /**
@@ -322,67 +269,6 @@ class HostsParser
     }
 
     /**
-     * Get default HTTP client options.
-     *
-     * @return array
-     */
-    protected function getDefaultHttpClientOptions()
-    {
-        return [
-            'timeout'         => $this->getHttpClientTimeout(),
-            'connect_timeout' => $this->getHttpClientTimeout(),
-
-            'allow_redirects' => [
-                'max'       => config('limits.max_redirects_count', 5),
-                'protocols' => config('limits.sources_protocols', ['http', 'https']),
-            ],
-
-            'headers'     => [
-                'User-Agent' => $this->getUserAgent(),
-            ],
-
-            // Cancel download, if found header with value in content-length more then we have in config
-            'on_headers'  => function (ResponseInterface $response) {
-                $content_length = $response->getHeaderLine('Content-Length');
-                if (!empty($content_length) && is_scalar($content_length)) {
-                    if ((intval($content_length, 10) / 1024) > $this->getDownloadFileSizeLimit()) {
-                        throw new Exception('The file is too big (detected by header "Content-Length")');
-                    }
-                }
-
-                $content_type = $response->getHeaderLine('Content-Type');
-                if (!empty($content_type) && is_scalar($content_type)) {
-                    if (!Str::contains(Str::lower((string) $content_type), 'text/plain')) {
-                        throw new Exception(sprintf('Invalid content type header (%s)', $content_type));
-                    }
-                }
-            },
-
-            // Cancel download, if downloaded content size more then limit, declared in config
-            'progress'    => function ($download_total, $downloaded_bytes) {
-                if ((intval($downloaded_bytes, 10) / 1024) > $this->getDownloadFileSizeLimit()) {
-                    throw new Exception('The file is too big (detected by "progress" callback)');
-                }
-            },
-
-            // Set to false to disable throwing exceptions on an HTTP protocol errors (i.e., 4xx and 5xx responses)
-            'http_errors' => true,
-
-            'verify' => false,
-        ];
-    }
-
-    /**
-     * Get HTTP client timeout.
-     *
-     * @return int
-     */
-    protected function getHttpClientTimeout()
-    {
-        return 10;
-    }
-
-    /**
      * Get user-agent string fo a work.
      *
      * @return string
@@ -394,22 +280,6 @@ class HostsParser
     }
 
     /**
-     * Get download file size limit (in kilobytes).
-     *
-     * @return int
-     */
-    protected function getDownloadFileSizeLimit()
-    {
-        static $limit = null;
-
-        if (is_null($limit)) {
-            $limit = (int) config('limits.source_file_size', 2048);
-        }
-
-        return $limit;
-    }
-
-    /**
      * Normalize new line characters.
      *
      * @param string $string
@@ -418,7 +288,7 @@ class HostsParser
      */
     public function normalizeNewLineCodes($string)
     {
-        if (is_scalar($string) && !empty($string)) {
+        if (is_scalar($string) && ! empty($string)) {
             return (string) preg_replace(
                 "/\n{2,}/",
                 "\n\n",
@@ -438,7 +308,7 @@ class HostsParser
     {
         foreach ((array) $hosts_names as $hostname) {
             $hostname = urldecode(trim($hostname));
-            if ($this->isValidHostname($hostname) && !in_array($hostname, $this->hosts)) {
+            if ($this->isValidHostname($hostname) && ! in_array($hostname, $this->hosts)) {
                 array_push($this->hosts, $hostname);
             }
         }
@@ -457,11 +327,11 @@ class HostsParser
     {
         $result = [];
 
-        if (is_string($raw_content) && !empty($raw_content)) {
+        if (is_string($raw_content) && ! empty($raw_content)) {
             $pattern = '~([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})[\s\t]+(?P<domain_names>[^\s\\\/]+)~m';
             preg_match_all($pattern, $raw_content, $matches);
 
-            if (isset($matches['domain_names']) && !empty($matches['domain_names'])) {
+            if (isset($matches['domain_names']) && ! empty($matches['domain_names'])) {
                 $result = array_filter(array_map(function ($hostname) {
                     $hostname = urldecode(trim($hostname));
 
@@ -538,7 +408,7 @@ class HostsParser
 
             $entry_comment = str_replace(' ', '', $entry_comment);
             foreach ($hosts as $host) {
-//                $result .= sprintf(
+                //                $result .= sprintf(
 //                    "add address=%s name=%s comment=%s\n",
 //                    $this->redirect_to,
 //                    $host,
@@ -570,5 +440,135 @@ class HostsParser
     public function getExcludedHosts()
     {
         return $this->excluded_hosts;
+    }
+
+    /**
+     * @param string          $value
+     * @param string|string[] $rules
+     *
+     * @return bool
+     */
+    protected function validate($value, $rules)
+    {
+        static $stack = [];
+
+        if (is_array($rules) && ! empty($rules)) {
+            $rules = implode('|', $rules);
+        }
+
+        if (is_string($value) && ! empty($value) && is_string($rules) && ! empty($rules)) {
+            if (! isset($stack[$value])) {
+                $stack[$value] = ! $this->getValidationFactory()
+                                       ->make(['value' => $value], ['value' => 'required|' . $rules])
+                                       ->fails();
+            }
+
+            return (bool) $stack[$value];
+        }
+
+        return false;
+    }
+
+    /**
+     * Get a validation factory instance.
+     *
+     * @return \Illuminate\Contracts\Validation\Factory
+     */
+    protected function getValidationFactory()
+    {
+        return app('validator');
+    }
+
+    /**
+     * Get a cache repository instance.
+     *
+     * @return \Illuminate\Cache\Repository
+     */
+    protected function getCacheRepository()
+    {
+        static $instance = null;
+
+        if (is_null($instance)) {
+            $instance = app('cache');
+        }
+
+        return $instance;
+    }
+
+    /**
+     * Get default HTTP client options.
+     *
+     * @return array
+     */
+    protected function getDefaultHttpClientOptions()
+    {
+        return [
+            'timeout'         => $this->getHttpClientTimeout(),
+            'connect_timeout' => $this->getHttpClientTimeout(),
+
+            'allow_redirects' => [
+                'max'       => config('limits.max_redirects_count', 5),
+                'protocols' => config('limits.sources_protocols', ['http', 'https']),
+            ],
+
+            'headers'     => [
+                'User-Agent' => $this->getUserAgent(),
+            ],
+
+            // Cancel download, if found header with value in content-length more then we have in config
+            'on_headers'  => function (ResponseInterface $response) {
+                $content_length = $response->getHeaderLine('Content-Length');
+                if (! empty($content_length) && is_scalar($content_length)) {
+                    if ((intval($content_length, 10) / 1024) > $this->getDownloadFileSizeLimit()) {
+                        throw new Exception('The file is too big (detected by header "Content-Length")');
+                    }
+                }
+
+                $content_type = $response->getHeaderLine('Content-Type');
+                if (! empty($content_type) && is_scalar($content_type)) {
+                    if (! Str::contains(Str::lower((string) $content_type), 'text/plain')) {
+                        throw new Exception(sprintf('Invalid content type header (%s)', $content_type));
+                    }
+                }
+            },
+
+            // Cancel download, if downloaded content size more then limit, declared in config
+            'progress'    => function ($download_total, $downloaded_bytes) {
+                if ((intval($downloaded_bytes, 10) / 1024) > $this->getDownloadFileSizeLimit()) {
+                    throw new Exception('The file is too big (detected by "progress" callback)');
+                }
+            },
+
+            // Set to false to disable throwing exceptions on an HTTP protocol errors (i.e., 4xx and 5xx responses)
+            'http_errors' => true,
+
+            'verify' => false,
+        ];
+    }
+
+    /**
+     * Get HTTP client timeout.
+     *
+     * @return int
+     */
+    protected function getHttpClientTimeout()
+    {
+        return 10;
+    }
+
+    /**
+     * Get download file size limit (in kilobytes).
+     *
+     * @return int
+     */
+    protected function getDownloadFileSizeLimit()
+    {
+        static $limit = null;
+
+        if (is_null($limit)) {
+            $limit = (int) config('limits.source_file_size', 2048);
+        }
+
+        return $limit;
     }
 }
