@@ -11,6 +11,12 @@
 |
 */
 
-$app->get('/', function () use ($app) {
-    return $app->version();
-});
+$app->get('/', [
+    'as'   => 'web.index',
+    'uses' => 'WebController@index',
+]);
+
+$app->get('/script/source', [
+    'as'   => 'script.source',
+    'uses' => 'ScriptController@source',
+]);

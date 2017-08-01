@@ -1,0 +1,17 @@
+{
+  "name": "processing",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "flat-ui": "^2.3.0",
+    "font-awesome": "^4.7.0",
+    "highlightjs": "^9.12.0"
+  }
+}
