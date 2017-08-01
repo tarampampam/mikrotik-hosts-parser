@@ -37,8 +37,8 @@ return [
         ],
 
         'database' => [
-            'driver' => 'database',
-            'table'  => env('CACHE_DATABASE_TABLE', 'cache'),
+            'driver'     => 'database',
+            'table'      => env('CACHE_DATABASE_TABLE', 'cache'),
             'connection' => env('CACHE_DATABASE_CONNECTION', null),
         ],
 
@@ -57,7 +57,7 @@ return [
         ],
 
         'redis' => [
-            'driver' => 'redis',
+            'driver'     => 'redis',
             'connection' => env('CACHE_REDIS_CONNECTION', 'default'),
         ],
 

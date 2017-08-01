@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 /**
- * Class AbstractController
+ * Class AbstractController.
  */
 abstract class AbstractController extends BaseController
 {

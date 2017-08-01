@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\HostsParser\HostsParser;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Services\HostsParser\HostsParser;
 
 /**
- * Class ScriptController
+ * Class ScriptController.
  */
 class ScriptController extends AbstractController
 {
@@ -17,7 +17,7 @@ class ScriptController extends AbstractController
     protected $cache;
 
     /**
-     * Response cache lifetime (in seconds);
+     * Response cache lifetime (in seconds);.
      *
      * @var int
      */
@@ -60,7 +60,7 @@ class ScriptController extends AbstractController
             $format  = $request->get('format', 'routeros');
             $version = $request->get('version', config('app.version'));
             $limit   = $request->get('limit', (int) config('limits.result_entries', 0));
-            $cache = true;
+            $cache   = true;
 
             $hosts_parser = (new HostsParser)
                 ->setCacheEnabled($cache)

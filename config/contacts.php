@@ -8,14 +8,14 @@ return [
 
     // Адрес электропочты автора
     'author' => [
-        'email' => 'tarampampam@users.noreply.github.com'
+        'email' => 'tarampampam@users.noreply.github.com',
     ],
 
     // Данные о репозитории проекта
     'repository' => [
-        'uri' => 'https://github.com/tarampampam/mikrotik-hosts-parser',
+        'uri'    => 'https://github.com/tarampampam/mikrotik-hosts-parser',
         'issues' => [
-            'new' => 'https://github.com/tarampampam/mikrotik-hosts-parser/issues/new'
+            'new' => 'https://github.com/tarampampam/mikrotik-hosts-parser/issues/new',
         ],
     ],
 

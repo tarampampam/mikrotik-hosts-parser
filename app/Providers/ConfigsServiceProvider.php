@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Laravel\Lumen\Application;
+use Illuminate\Support\ServiceProvider;
 
 /**
- * Class ConfigsServiceProvider
+ * Class ConfigsServiceProvider.
  *
  * Загружаем все конфиги, описанные в директории ./config
  */

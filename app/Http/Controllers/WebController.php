@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 /**
- * Class WebController
+ * Class WebController.
  */
 class WebController extends AbstractController
 {
