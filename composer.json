@@ -28,9 +28,13 @@
         ]
     },
     "scripts": {
-        "post-root-package-install": [
-            "php -r \"copy('.env.example', '.env');\""
-        ]
+        "post-install-cmd": [
+            "php -r 'list($s, $t) = [\"./.env.example\", \"./.env\"]; file_exists($t) || copy($s, $t);'"
+        ],
+        "post-update-cmd": [
+            "php -r 'list($s, $t) = [\"./.env.example\", \"./.env\"]; file_exists($t) || copy($s, $t);'"
+        ],
+        "test": "./vendor/bin/phpunit --no-coverage"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

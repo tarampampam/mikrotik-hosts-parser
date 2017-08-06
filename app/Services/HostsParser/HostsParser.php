@@ -170,16 +170,28 @@ class HostsParser
      */
     public function isValidHostname($hostname)
     {
-        //static $regexp = '((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*'
-        //    . '([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))';
-        if (is_string($hostname) && ! empty($hostname)) {
-            if (mb_strpos($hostname, ' ') === false) { // It's faster
-                //if ((bool) preg_match('/^' . $regexp . '$/', $hostname)) {
-                return true;
+        static $regexp = '((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*'
+            . '([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))';
+
+        static $stack = [];
+
+        $hostname = (string) $hostname;
+
+        if (isset($stack[$hostname])) {
+            return $stack[$hostname];
+        } else {
+            if (is_string($hostname) && ! empty($hostname)) {
+                if ((bool) preg_match('/^' . $regexp . '$/', $hostname)) {
+                    $stack[$hostname] = true;
+
+                    return $stack[$hostname];
+                }
             }
+
+            $stack[$hostname] = false;
         }
 
-        return false;
+        return $stack[$hostname];
     }
 
     /**
@@ -408,14 +420,14 @@ class HostsParser
 
             $entry_comment = str_replace(' ', '', $entry_comment);
             foreach ($hosts as $host) {
-                //                $result .= sprintf(
-//                    "add address=%s name=%s comment=%s\n",
-//                    $this->redirect_to,
-//                    $host,
-//                    $entry_comment
-//                );
+                $result .= sprintf(
+                    "add address=%s name=%s comment=%s\n",
+                    $this->redirect_to,
+                    $host,
+                    $entry_comment
+                );
                 // It's faster:
-                $result .= 'add address=' . $this->redirect_to . ' name=' . $host . ' comment=' . $entry_comment . "\n";
+                //$result .= 'add address=' . $this->redirect_to . ' name=' . $host . ' comment=' . $entry_comment . "\n";
             }
         }
 

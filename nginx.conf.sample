@@ -1,0 +1,26 @@
+server {
+  listen      80;
+  server_name your.domain.com;
+  root        /path_to/mikrotik-hosts-parser/public;
+  access_log  off;
+  error_log   off;
+
+  index index.php index.html index.htm;
+
+  location / {
+    try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+    access_log off;
+    log_not_found off;
+    expires 1M;
+  }
+
+  location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_pass php;
+  }
+
+  location ~ /\.ht {return 444;}
+}
