@@ -21,7 +21,7 @@ class ScriptController extends AbstractController
      *
      * @var int
      */
-    protected $cache_lifetime = 30;
+    protected $cache_lifetime = 240;
 
     /**
      * ScriptController constructor.
