@@ -22,6 +22,9 @@ class ConfigsServiceProvider extends ServiceProvider
         foreach (glob($app->getConfigurationPath() . '*.php', GLOB_ERR) as $path) {
             $app->configure(basename($path, '.php'));
         }
+
+        // Allow APP_URL
+        $app->make('url')->forceRootUrl(config('app.url'));
     }
 
     /**

@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Contracts\Routing\UrlGenerator;
+use Illuminate\Support\Facades\URL;
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 try {
@@ -82,6 +85,8 @@ $app->register(App\Providers\AppServiceProvider::class);
 $app->register(App\Providers\ConfigsServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
+
+
 
 /*
 |--------------------------------------------------------------------------
