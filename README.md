@@ -45,10 +45,6 @@ $ docker run --rm -p 8000:80 tarampampam/mikrotik-hosts-parser
 
 Не гарантирую что приложение будет жить вечно, что пользоваться им можешь [тут][demo].
 
-### Лицензия
-
-[MIT license](./LICENSE) *(да делай ты что хочешь, просто не удаляй имя автора)*.
-
 [badge_version]:http://img.shields.io/packagist/v/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
 [badge_docker_build]:https://img.shields.io/docker/build/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
 [badge_docker_pulls]:https://img.shields.io/docker/pulls/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
