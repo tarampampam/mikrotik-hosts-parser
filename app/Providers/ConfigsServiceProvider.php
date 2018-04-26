@@ -24,7 +24,9 @@ class ConfigsServiceProvider extends ServiceProvider
         }
 
         // Allow APP_URL
-        $app->make('url')->forceRootUrl(config('app.url'));
+        if (! empty($app_url = config('app.url'))) {
+            $app->make('url')->forceRootUrl($app_url);
+        }
     }
 
     /**
