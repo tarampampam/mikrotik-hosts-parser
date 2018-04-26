@@ -1,0 +1,32 @@
+# Application temporary files, caches, logs
+temp
+tmp
+.idea
+.bowerrc
+.env.example
+.styleci.yml
+.editorconfig
+vendor
+tests
+storage/logs/*
+storage/coverage
+storage/*log*xml
+storage/framework/cache/*
+storage/framework/views/*
+storage/*.key
+storage/*.cache
+*.cache
+.env
+
+# Git
+**/.gitignore
+.git
+.gitattributes
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# etc.
+**/.DS_Store
