@@ -1,13 +1,12 @@
 # MikroTik hosts parser
 
-[![Version][badge_version]][link_packagist]
-[![Docker build][badge_docker_build]][link_docker_build]
+[![Version][badge_packagist_version]][link_packagist]
+[![Version][badge_php_version]][link_packagist]
 [![Build Status][badge_build_status]][link_build_status]
-[![StyleCI][badge_styleci]][link_styleci]
 [![Coverage][badge_coverage]][link_coverage]
-[![License][badge_license]][link_license]
+[![Code quality][badge_code_quality]][link_coverage]
 [![Downloads count][badge_downloads_count]][link_packagist]
-[![Docker pulls][badge_docker_pulls]][link_docker_pulls]
+[![License][badge_license]][link_license]
 
 Приложение, которое генерирует скрипт для роутера на базе `RouterOS`, который блокирует "рекламные" хосты.
 
@@ -24,6 +23,9 @@ $ composer create-project tarampampam/mikrotik-hosts-parser
 Все интересные настройки вынесены в файлы конфигурации, что лежат в директории `./config`:
 
 ### Docker
+
+[![Docker build][badge_docker_build]][link_docker_build]
+[![Docker pulls][badge_docker_pulls]][link_docker_pulls]
 
 [/r/avtodev/docker-php71-pg-redis][docker_hub]
 
@@ -45,22 +47,49 @@ $ docker run --rm -p 8000:80 tarampampam/mikrotik-hosts-parser
 
 Не гарантирую что приложение будет жить вечно, что пользоваться им можешь [тут][demo].
 
-[badge_version]:http://img.shields.io/packagist/v/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
-[badge_docker_build]:https://img.shields.io/docker/build/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
-[badge_docker_pulls]:https://img.shields.io/docker/pulls/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
-[badge_downloads_count]:https://img.shields.io/packagist/dt/tarampampam/mikrotik-hosts-parser.svg?style=flat&maxAge=30
-[badge_license]:https://img.shields.io/packagist/l/tarampampam/mikrotik-hosts-parser.svg
-[badge_build_status]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/badges/build.png?b=master
-[badge_styleci]:https://styleci.io/repos/39877790/shield?style=flat&maxAge=30
-[badge_coverage]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/badges/coverage.png?b=master
+## Changes log
+
+[![Release date][badge_release_date]][link_releases]
+[![Commits since latest release][badge_commits_since_release]][link_commits]
+
+Changes log can be [found here][link_changes_log].
+
+## Support
+
+[![Issues][badge_issues]][link_issues]
+[![Issues][badge_pulls]][link_pulls]
+
+If you will find any package errors, please, [make an issue][link_create_issue] in current repository.
+
+## License
+
+This is open-sourced software licensed under the [MIT License][link_license].
+
+[badge_packagist_version]:https://img.shields.io/packagist/v/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_php_version]:https://img.shields.io/packagist/php-v/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&longCache=true
+[badge_build_status]:https://img.shields.io/scrutinizer/build/g/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180&logo=scrutinizer
+[badge_code_quality]:https://img.shields.io/scrutinizer/g/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_coverage]:https://img.shields.io/scrutinizer/coverage/g/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_downloads_count]:https://img.shields.io/packagist/dt/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_license]:https://img.shields.io/packagist/l/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&longCache=true
+[badge_release_date]:https://img.shields.io/github/release-date/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_commits_since_release]:https://img.shields.io/github/commits-since/tarampampam/mikrotik-hosts-parser/latest.svg?style=flat-square&maxAge=180
+[badge_issues]:https://img.shields.io/github/issues/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_pulls]:https://img.shields.io/github/issues-pr/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_docker_build]:https://img.shields.io/docker/build/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_docker_pulls]:https://img.shields.io/docker/pulls/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[link_releases]:https://github.com/tarampampam/mikrotik-hosts-parser/releases
 [link_packagist]:https://packagist.org/packages/tarampampam/mikrotik-hosts-parser
-[link_docker_build]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/builds/
-[link_docker_pulls]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/
-[link_styleci]:https://styleci.io/repos/39877790/
-[link_license]:https://github.com/tarampampam/mikrotik-hosts-parser/blob/master/LICENSE
 [link_build_status]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/build-status/master
 [link_coverage]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/?branch=master
-[faker_repository_link]:https://github.com/fzaninotto/Faker
+[link_changes_log]:https://github.com/tarampampam/mikrotik-hosts-parser/blob/master/CHANGELOG.md
+[link_issues]:https://github.com/tarampampam/mikrotik-hosts-parser/issues
+[link_create_issue]:https://github.com/tarampampam/mikrotik-hosts-parser/issues/new/choose
+[link_commits]:https://github.com/tarampampam/mikrotik-hosts-parser/commits
+[link_pulls]:https://github.com/tarampampam/mikrotik-hosts-parser/pulls
+[link_license]:https://github.com/tarampampam/mikrotik-hosts-parser/blob/master/LICENSE
+[link_docker_build]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/builds/
+[link_docker_pulls]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/
 [getcomposer]:https://getcomposer.org/download/
 [demo]: https://stopad.kplus.pro/
 [habr]: https://habrahabr.ru/post/264001/
