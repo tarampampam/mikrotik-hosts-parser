@@ -27,7 +27,7 @@ $ composer create-project tarampampam/mikrotik-hosts-parser
 [![Docker build][badge_docker_build]][link_docker_build]
 [![Docker pulls][badge_docker_pulls]][link_docker_pulls]
 
-[/r/avtodev/docker-php71-pg-redis][docker_hub]
+[/r/tarampampam/mikrotik-hosts-parser][docker_hub]
 
 Для pull-а образа контейнера:
 
