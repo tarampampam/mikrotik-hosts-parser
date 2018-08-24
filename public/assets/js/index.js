@@ -49,6 +49,7 @@
 \n\
 do {\n\
   /tool fetch {%fetch_mode%} url=$hostScriptUrl dst-path=(\"./\".$scriptName);\n\
+  :delay 3s;\n\
   :if ([:len [/file find name=$scriptName]] > 0) do={\n\
     /system backup save name=$backupFileName;\n\
     :delay 1s;\n\
