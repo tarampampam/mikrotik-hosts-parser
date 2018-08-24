@@ -21,6 +21,7 @@ services:
       LIMIT_SOURCE_LIFE_SIZE: 2048
       LIMIT_SOURCE_URI_LENGTH: 256
       EXCLUDED_SOURCES_PROTOCOLS: 'http,https,ftp'
+      #FORCE_HTTPS: 'true'
       #APP_URL: 'http://mydomain3.com'
     ports:
      - "8000:80"

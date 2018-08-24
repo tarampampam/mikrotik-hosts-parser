@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.1
+
+### Added
+
+- Environment value `FORCE_HTTPS` for forcing `https` scheme usage
+
 ## v2.2.0
 
 ### Changed

@@ -26,6 +26,7 @@ $ composer create-project tarampampam/mikrotik-hosts-parser
 
 [![Docker build][badge_docker_build]][link_docker_build]
 [![Docker pulls][badge_docker_pulls]][link_docker_pulls]
+[![Docker size][badge_docker_size]][link_docker_pulls]
 
 [/r/tarampampam/mikrotik-hosts-parser][docker_hub]
 
@@ -78,6 +79,7 @@ This is open-sourced software licensed under the [MIT License][link_license].
 [badge_pulls]:https://img.shields.io/github/issues-pr/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
 [badge_docker_build]:https://img.shields.io/docker/build/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
 [badge_docker_pulls]:https://img.shields.io/docker/pulls/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
+[badge_docker_size]:https://images.microbadger.com/badges/image/tarampampam/mikrotik-hosts-parser:latest.svg?style=flat-square
 [link_releases]:https://github.com/tarampampam/mikrotik-hosts-parser/releases
 [link_packagist]:https://packagist.org/packages/tarampampam/mikrotik-hosts-parser
 [link_build_status]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/build-status/master
