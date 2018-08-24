@@ -1,45 +1,38 @@
-FROM php:7.2
+FROM php:7.2-alpine
 LABEL Description="Mikrotik hosts parser application container"
 
-# Install basic deps
-RUN \
-  apt-get -yq update && apt-get -yq upgrade -o Dpkg::Options::="--force-confold" \
-  && apt-get -yq install --no-install-recommends openssl unzip zip git \
-  && docker-php-ext-install opcache \
-  && php --version
-
-# Install composer
 ENV COMPOSER_HOME /usr/local/share/composer
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV PATH "$COMPOSER_HOME:$COMPOSER_HOME/vendor/bin:$PATH"
+
+# Install basic deps
 RUN \
-  mkdir -pv $COMPOSER_HOME && chmod -R g+w $COMPOSER_HOME \
-  && curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
-  && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
-  && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) \
-    !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); \
-    echo 'Invalid installer' . PHP_EOL; exit(1); }" \
+  docker-php-ext-install opcache \
+  && php --version \
+  && mkdir -pv $COMPOSER_HOME && chmod -R g+w $COMPOSER_HOME \
+  && php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" \
+  && php -r "if(hash_file('SHA384','/tmp/composer-setup.php')==='544e09ee996cdf60ece3804abc52599c22b1f40f4323403c'.\
+    '44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061'){echo 'Verified';}else{unlink('/tmp/composer-setup.php');}" \
   && php /tmp/composer-setup.php --filename=composer --install-dir=$COMPOSER_HOME \
   && $COMPOSER_HOME/composer --no-interaction global require 'hirak/prestissimo' \
   && $COMPOSER_HOME/composer --version && $COMPOSER_HOME/composer global info \
-  && rm -rf /tmp/composer-setup*
+  && rm -rf /tmp/composer-setup* \
+  && mkdir -pv /app/src
+
+WORKDIR /app/src
 
 # Copy application sources and configs
-RUN mkdir -pv /app/src
 COPY . /app/src
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 
 # Make composer install and configure other applications
 RUN \
   cd /app/src \
-  && composer install --no-interaction --no-dev \
+  && composer install --no-interaction --no-suggest --no-dev \
+  && composer clear-cache \
   && chmod +x /docker-entrypoint.sh \
   && php ./artisan
 
-# Make clear
-RUN apt-get -yqq clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-WORKDIR /app/src
 STOPSIGNAL SIGTERM
 EXPOSE 80
 ENTRYPOINT ["/docker-entrypoint.sh"]
