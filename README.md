@@ -91,6 +91,6 @@ This is open-sourced software licensed under the [MIT License][link_license].
 [link_docker_build]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/builds/
 [link_docker_pulls]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/
 [getcomposer]:https://getcomposer.org/download/
-[demo]: https://stopad.kplus.pro/
+[demo]: https://stopad.hook.sh/
 [habr]: https://habrahabr.ru/post/264001/
 [docker_hub]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/
