@@ -7,7 +7,7 @@
 - Dockerfile now based on `alpine`
 - Bower-installed components removed (use `cdnjs.com` now)
 - Make repository clear
-- Added `delay 3` after `/tool fetch ...`
+- Added `delay 3` after `/tool fetch ...` [#10]
 
 ## v2.1.2
 
