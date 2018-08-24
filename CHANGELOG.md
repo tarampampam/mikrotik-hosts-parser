@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.0
+
+### Changed
+
+- Dockerfile now based on `alpine`
+- Bower-installed components removed (use `cdnjs.com` now)
+- Make repository clear
+
 ## v2.1.2
 
 ### Fixed
