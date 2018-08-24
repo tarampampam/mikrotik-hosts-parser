@@ -2,7 +2,6 @@
 temp
 tmp
 .idea
-.bowerrc
 .env.example
 .styleci.yml
 .editorconfig

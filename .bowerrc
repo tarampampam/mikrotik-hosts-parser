@@ -1,8 +1,0 @@
-{
-  "directory": "public/components",
-  "color": true,
-  "save": true,
-  "scripts": {
-    "postinstall": ""
-  }
-}

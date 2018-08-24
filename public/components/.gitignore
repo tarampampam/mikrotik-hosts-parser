@@ -1,8 +1,0 @@
-*
-!flat-ui/dist/**/*
-!font-awesome/css/**/*
-!font-awesome/fonts/**/*
-!highlightjs/styles/default.css
-!highlightjs/styles/github-gist.css
-!highlightjs/*.js
-!.gitignore

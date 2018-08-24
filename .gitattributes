@@ -9,6 +9,4 @@
 .scrutinizer.yml export-ignore
 phpunit.xml export-ignore
 nginx.conf.sample export-ignore
-bower.json export-ignore
-.bowerrc export-ignore
 .github export-ignore

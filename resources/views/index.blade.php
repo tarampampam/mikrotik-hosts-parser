@@ -1,8 +1,12 @@
 @extends('layouts.app')
 
 @section('html_header')
-    <link type="text/css" href="{{ url('/components/highlightjs/styles/default.css') }}" rel="stylesheet"/>
-    <link type="text/css" href="{{ url('/components/highlightjs/styles/github-gist.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"
+          integrity="sha256-Zd1icfZ72UBmsId/mUcagrmN7IN5Qkrvh75ICHIQVTk="
+          crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github-gist.min.css"
+          integrity="sha256-tAflq+ymku3Khs+I/WcAneIlafYgDiOQ9stIHH985Wo="
+          crossorigin="anonymous" />
 @endsection
 
 @section('main_content')
@@ -199,6 +203,8 @@
 @endsection
 
 @section('inline_scripts')
-    <script type="text/javascript" src="{{ url('/components/highlightjs/highlight.pack.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"
+            integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw="
+            crossorigin="anonymous"></script>
     <script type="text/javascript" src="{{ url('/assets/js/index.js') }}"></script>
 @endsection
