@@ -13,7 +13,7 @@ return [
     ],
 
     [
-        'uri'     => 'https://cdn.rawgit.com/crazy-max/WindowsSpyBlocker/889dce20/data/hosts/spy.txt',
+        'uri'     => 'https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt',
         'title'   => 'Cервисы телеметрии от MS',
         'checked' => false,
     ],
