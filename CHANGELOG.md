@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.3.0
+
+### Changed
+
+- Basic sources URIs
+- (docker) Now docker image based on [PHPPM][phppm]
+
+[phppm]:https://github.com/php-pm/php-pm
+
 ## v2.2.1
 
 ### Added

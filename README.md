@@ -2,6 +2,7 @@
 
 [![Version][badge_packagist_version]][link_packagist]
 [![Version][badge_php_version]][link_packagist]
+[![PPM Compatible][badge_ppm]][link_ppm]
 [![Build Status][badge_build_status]][link_build_status]
 [![Coverage][badge_coverage]][link_coverage]
 [![Code quality][badge_code_quality]][link_coverage]
@@ -68,6 +69,7 @@ This is open-sourced software licensed under the [MIT License][link_license].
 
 [badge_packagist_version]:https://img.shields.io/packagist/v/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
 [badge_php_version]:https://img.shields.io/packagist/php-v/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&longCache=true
+[badge_ppm]:https://raw.githubusercontent.com/php-pm/ppm-badge/master/ppm-badge.png
 [badge_build_status]:https://img.shields.io/scrutinizer/build/g/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180&logo=scrutinizer
 [badge_code_quality]:https://img.shields.io/scrutinizer/g/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
 [badge_coverage]:https://img.shields.io/scrutinizer/coverage/g/tarampampam/mikrotik-hosts-parser.svg?style=flat-square&maxAge=180
@@ -82,6 +84,7 @@ This is open-sourced software licensed under the [MIT License][link_license].
 [badge_docker_size]:https://images.microbadger.com/badges/image/tarampampam/mikrotik-hosts-parser:latest.svg?style=flat-square
 [link_releases]:https://github.com/tarampampam/mikrotik-hosts-parser/releases
 [link_packagist]:https://packagist.org/packages/tarampampam/mikrotik-hosts-parser
+[link_ppm]:https://github.com/php-pm/php-pm
 [link_build_status]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/build-status/master
 [link_coverage]:https://scrutinizer-ci.com/g/tarampampam/mikrotik-hosts-parser/?branch=master
 [link_changes_log]:https://github.com/tarampampam/mikrotik-hosts-parser/blob/master/CHANGELOG.md

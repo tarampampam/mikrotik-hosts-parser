@@ -4,15 +4,13 @@ services:
   application:
     container_name: mikrotik-parser-app
     restart: on-failure
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     environment:
       APP_KEY: 'SOME_RANDOM_STRING_HERE'
       AUTHOR_EMAIL: 'tarampampam@users.noreply.github.com'
-      REDIRECT_IP: '127.0.0.2'
+      #REDIRECT_IP: '127.0.0.1'
       EXCLUDED_HOSTS: 'localhost'
-      SCRIPT_AD_ENTRIES_COMMENT: 'ADBlock'
+      #SCRIPT_AD_ENTRIES_COMMENT: 'ADBlock'
       LIMIT_USER_SOURCES: 8
       LIMIT_RESULT_ENTRIES: 0
       LIMIT_SOURCE_CACHE_LIFETIME: 7200
@@ -24,4 +22,4 @@ services:
       #FORCE_HTTPS: 'true'
       #APP_URL: 'http://mydomain3.com'
     ports:
-     - "8000:80"
+     - '8000:80'
