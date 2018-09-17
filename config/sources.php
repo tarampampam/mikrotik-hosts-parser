@@ -19,25 +19,25 @@ return [
     ],
 
     [
-        'uri'     => 'http://adaway.org/hosts.txt',
+        'uri'     => 'https://adaway.org/hosts.txt',
         'title'   => '~400 записей',
         'checked' => true,
     ],
 
     [
-        'uri'     => 'http://www.malwaredomainlist.com/hostslist/hosts.txt',
+        'uri'     => 'https://www.malwaredomainlist.com/hostslist/hosts.txt',
         'title'   => '~1500 записей',
         'checked' => false,
     ],
 
     [
-        'uri'     => 'http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext',
+        'uri'     => 'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext',
         'title'   => '~2400 записей',
         'checked' => true,
     ],
 
     [
-        'uri'     => 'http://someonewhocares.org/hosts/hosts',
+        'uri'     => 'https://someonewhocares.org/hosts/hosts',
         'title'   => '~12000 записей',
         'checked' => false,
     ],
@@ -49,7 +49,7 @@ return [
     ],
 
     [
-        'uri'     => 'http://hosts-file.net/ad_servers.txt',
+        'uri'     => 'https://hosts-file.net/ad_servers.txt',
         'title'   => '~45000 записей',
         'checked' => false,
     ],
