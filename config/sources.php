@@ -7,7 +7,7 @@
 return [
 
     [
-        'uri'     => 'https://cdn.rawgit.com/tarampampam/static/master/hosts/block_shit.txt',
+        'uri'     => 'https://raw.githubusercontent.com/tarampampam/static/master/hosts/block_shit.txt',
         'title'   => 'Реклама на YouTube.com, Skype и пр.',
         'checked' => true,
     ],
