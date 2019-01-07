@@ -9,7 +9,7 @@
         "ext-curl": "*",
         "ext-json": "*",
         "laravel/lumen-framework": ">=5.6.1 <5.7.0",
-        "vlucas/phpdotenv": "~2.2",
+        "vlucas/phpdotenv": "~3.1",
         "guzzlehttp/guzzle": "^6.3"
     },
     "require-dev": {
