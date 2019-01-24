@@ -1,5 +1,15 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
+
+## v2.3.1
+
+### Fixed
+
+- Composer installation in dockerfile
+
 ## v2.3.0
 
 ### Changed
@@ -33,3 +43,6 @@
 - `WindowsSpyBlocker` hosts file URI [#10]
 
 [#10]: https://github.com/tarampampam/mikrotik-hosts-parser/issues/10
+
+[keepachangelog]:https://keepachangelog.com/en/1.0.0/
+[semver]:https://semver.org/spec/v2.0.0.html
