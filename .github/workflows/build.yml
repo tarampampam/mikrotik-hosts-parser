@@ -24,7 +24,6 @@ jobs:
           fetch-depth: 1
 
       - name: Run Gofmt
-        working-directory: ./src
         run: test -z "$(gofmt -l .)"
 
   test:
@@ -42,7 +41,6 @@ jobs:
           fetch-depth: 1
 
       - name: Run Unit tests
-        working-directory: ./src
         run: go test . -v -race -coverprofile=coverage.txt -covermode=atomic
 
       - name: Upload Coverage report to CodeCov
@@ -50,7 +48,7 @@ jobs:
         uses: codecov/codecov-action@v1.0.0 # https://github.com/codecov/codecov-action
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./src/coverage.txt
+          file: ./coverage.txt
           flags: unittests
 
   build:
@@ -69,7 +67,6 @@ jobs:
           fetch-depth: 1
 
       - name: Build application
-        working-directory: ./src
         run: go build -ldflags '-s -w' -o /tmp/mikrotik-hosts-parser .
 
       - name: Try to execute

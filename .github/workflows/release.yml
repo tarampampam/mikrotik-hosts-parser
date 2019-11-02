@@ -25,7 +25,6 @@ jobs:
           fetch-depth: 1
 
       - name: Build application
-        working-directory: ./src
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
