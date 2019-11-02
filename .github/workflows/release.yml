@@ -1,0 +1,46 @@
+name: release
+
+on:
+  release: # Docs: <https://help.github.com/en/articles/events-that-trigger-workflows#release-event-release>
+    types: [prereleased, published]
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux]
+        arch: [amd64, 386]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+
+      - name: Check out code
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Build application
+        working-directory: ./src
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: go build -ldflags '-s -w' -o ./../build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
+
+      - name: Pack binary
+        uses: docker://gact/upx:latest # https://github.com/marketplace/actions/upx-action
+        with:
+          file: "./build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
+          upx_args: '-7'
+
+      - name: Upload to release
+        uses: docker://gact/upload-to-release:latest # https://github.com/actions-github/upload-to-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: "./build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
+          type: 'application/octet-stream'

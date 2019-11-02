@@ -1,0 +1,8 @@
+.dockerignore
+Makefile
+docker*.yml
+*.log
+.gitignore
+.editorconfig
+.idea
+.git
