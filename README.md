@@ -14,6 +14,8 @@
 
 This application is HTTP server, that can generate script for RouterOS-based routers for blocking "AD" hosts.
 
+> Previous version (PHP) can be found in [`php-version` branch](https://github.com/tarampampam/mikrotik-hosts-parser/tree/php-version).
+
 ## Usage example
 
 %is.in.progress%

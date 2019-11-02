@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [linux]
+        os: [linux, darwin]
         arch: [amd64, 386]
     steps:
       - name: Set up Go
