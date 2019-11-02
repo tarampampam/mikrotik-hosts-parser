@@ -7,7 +7,7 @@ ENV upx_params=${upx_params:--7}
 
 RUN apk add --no-cache upx
 
-ADD ./src /src
+COPY . /src
 
 WORKDIR /src
 
