@@ -1,0 +1,11 @@
+# IDEs
+/nbproject
+/.idea
+
+# Temp dirs & trash
+/temp
+/tmp
+.DS_Store
+/cover*.*
+/*_test.go
+/mikrotik-hosts-parser
