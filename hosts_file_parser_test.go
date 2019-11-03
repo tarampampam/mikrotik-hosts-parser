@@ -282,6 +282,18 @@ func TestHostsFileParser_parseRawLine(t *testing.T) {
 			wantResult: false,
 		},
 		{
+			line:       "#",
+			wantResult: false,
+		},
+		{
+			line:       " #",
+			wantResult: false,
+		},
+		{
+			line:       "# ",
+			wantResult: false,
+		},
+		{
 			line:       "# Comment line",
 			wantResult: false,
 		},
