@@ -177,6 +177,18 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 			wantResult: `address=1.2.3.4 comment="Foo comment" disabled=no name="Foo entry"` + "\n" +
 				`address=4.3.2.1 comment="Bar comment" disabled=no name="Bar entry"`,
 		},
+		{
+			name: "Entry with all fields with unescaped values",
+			entries: &MikrotikDnsStaticEntries{{
+				Address:  "1.2.3.4",
+				Comment:  `foo \"bar\" "baz"`,
+				Disabled: true,
+				Name:     " \"'blah",
+				TTL:      "1d",
+			}},
+			renderOptions: &RenderOptions{},
+			wantResult:    `address=1.2.3.4 comment="foo \"bar\" \"baz\"" disabled=yes name=" \"'blah" ttl="1d"`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -194,6 +206,26 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 
 			if res := buf.String(); res != tt.wantResult {
 				t.Errorf("Unexpected result. Want:\n[%s]\nGot:\n[%s]", tt.wantResult, res)
+			}
+		})
+	}
+}
+
+func TestMikrotikDnsStaticEntries_escapeString(t *testing.T) {
+	tests := []struct {
+		in, wantOut string
+	}{
+		{in: `foo "bar"`, wantOut: `foo \"bar\"`},
+		{in: `foo \"bar\"`, wantOut: `foo \"bar\"`},
+		{in: `foo \\"bar\\"`, wantOut: `foo \"bar\"`},
+	}
+
+	entries := MikrotikDnsStaticEntries{}
+
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			if res := entries.escapeString(tt.in); res != tt.wantOut {
+				t.Errorf("Unexpected result. Want: [%s], got: [%s]", tt.wantOut, res)
 			}
 		})
 	}
