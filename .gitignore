@@ -7,5 +7,4 @@
 /tmp
 .DS_Store
 /cover*.*
-/*_test.go
 /mikrotik-hosts-parser
