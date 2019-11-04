@@ -1,19 +1,20 @@
 package main
 
-import (
-	"log"
-	"os"
-)
+import "time"
 
 const VERSION = "3.0.0" // Do not forget update this value before new version releasing
 
 func main() {
-	var (
-		stdLog = log.New(os.Stderr, "", 0)
-		errLog = log.New(os.Stderr, "", log.LstdFlags)
-	)
-
-	server := NewServer("0.0.0.0", 8080, "./public", stdLog, errLog)
+	server := NewServer(&HttpServerSettings{
+		Host:             "0.0.0.0",
+		Port:             8080,
+		PublicDir:        "./public",
+		IndexFile:        "index.html",
+		Error404File:     "404.html",
+		WriteTimeout:     time.Second * 15,
+		ReadTimeout:      time.Second * 15,
+		KeepAliveEnabled: false,
+	})
 
 	server.RegisterHandlers()
 
