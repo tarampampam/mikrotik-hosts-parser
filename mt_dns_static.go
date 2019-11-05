@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"reflect"
+	"strings"
 )
 
 // Structure that can be "rendered" in RouterOS script format.
@@ -71,7 +72,7 @@ func (e MikrotikDnsStaticEntries) Render(to io.Writer, options *RenderOptions) (
 
 		// write "comment"
 		if entry.Comment != "" || options.RenderEmpty {
-			buf = append(buf, " "+comment+`="`+entry.Comment+`"`...)
+			buf = append(buf, " "+comment+`="`+e.escapeString(entry.Comment)+`"`...)
 		}
 
 		// write "disabled"
@@ -83,7 +84,7 @@ func (e MikrotikDnsStaticEntries) Render(to io.Writer, options *RenderOptions) (
 
 		// write "name"
 		if entry.Name != "" || options.RenderEmpty {
-			buf = append(buf, " "+name+`="`+entry.Name+`"`...)
+			buf = append(buf, " "+name+`="`+e.escapeString(entry.Name)+`"`...)
 		}
 
 		// write "regexp"
@@ -93,7 +94,7 @@ func (e MikrotikDnsStaticEntries) Render(to io.Writer, options *RenderOptions) (
 
 		// write "ttl"
 		if entry.TTL != "" || options.RenderEmpty {
-			buf = append(buf, " "+ttl+`="`+entry.TTL+`"`...)
+			buf = append(buf, " "+ttl+`="`+e.escapeString(entry.TTL)+`"`...)
 		}
 
 		// write entry Postfix
@@ -115,7 +116,12 @@ func (e MikrotikDnsStaticEntries) Render(to io.Writer, options *RenderOptions) (
 	return wroteTotal, nil
 }
 
-// Small helper for getting structure tag value
+// Escape string value chars for using in rendering.
+func (MikrotikDnsStaticEntries) escapeString(s string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(s, `\`, ``), `"`, `\"`)
+}
+
+// Small helper for getting structure tag value.
 func (MikrotikDnsStaticEntries) getStructTagValue(r reflect.Type, field, tag string) string {
 	if field, ok := r.FieldByName(field); ok {
 		val, _ := field.Tag.Lookup(tag)

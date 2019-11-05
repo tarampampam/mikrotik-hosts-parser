@@ -14,6 +14,7 @@ WORKDIR /src
 RUN set -x \
     && upx -V \
     && go version \
+    && go generate ./... \
     && go build -ldflags='-s -w' -o /tmp/mikrotik-hosts-parser . \
     && upx ${upx_params} /tmp/mikrotik-hosts-parser \
     && /tmp/mikrotik-hosts-parser -V \

@@ -1,0 +1,3 @@
+# Deny access for all
+User-agent: *
+Disallow:

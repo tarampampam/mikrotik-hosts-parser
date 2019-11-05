@@ -3,7 +3,7 @@ name: Basic hosts file update
 about: Some entries in basic hosts file (provided by this project) need to be updated
 ---
 
-### Update reason
+## Update reason
 
 > Tell us what happens?
 
@@ -19,3 +19,7 @@ about: Some entries in basic hosts file (provided by this project) need to be up
 > Remove:
 >
 > - `broken.domain.example.com`
+
+> ### Pull request with changes
+>
+> You can create pull request with any changes by [following this link](https://github.com/tarampampam/mikrotik-hosts-parser/edit/master/docs/hosts/basic.txt). After this action do not forget leave a link in PR description on this issue.
