@@ -25,9 +25,6 @@ jobs:
           fetch-depth: 1
 
       - name: Run codegeneration
-        env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
         run: go generate ./...
 
       - name: Build application
