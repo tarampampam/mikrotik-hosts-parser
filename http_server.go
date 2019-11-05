@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"io"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -69,10 +67,11 @@ func (s *HttpServer) RegisterHandlers() {
 
 	s.Router.PathPrefix("/").
 		Handler(&HttpFileServer{
-			root:                     http.Dir(s.Settings.PublicDir),
-			resources:                Resources,
-			NotFoundHandler:          s.fileNotFoundHandler,
-			DirectoryListingDisabled: s.accessDeniedHandler,
+			root:            http.Dir(s.Settings.PublicDir),
+			resources:       Resources,
+			indexFile:       "index.html",
+			resourcesPrefix: "/public",
+			error404file:    "404.html",
 		}).
 		Name("static")
 }
@@ -88,69 +87,6 @@ func (s *HttpServer) Start() error {
 func (s *HttpServer) Stop() error {
 	s.stdLog.Println("Stopping Server")
 	return s.Server.Shutdown(context.Background())
-}
-
-// HTML errors rendering function.
-func (s *HttpServer) renderHtmlErrorPage(w http.ResponseWriter, code int, fName, failBack string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(code)
-
-	var errFilePath = filepath.Join(s.Settings.PublicDir, fName)
-	if _, statErr := os.Stat(errFilePath); statErr == nil {
-		// file exists
-		if f, err := os.Open(errFilePath); f != nil {
-			// file opened
-			defer f.Close()
-			if err == nil {
-				if _, writeErr := io.Copy(w, f); writeErr != nil {
-					panic(writeErr)
-				}
-			}
-		}
-	} else {
-		// fail-back to passed error page content
-		if _, err := w.Write([]byte(failBack)); err != nil {
-			panic(err)
-		}
-	}
-}
-
-// Error handler - 404
-func (s *HttpServer) fileNotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	const errFileName = "404.html"
-
-	s.stdLog.Printf("Request from '%s' failed: '%s' was not found\n", r.RemoteAddr, r.RequestURI)
-
-	s.renderHtmlErrorPage(w, http.StatusNotFound, errFileName, `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<title>Error 404</title>
-	<style>html,body{background-color:#1a1a1a;color:#fff;font-family:sans-serif;}h1,h2,h3{text-align:center}</style>
-</head>
-<body>
-	<h1>Error 404</h1>
-	<h2>page not found</h2>
-</body>
-</html>`)
-}
-
-// Error handler - access denied
-func (s *HttpServer) accessDeniedHandler(w http.ResponseWriter, r *http.Request) {
-	const errFileName = "403.html"
-
-	s.stdLog.Printf("Request from '%s' failed: '%s' access denied\n", r.RemoteAddr, r.RequestURI)
-
-	s.renderHtmlErrorPage(w, http.StatusForbidden, errFileName, `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<title>Error 403</title>
-	<style>html,body{background-color:#1a1a1a;color:#fff;font-family:sans-serif;}h1,h2,h3{text-align:center}</style>
-</head>
-<body>
-	<h1>Error 403</h1>
-	<h2>access denied</h2>
-</body>
-</html>`)
 }
 
 // Metrics request handler.

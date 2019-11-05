@@ -41,7 +41,7 @@ func FormatByteSlice(sl []byte) string {
 }
 
 func main() {
-	log.SetFlags(log.Lshortfile|log.Lmicroseconds)
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 	log.Printf("Packing resources into [%s] file", resources_out)
 
 	if _, err := os.Stat("resources"); os.IsNotExist(err) {
@@ -49,6 +49,7 @@ func main() {
 	}
 
 	resources := make(map[string][]byte)
+	var totalSize int64 = 0
 	err := filepath.Walk("resources", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println("Error :", err)
@@ -66,6 +67,7 @@ func main() {
 				return err
 			}
 			resources[relativePath] = b
+			totalSize += int64(len(b))
 		}
 		return nil
 	})
@@ -96,6 +98,5 @@ func main() {
 		log.Fatal("Error writing blob file", err)
 	}
 
-	log.Println("Packing resources done!")
-	log.Println("DO NOT COMMIT", resources_out)
+	log.Printf("Resources packing done! Total size: %d KiB", totalSize/1024)
 }

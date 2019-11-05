@@ -1,26 +1,37 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
-type HttpFileServer struct {
-	root                     http.Dir
-	resources                ResourcesBox
-	NotFoundHandler          func(http.ResponseWriter, *http.Request)
-	DirectoryListingDisabled func(http.ResponseWriter, *http.Request)
-}
+type (
+	HttpFileNotFoundHandler func(http.ResponseWriter, *http.Request)
+
+	HttpFileServer struct {
+		root            http.Dir
+		resources       ResourcesBox            // optionally, but strongly recommended
+		NotFoundHandler HttpFileNotFoundHandler // optionally
+		indexFile       string
+		resourcesPrefix string
+		error404file    string
+	}
+)
 
 // Serve requests to the "public" files and directories.
 func (fileServer *HttpFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	const (
-		indexFileName       string = "index.html"
-		resourcesPathPrefix string = "/public"
-	)
+	// redirect .../index.html to .../
+	if strings.HasSuffix(r.URL.Path, "/"+fileServer.indexFile) {
+		http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fileServer.indexFile)], http.StatusMovedPermanently)
+		return
+	}
 
 	// if empty, set current directory
 	dir := string(fileServer.root)
@@ -34,43 +45,108 @@ func (fileServer *HttpFileServer) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		upath = "/" + upath
 		r.URL.Path = upath
 	}
+	// add index file name if requested directory (or server root)
+	if upath[len(upath)-1] == '/' {
+		upath += fileServer.indexFile
+	}
+	// make path clean
 	upath = path.Clean(upath)
 
 	// path to file
 	name := path.Join(dir, filepath.FromSlash(upath))
 
-	if fileServer.NotFoundHandler != nil {
-		// check if file exists
-		f, err := os.Open(name)
-		if err != nil {
-			if os.IsNotExist(err) {
-				fileServer.NotFoundHandler(w, r)
+	// if files server root directory is set - try to find file and serve them
+	if len(fileServer.root) > 0 {
+		// check for file exists
+		if f, err := os.Open(name); err == nil {
+			// file exists and opened
+			defer func() {
+				if err := f.Close(); err != nil {
+					panic(err)
+				}
+			}()
+			// file (or directory) exists
+			if stat, statErr := os.Stat(name); statErr == nil && stat.Mode().IsRegular() {
+				// requested file is file (not directory)
+				var modTime time.Time
+				// Try to extract file modified time
+				if info, err := f.Stat(); err == nil {
+					modTime = info.ModTime()
+				} else {
+					modTime = time.Now() // fail-back
+				}
+				// serve fie content
+				http.ServeContent(
+					w,
+					r,
+					filepath.Base(upath),
+					modTime,
+					f,
+				)
 				return
 			}
 		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				panic(err)
-			}
-		}()
 	}
 
-	// check if requested directory (not regular file)
-	if info, err := os.Stat(name); err == nil {
-		if info.Mode().IsDir() {
-			indexFilePath := path.Join(name, indexFileName)
-			if _, err := os.Stat(indexFilePath); err == nil {
-				// index file exists - "rewrite" requested name
-				name = indexFilePath
-			} else if os.IsNotExist(err) {
-				// index file does not exists - check for handler
-				if fileServer.DirectoryListingDisabled != nil {
-					fileServer.DirectoryListingDisabled(w, r)
-					return
+	// requested file exists in resources
+	if fileServer.resources != nil {
+		if content, ok := fileServer.resources.Get(fileServer.resourcesPrefix + upath); ok {
+			http.ServeContent(
+				w,
+				r,
+				filepath.Base(upath),
+				time.Now(), // @todo: set build time, not time.Now()
+				bytes.NewReader(content),
+			)
+			return
+		}
+	}
+
+	// If all tries for content serving above has been failed - file was not found (HTTP 404)
+	if fileServer.NotFoundHandler != nil {
+		// If "file not found" handler is set - call them
+		fileServer.NotFoundHandler(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusNotFound)
+
+	// at first - we try to find local file with error content
+	if len(fileServer.root) > 0 {
+		var errPage = string(fileServer.root) + "/" + fileServer.error404file
+		if f, err := os.Open(errPage); err == nil {
+			// file exists and opened
+			defer func() {
+				if err := f.Close(); err != nil {
+					panic(err)
 				}
+			}()
+			// file (or directory) exists
+			if stat, statErr := os.Stat(errPage); statErr == nil && stat.Mode().IsRegular() {
+				// requested file is file (not directory)
+				if _, writeErr := io.Copy(w, f); writeErr != nil {
+					panic(writeErr)
+				}
+				return
 			}
 		}
 	}
 
-	http.ServeFile(w, r, name)
+	if fileServer.resources != nil {
+		// if local file was not found - try to extract data from resources
+		if content, ok := fileServer.resources.Get(fileServer.resourcesPrefix + "/" + fileServer.error404file); ok {
+			// write content into response
+			if _, writeErr := w.Write(content); writeErr != nil {
+				panic(writeErr)
+			}
+			return
+		}
+	}
+
+	// fail-back
+	if _, err := fmt.Fprint(w, "<html><body><h1>ERROR 404</h1><h2>Requested file was not found</h2></body></html>"); err != nil {
+		panic(err)
+	}
 }
