@@ -1,0 +1,7 @@
+{
+    "name": "MikroTik hosts parser",
+    "short_name": "MikroTik hosts parser",
+    "theme_color": "#ffffff",
+    "background_color": "#272B30",
+    "display": "standalone"
+}
