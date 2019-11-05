@@ -8,7 +8,7 @@ func main() {
 	server := NewServer(&HttpServerSettings{
 		Host:             "0.0.0.0",
 		Port:             8080,
-		PublicDir:        "./public",
+		PublicDir:        "./resources/public",
 		IndexFile:        "index.html",
 		Error404File:     "404.html",
 		WriteTimeout:     time.Second * 15,

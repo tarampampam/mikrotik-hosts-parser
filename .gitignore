@@ -7,4 +7,5 @@
 /tmp
 .DS_Store
 /cover*.*
+/resources_data.go
 /mikrotik-hosts-parser

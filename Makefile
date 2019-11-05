@@ -27,7 +27,8 @@ update: ## Update modules (safe)
 	$(DC_BIN) run $(DC_RUN_ARGS) go get -u
 
 build: ## Build app binary file
-	$(DC_BIN) run $(DC_RUN_ARGS) go build -ldflags=$(LDFLAGS) -o '/$(APP_NAME)' .
+	$(DC_BIN) run $(DC_RUN_ARGS) go generate ./...
+	$(DC_BIN) run $(DC_RUN_ARGS) go build -ldflags=$(LDFLAGS) -o './$(APP_NAME)' .
 
 gofmt: ## Run gofmt tool
 	$(DC_BIN) run $(DC_RUN_ARGS) gofmt -s -w .

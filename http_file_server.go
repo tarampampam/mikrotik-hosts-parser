@@ -10,13 +10,17 @@ import (
 
 type HttpFileServer struct {
 	root                     http.Dir
+	resources                ResourcesBox
 	NotFoundHandler          func(http.ResponseWriter, *http.Request)
 	DirectoryListingDisabled func(http.ResponseWriter, *http.Request)
 }
 
 // Serve requests to the "public" files and directories.
 func (fileServer *HttpFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	const indexFileName string = "index.html"
+	const (
+		indexFileName       string = "index.html"
+		resourcesPathPrefix string = "/public"
+	)
 
 	// if empty, set current directory
 	dir := string(fileServer.root)
@@ -35,8 +39,8 @@ func (fileServer *HttpFileServer) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	// path to file
 	name := path.Join(dir, filepath.FromSlash(upath))
 
-	// check if file exists
 	if fileServer.NotFoundHandler != nil {
+		// check if file exists
 		f, err := os.Open(name)
 		if err != nil {
 			if os.IsNotExist(err) {
