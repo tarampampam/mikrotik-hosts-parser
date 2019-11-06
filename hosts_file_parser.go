@@ -62,7 +62,7 @@ func (p *HostsFileParser) parseRawLine(line string) (*HostsFileRecord, error) {
 	line = strings.TrimSpace(line)
 
 	// Comment format: `# Any comment text`
-	if len(line) >= 1 && []rune(line)[0] == delimiter {
+	if p.startsWithRune(line, delimiter) {
 		return nil, nil
 	}
 
@@ -82,8 +82,7 @@ func (p *HostsFileParser) parseRawLine(line string) (*HostsFileRecord, error) {
 	var hosts []string
 
 	for _, host := range words[1:] {
-		//if strings.IndexRune(host, delimiter) == 0 {
-		if len(host) >= 1 && []rune(host)[0] == delimiter {
+		if p.startsWithRune(host, delimiter) {
 			break
 		}
 		if p.validateHostname(host) {
@@ -96,4 +95,9 @@ func (p *HostsFileParser) parseRawLine(line string) (*HostsFileRecord, error) {
 	}
 
 	return &HostsFileRecord{IP: ip, Hosts: hosts}, nil
+}
+
+// startsWithRune make a check for string starts with passed rune
+func (p *HostsFileParser) startsWithRune(s string, r rune) bool {
+	return len(s) >= 1 && []rune(s)[0] == r
 }
