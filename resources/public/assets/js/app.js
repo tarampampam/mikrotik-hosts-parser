@@ -9,6 +9,7 @@
 // @link <https://github.com/vuejs/vue-devtools/issues/190#issuecomment-264203810>
 Vue.config.devtools = true;
 
+// @link <https://github.com/FranckFreiburger/http-vue-loader/#api>
 httpVueLoader.httpRequest = function (url) {
     return axios.get(url)
         .then(function (res) {
@@ -27,6 +28,7 @@ new Vue({
         'line-delimiter': 'url:components/line-delimiter.vue',
         'main-header': 'url:components/main-header.vue',
         'about': 'url:components/about.vue',
+        'script-source': 'url:components/script-source.vue',
         'faq': 'url:components/faq.vue',
         'main-footer': 'url:components/main-footer.vue',
     },
