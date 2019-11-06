@@ -2,7 +2,7 @@
     <div class="container">
         <h3>Скрипт для маршрутизатора</h3>
 
-        <pre>
+        <pre class="script-source hljs routeros">
 ## StopAD - Script for blocking advertisements, based on your defined hosts files<span v-if="serviceLink">
 ## For changing any parameters, please, use this link: {{ serviceLink }}</span>
 ##
@@ -41,6 +41,8 @@ do {
 
 <script>
     /* global module */
+    /* global hljs */
+
     module.exports = {
         props: {
             serviceLink: {
@@ -78,9 +80,17 @@ do {
                 default: true,
                 type: Boolean
             },
-        }
+        },
+        mounted: function () {
+            this.$el.querySelectorAll('pre').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        },
     }
 </script>
 
 <style scoped>
+    pre {
+        background-color: transparent;
+    }
 </style>

@@ -6,65 +6,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" href="favicon.ico" sizes="16x16"/>
     <link rel="manifest" href="webmanifest.json"/>
-    <meta name="theme-color" content="#252d37"/>
+    <meta name="theme-color" content="#272B30"/>
+
+    <style>
+        html, body {
+            background-color: #272B30;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: 0 0;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 250, .25);
+            border-radius: 3px;
+        }
+
+        ::selection {
+            background: rgba(255, 255, 250, .14);
+        }
+    </style>
 
     <!-- Preview: <https://bootswatch.com/slate/> -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/slate/bootstrap.min.css"
           integrity="sha384-FBPbZPVh+7ks5JJ70RJmIaqyGnvMbeJ5JQfEbW0Ac6ErfvEg9yG56JQJuMNptWsH"
           crossorigin="anonymous"/>
+
+    <!-- Icons: <https://fontawesome.com/icons/> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css"
           integrity="sha256-+N4/V/SbAFiW1MPBCXnfnP9QSN3+Keu+NlB+0ev/YKQ="
           crossorigin="anonymous"/>
-    <link rel="stylesheet" href="assets/css/app.css"/>
+
+    <!-- Usage: <https://highlightjs.org/usage/> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css"
+          integrity="sha256-zcunqSn1llgADaIPFyzrQ8USIjX2VpuxHzUwYisOwo8="
+          crossorigin="anonymous"/>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/monokai-sublime.min.css"
+          integrity="sha256-kTdkFYZP3TqSvlJAUiZ6/s5L2xu4xsdU9eYMWsKOk74="
+          crossorigin="anonymous"/>
 
     <title>MikroTik DNS Stop AD</title>
 </head>
 <body>
-<div class="container" id="app" v-cloak>
-    <main-header></main-header>
 
-    <about></about>
-
-    <line-delimiter></line-delimiter>
-
-    <script-source
-            service-link=""
-            version=""
-            script-uri=""
-            :use-ssl="false"
-    ></script-source>
-
-    <div class="form-group clearfix">
-        <h5>Строка запроса</h5>
-        <div class="row">
-            <div class="col-xs-12">
-                <pre class="script-uri hljs accesslog"></pre>
-            </div>
-        </div>
-        <h6>Скрипт для маршрутизатора</h6>
-        <div class="row">
-            <div class="col-xs-12">
-                <pre class="script-source hljs routeros"></pre>
-            </div>
+<noscript>
+    <div class="text-center">
+        <div class="alert alert-danger mt-3 d-inline-block">
+            <strong>JavaScript</strong> is required for this page.
         </div>
     </div>
+</noscript>
 
-    <line-delimiter></line-delimiter>
-
-    <faq></faq>
-
-    <main-footer></main-footer>
+<div id="app">
+    <div class="w-100 text-center mt-5">
+        <div class="spinner-border text-secondary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
 </div>
 
-
+<!-- Documentation: <https://github.com/axios/axios> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"
         integrity="sha256-S1J4GVHHDMiirir9qsXWc8ZWw74PHHafpsHp5PXtjTs="
         crossorigin="anonymous"></script>
+
+<!-- Documentation: <https://vuejs.org/v2/api/> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"
         integrity="sha256-chlNFSVx3TdcQ2Xlw7SvnbLAavAQLO0Y/LBiWX04viY="
         crossorigin="anonymous"></script>
+
+<!-- Documentation: <https://github.com/FranckFreiburger/http-vue-loader> -->
 <script src="https://cdn.jsdelivr.net/gh/FranckFreiburger/http-vue-loader@1.4.1/src/httpVueLoader.min.js"
         crossorigin="anonymous"></script>
+
+<!-- Documentation: <https://highlightjs.org/usage/> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"
+        integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0="
+        crossorigin="anonymous"></script>
+
 <script src="assets/js/app.js"></script>
+
 </body>
 </html>

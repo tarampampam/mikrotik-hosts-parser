@@ -1,5 +1,3 @@
-/* jsDoc nice ref: <https://fettblog.eu/typescript-jsdoc-superpowers/> */
-
 'use strict';
 
 /** @typedef {Vue} Vue */
@@ -24,17 +22,8 @@ Vue.use(httpVueLoader);
 
 new Vue({
     el: '#app',
+    template: `<app></app>`,
     components: {
-        'line-delimiter': 'url:components/line-delimiter.vue',
-        'main-header': 'url:components/main-header.vue',
-        'about': 'url:components/about.vue',
-        'script-source': 'url:components/script-source.vue',
-        'faq': 'url:components/faq.vue',
-        'main-footer': 'url:components/main-footer.vue',
-    },
-    data: {},
-    methods: {},
-    created: function () {
-        //
+        'app': 'url:components/app.vue',
     },
 });

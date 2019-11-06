@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <h5>Как мне всё это дело прикрутить к моему MikroTik-у?</h5>
+        <h4>Как мне всё это дело прикрутить к моему MikroTik-у?</h4>
         <p>
             Более чем просто &mdash; необходимо добавить (<code>System</code> &rarr; <code>Scripts</code> &rarr; <code>Add
             New</code>) указанный выше скрипт, а так же добавить задание в планировщик (<code>System</code> &rarr;
@@ -9,36 +9,36 @@
             script run AutoADBlock</code>. Права доступа: <code>[X] Read [X] Write [X] Policy [X] Test</code>.
         </p>
 
-        <h5 class="mt-4">Выдача кэшируется?</h5>
-        <p>В данный момент каждый запрашиваемый (<em>внешний</em>) ресурс кэшируется на <strong>{{ cache_lifetime_sec }}
+        <h4 class="mt-4">Выдача кэшируется?</h4>
+        <p>В данный момент каждый запрашиваемый (<em>внешний</em>) ресурс кэшируется на <strong>{{ cacheLifetimeSec }}
             секунд</strong>. Всё остальное &mdash; обрабатывается в realtime.</p>
 
-        <h5 class="mt-4">Какие ещё есть ограничения?</h5>
+        <h4 class="mt-4">Какие ещё есть ограничения?</h4>
         <p>Ограничения хоть и носят больше формальный характер, но всё таки они есть:</p>
         <ul>
             <li>
-                Максимальное количество внешних источников &mdash; <strong>{{ max_sources_count }}</strong> (<em>URI должен
-                быть не более <code>{{ max_source_uri_len}}</code> символов</em>);
+                Максимальное количество внешних источников &mdash; <strong>{{ maxSourcesCount }}</strong> (<em>URI должен
+                быть не более <code>{{ maxSourceUriLen}}</code> символов</em>);
             </li>
             <li>
-                Максимальное количество исключений &mdash; <strong>{{ excludes_limit }}</strong>;
+                Максимальное количество исключений &mdash; <strong>{{ excludesLimit }}</strong>;
             </li>
             <li>
-                Максимальный размер файла на источнике &mdash; <strong>{{ max_source_size_kb }}</strong> Кб;
+                Максимальный размер файла на источнике &mdash; <strong>{{ maxSourceSizeKb }}</strong> Кб;
             </li>
         </ul>
 
-        <h5 class="mt-4">Применимо только к маршрутизаторам MikroTik (<em>RouterOS</em>)?</h5>
+        <h4 class="mt-4">Применимо только к маршрутизаторам MikroTik (<em>RouterOS</em>)?</h4>
         <p>
             На данный момент &mdash; да. Но если потребуется дополнительный функционал &mdash; пишите <a
-            :href="feature_request_link" target="_blank">здесь</a>.
+            :href="featureRequestLink" target="_blank">здесь</a>.
         </p>
 
-        <h5 class="mt-4">У меня в таблице DNS есть нужные мне ресурсы. Как быть с ними?</h5>
+        <h4 class="mt-4">У меня в таблице DNS есть нужные мне ресурсы. Как быть с ними?</h4>
         <p>С ними ничего не произойдет, так как импортируемые хосты "помечаются" определенным комментарием. Как
             следствие &mdash; они останутся буз изменений.</p>
 
-        <h5 class="mt-4">Откуда источники хостов?</h5>
+        <h4 class="mt-4">Откуда источники хостов?</h4>
         <p>Используются открытые и обновляемые источники, указанные выше. Более того, вы можете указать свои источники
             (записи в которых имеют формат "<code>%ip_address% %host_name%</code>") доступные "извне" по протоколам:
             <code>http</code> и <code>https</code>. Разместить свой источник можете, например, на <a
@@ -46,21 +46,21 @@
             <strong>RAW</strong> и только, кнопка на "raw" в правом-верхнем углу страницы gist-а).
         </p>
 
-        <h5 class="mt-4">Запускаю указанный выше скрипт и ничего не происходит. Что делать?</h5>
+        <h4 class="mt-4">Запускаю указанный выше скрипт и ничего не происходит. Что делать?</h4>
         <p>Попробуйте выполнить в консоли <code>/system script print from=%имя_скрипта%</code> и проанализировать вывод.
             Работоспособность скрипта была протестирована на <code>RouterOS v6.30.2</code>.</p>
 
-        <h5 class="mt-4">Я указал свой источник, но он не обрабатывается. Почему?</h5>
+        <h4 class="mt-4">Я указал свой источник, но он не обрабатывается. Почему?</h4>
         <p>Указанный вами адрес должен отвечать кодом <strong>2xx</strong> (<em>или 3xx &mdash; но не больше <u>двух</u>
             редиректов</em>). Если при соблюдении этих условий он всё равно не обрабатывается, пожалуйста, напиши об
-            этом <a :href="bug_report_link" target="_blank">вот тут</a>.
+            этом <a :href="bugReportLink" target="_blank">вот тут</a>.
         </p>
 
-        <h5 class="mt-4">Я не хочу, чтоб кто-то имел возможность выполнять произвольный код на моих маршрутизаторах. Но
+        <h4 class="mt-4">Я не хочу, чтоб кто-то имел возможность выполнять произвольный код на моих маршрутизаторах. Но
             идея мне
-            нравится. Что мне делать?</h5>
+            нравится. Что мне делать?</h4>
         <p>Данный "сервис" распространяется под лицензией MIT и исходники <a
-            :href="project_link" target="_blank">находятся в общем доступе</a>. Тебе остается только скачать, настроить
+            :href="projectLink" target="_blank">находятся в общем доступе</a>. Тебе остается только скачать, настроить
             и запустить его на своем ресурсе подконтрольном только тебе.</p>
     </div>
 </template>
@@ -69,42 +69,38 @@
     /* global module */
     module.exports = {
         props: {
-            cache_lifetime_sec: {
+            cacheLifetimeSec: {
                 default: 7200,
                 type: Number
             },
-            max_sources_count: {
+            maxSourcesCount: {
                 default: 8,
                 type: Number
             },
-            max_source_uri_len: {
+            maxSourceUriLen: {
                 default: 256,
                 type: Number
             },
-            excludes_limit: {
+            excludesLimit: {
                 default: 32,
                 type: Number
             },
-            max_source_size_kb: {
+            maxSourceSizeKb: {
                 default: 2048,
                 type: Number
             },
-            feature_request_link: {
+            featureRequestLink: {
                 default: 'https://github.com/tarampampam/mikrotik-hosts-parser/issues/new?template=feature_request.md',
                 type: String
             },
-            bug_report_link: {
+            bugReportLink: {
                 default: 'https://github.com/tarampampam/mikrotik-hosts-parser/issues/new?template=bug_report.md',
                 type: String
             },
-            project_link: {
+            projectLink: {
                 default: 'https://github.com/tarampampam/mikrotik-hosts-parser',
                 type: String
             },
         }
     }
 </script>
-
-<style scoped>
-
-</style>
