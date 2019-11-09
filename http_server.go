@@ -89,7 +89,7 @@ func (s *HttpServer) Start() error {
 
 // Register custom mime types.
 func (*HttpServer) registerCustomMimeTypes() error {
-	return mime.AddExtensionType(".vue", "text/x-template; charset=utf-8")
+	return mime.AddExtensionType(".vue", "text/html; charset=utf-8")
 }
 
 // Stop proxy Server.
