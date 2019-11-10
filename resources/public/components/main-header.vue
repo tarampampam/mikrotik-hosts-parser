@@ -12,6 +12,12 @@
     /* global module */
 
     module.exports = {
+        props: {
+            version: {
+                default: undefined,
+                type: String
+            },
+        },
         data: function () {
             return {}
         },

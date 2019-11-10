@@ -1,44 +1,76 @@
 <template>
     <div class="container">
-        <div v-if="errored" class="alert alert-danger mt-3">
-            <strong>Ooops!</strong> {{ errorMessage }}.
+        <div v-if="this.errored" class="alert alert-danger mt-3">
+            <strong>Ooops!</strong> {{ this.errorMessage }}
         </div>
 
         <main-header></main-header>
 
         <about></about>
 
-        <line-delimiter></line-delimiter>
+        <hr class="delimiter"/>
 
-        <div class="container" v-if="loaded">
+        <div class="container" v-if="this.loaded">
             <fieldset class="form-group">
                 <legend>
                     Источники
                     <button type="button"
                             class="btn btn-outline-info btn-sm border-primary ml-2"
                             v-on:click="addUserSource('', true)"
-                            v-if="sources.length <= maxSourcesCount">
+                            v-if="this.sources.length <= this.maxSourcesCount">
                         <i class="fas fa-plus"></i> Добавить свой источник
                     </button>
                 </legend>
 
                 <div class="form-check pl-1">
-                    <source-checkbox
-                        v-for="source in sources"
+                    <div
+                        v-for="(source, index) in this.sources"
                         v-if="!source.isUserDefined"
-                        :source-name="source.name"
-                        :entries-count="source.count"
-                        :description="source.description"
-                        :source-uri="source.uri"
-                        :checked.sync="source.isChecked"
-                    ></source-checkbox>
+                        class="custom-control custom-checkbox pb-2"
+                    >
+                        <input
+                            type="checkbox"
+                            class="custom-control-input"
+                            :id="index + '_provided'"
+                            v-model="source.isChecked"
+                        />
+                        <label class="custom-control-label text-light" :for="index + '_provided'">
+                            {{ source.name }}
+                            <span v-if="source.count" class="badge badge-primary">~{{ source.count }} записей</span>
 
-                    <user-source-checkbox
-                        v-for="source in sources"
+
+                            <small id="fileHelp" class="form-text text-muted mt-0">
+                                <span v-if="source.description" v-text="source.description + ' - '"></span>
+                                <a :href="source.uri" target="_blank" class="text-muted">
+                                    <code v-text="source.uri"></code> <i class="fas fa-external-link-alt small"></i>
+                                </a>
+                            </small>
+                        </label>
+                    </div>
+
+                    <div
+                        v-for="(source, index) in this.sources"
                         v-if="source.isUserDefined"
-                        :source-uri.sync="source.uri"
-                        :checked.sync="source.isChecked"
-                    ></user-source-checkbox>
+                        class="custom-control custom-checkbox pb-2"
+                    >
+                        <input
+                            type="checkbox"
+                            class="custom-control-input"
+                            v-model="source.isChecked"
+                            :id="index + '_user'"
+                        />
+
+                        <label class="custom-control-label w-100" :for="index + '_user'">
+                            <input
+                                class="form-control form-control-sm bg-transparent border-primary text-light"
+                                type="url"
+                                placeholder="https://example.com/hosts.txt"
+                                v-model="source.uri"
+                                @change="validateSourceUri"
+                                @keyup="validateSourceUri"
+                            />
+                        </label>
+                    </div>
                 </div>
             </fieldset>
 
@@ -57,7 +89,8 @@
                                        placeholder="127.0.0.1"
                                 />
                                 <label class="form-text text-muted"
-                                       for="redirectIp">Укажите IP (v4) адрес, куда перенаправлять запросы</label>
+                                       for="redirectIp">Укажите IP (v4 или v6) адрес, куда перенаправлять
+                                    запросы</label>
                             </div>
                         </div>
                     </fieldset>
@@ -110,19 +143,38 @@
 
             <fieldset class="form-group">
                 <legend>
-                    <h3>Скрипт для маршрутизатора</h3>
+                    Адрес скрипта
+                </legend>
+                <div class="form-check pl-3 pr-3">
+                    <a :href="getScriptGeneratorUri() + '?' + buildScriptUriParams()" target="_blank">
+                        <code
+                            class="font-weight-bolder" style="word-break: break-all"
+                            v-text="getScriptGeneratorUri() + '?' + buildScriptUriParams()"
+                        ></code> <i class="fas fa-external-link-alt small"></i>
+                    </a>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-group">
+                <legend class="h3">
+                    Скрипт для маршрутизатора
                 </legend>
                 <div class="form-check pl-1">
                     <script-source
-                        service-link=""
-                        version=""
-                        script-uri=""
-                        :use-ssl="false"
+                        :service-link="window.location.toString()"
+                        :version="version"
+                        :script-uri="getScriptGeneratorUri() + '?' + buildScriptUriParams()"
+                        :use-ssl="window.location.protocol === 'https:'"
                     ></script-source>
                 </div>
             </fieldset>
 
-            <line-delimiter></line-delimiter>
+            <hr class="delimiter"/>
+        </div>
+        <div v-else>
+            <div class="w-100 text-center mt-5 mb-5">
+                <span class="spinner-border spinner-border-sm mr-1"></span> Загрузка..
+            </div>
         </div>
 
         <faq></faq>
@@ -132,12 +184,15 @@
 </template>
 
 <script>
-    /* global module */
-    /* global axios */
+    'use strict';
 
     const clean = new function () {
         /**
          * Make string cleaning.
+         *
+         * @example
+         *   in:  QWERTYUIOPASDFGHJKLZXCVBNM \n\r\tqwertyuiop[]asdfghjkl;'zxcvbnm,./1234567890-=`~!@#$%^&*()_+ \n\r\t
+         *   out: QWERTYUIOPASDFGHJKLZXCVBNM qwertyuiop[]asdfghjkl;zxcvbnm,./1234567890-=@^*_+
          *
          * @param {string} string
          * @returns {string}
@@ -152,6 +207,10 @@
         /**
          * Make IP address clean.
          *
+         * @example
+         *   in:  qwertyQWERTY1234567890.:~`!@#$%^&*()_+-={}[]\|;"'<>?/
+         *   out: qwertyQWERTY1234567890.:
+         *
          * @param {string} string
          * @returns {string}
          */
@@ -159,74 +218,61 @@
             return string
                 .trim()
                 .replace(/\s\s+/g, ' ')
-                .replace(/[^0-9a-z:\.]/g, '');
+                .replace(/[^0-9a-z:\.]/ig, '');
         };
     };
 
     /**
-     * Source object.
-     *
-     * @typedef {Object} Source
-     * @property {string}  name Human-like source name
-     * @property {string}  uri Source URI
-     * @property {number}  count Approximate source entries count
-     * @property {string}  description Human-like source description
-     * @property {boolean} isChecked Checked state
-     * @property {boolean} isUserDefined Is source defined by user?
-     */
-
-    /**
      * Source object factory.
      *
-     * @param {string} name
      * @param {string} uri
+     * @param {string} name
      * @param {number} count
      * @param {string} desc
      * @param {boolean} isChecked
      * @param {boolean} isUserDefined
      *
-     * @throws {Error} If required parameters not passed.
+     * @throws {Error} If required parameters was not passed.
      *
      * @returns {Source}
      */
-    let sourceFactory = function (name, uri, count, desc, isChecked, isUserDefined) {
-        if (typeof uri === 'undefined') {
+    const NewSource = function (uri, name, count, desc, isChecked, isUserDefined) {
+        if (typeof uri !== 'string') {
             throw Error('Required arguments for factory was not passed');
         }
 
+        /**
+         * @typedef {Object} Source
+         * @property {string}  uri Source URI
+         * @property {string}  name Human-like source name
+         * @property {number}  count Approximate source entries count
+         * @property {string}  description Human-like source description
+         * @property {boolean} isChecked Checked state
+         * @property {boolean} isUserDefined Is source defined by user?
+         */
         return {
-            name: name,
-            uri: uri,
-            count: count,
-            description: desc,
-            isChecked: isChecked || false,
-            isUserDefined: isUserDefined || false,
+            uri: uri.trim(),
+            name: typeof name === "string" ? name.trim() : undefined,
+            count: typeof count === "number" ? count : NaN,
+            description: typeof desc === "string" ? desc.trim() : undefined,
+            isChecked: typeof isChecked === "boolean" ? isChecked : false,
+            isUserDefined: typeof isUserDefined === "boolean" ? isUserDefined : false,
         };
     };
 
+    /* global module */
+    /* global axios */
+
     module.exports = {
         components: {
-            'line-delimiter': 'url:components/line-delimiter.vue',
             'main-header': 'url:components/main-header.vue',
             'about': 'url:components/about.vue',
-            'source-checkbox': 'url:components/source-checkbox.vue',
-            'user-source-checkbox': 'url:components/user-source-checkbox.vue',
             'script-source': 'url:components/script-source.vue',
             'faq': 'url:components/faq.vue',
             'main-footer': 'url:components/main-footer.vue',
         },
 
-        /**
-         * @typedef {Object} AppData
-         * @property {boolean} loaded Loading completed?
-         * @property {boolean} errored Some fatal error occurred?
-         * @property {string} errorMessage Fatal error message
-         * @property {number} maxSourcesCount Maximum sources count
-         * @property {Source[]} sources Source definition objects
-         * @property {string} redirectIp
-         * @property {number} recordsLimit
-         */
-        data: /** @return {AppData} */ function () {
+        data: function () {
             return {
                 loaded: false,
                 errored: false,
@@ -248,6 +294,9 @@
                     'ip6-allrouters',
                     'ip6-allhosts',
                 ],
+                version: 'UNKNOWN_VERSION',
+                format: 'routeros',
+                scriptGeneratorPath: 'script/source',
             }
         },
 
@@ -258,8 +307,8 @@
                  * @param {boolean} isChecked
                  */
                 function (sourceUri, isChecked) {
-                    this.sources.push(sourceFactory(
-                        undefined, sourceUri, NaN, undefined, isChecked, true
+                    this.sources.push(NewSource(
+                        sourceUri, undefined, undefined, undefined, isChecked, true
                     ));
                 },
 
@@ -273,13 +322,94 @@
                     if (typeof event.target.value === "string") {
                         event.target.value.split("\n").forEach(/** @param {string} line */ function (line) {
                             line = clean.string(line);
-                            if (line.length > 0) {
+                            if (line.length > 0 && !line.includes(' ')) {
                                 res.push(line);
                             }
                         })
                     }
 
                     this.excludesList = res;
+                },
+
+            validateSourceUri:
+                /**
+                 * @param {Event} event
+                 */
+                function (event) {
+                    let validated = false;
+                    const $el = event.target,
+                        validClass = 'is-valid',
+                        invalidClass = 'is-invalid';
+
+                    if (typeof $el.value === "string") {
+                        validated = $el.value.match(/^https?:\/\/[a-z0-9-.]+\.[a-z]{2,4}\/?([^\s<>#%",{}\\|\\\^\[\]`]+)?$/) !== null;
+                    }
+
+                    if (validated === true) {
+                        $el.classList.add(validClass);
+                        $el.classList.remove(invalidClass);
+                    } else {
+                        $el.classList.add(invalidClass);
+                        $el.classList.remove(validClass);
+                    }
+                },
+
+            getScriptGeneratorUri:
+                /**
+                 * Get script generator URI.
+                 */
+                function () {
+                    let location = window.location.toString();
+
+                    return location.substring(0, location.lastIndexOf('/'))
+                        + '/' + this.scriptGeneratorPath.toString().replace(/^\//, '');
+                },
+
+            buildScriptUriParams:
+                /**
+                 * Build script generation URI params.
+                 */
+                function () {
+                    let parts = {
+                            format: this.format,
+                            version: this.version,
+                        },
+                        redirectIp = clean.ip(this.redirectIp),
+                        recordsLimit = parseInt(this.recordsLimit, 10);
+
+                    parts['redirect_to'] = redirectIp.length >= 4 ? redirectIp : null;
+                    parts['limit'] = recordsLimit > 0 ? recordsLimit : null;
+                    parts['sources_urls'] = this.sources
+                        .map(/** @param {Source} source */ function (source) {
+                            if (source.isChecked === true) {
+                                return encodeURIComponent(source.uri);
+                            }
+
+                            return null;
+                        })
+                        .filter(/** @param {?Source} source */ function (source) {
+                            return source != null;
+                        })
+                        .join(',');
+                    parts['excluded_hosts'] = this.excludesList
+                        .map(/** @param {string} value */ function (value) {
+                            return encodeURIComponent(value.toString().trim());
+                        })
+                        .join(',');
+
+                    let partsArray = [];
+
+                    // Make clean
+                    for (let part_name in parts) {
+                        if (
+                            parts[part_name] !== null && parts[part_name] !== undefined && parts[part_name] !== []
+                            || (typeof parts[part_name] === 'string' && parts[part_name].length > 0)
+                        ) {
+                            partsArray.push(part_name + '=' + parts[part_name]);
+                        }
+                    }
+
+                    return partsArray.join('&');
                 },
         },
 
@@ -288,10 +418,11 @@
 
             axios
                 .request({method: 'get', url: 'https://httpbin.org/json', timeout: 5000})
+                // .request({method: 'get', url: 'https://httpbin.org/delay/2', timeout: 5000})
                 .then(function (response) {
-                    self.sources.push(sourceFactory('Foo name', 'https://ya.ru/robots.txt', 123, 'Foo desc', true));
-                    self.sources.push(sourceFactory('Bar name', 'https://ya.ru/robots.txt', 123, 'Foo desc', false));
-                    self.sources.push(sourceFactory('Baz name', 'https://ya.ru/robots.txt', 123, 'Foo desc', true));
+                    self.sources.push(NewSource('https://ya.ru/robots.txt', 'Foo name', 123, 'Foo desc', true, false));
+                    self.sources.push(NewSource('https://ya.ru/robots.txt', 'Bar name', 123, 'Foo desc', false, false));
+                    self.sources.push(NewSource('https://ya.ru/robots.txt', 'Baz name', 123, 'Foo desc', true, false));
                     self.loaded = true;
                 })
                 .catch(/** @param {Error} error */ function (error) {
@@ -309,4 +440,10 @@
 </script>
 
 <style scoped>
+    hr.delimiter {
+        border: none;
+        height: 2px;
+        background-image: linear-gradient(to right, #272B30, #2d3238, #272B30);
+        margin: 2em 0 1.5em;
+    }
 </style>

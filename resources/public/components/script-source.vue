@@ -1,6 +1,6 @@
 <template>
     <div>
-        <pre class="script-source hljs routeros">
+        <pre class="script-source hljs routeros mb-0" style="word-wrap: break-word; white-space: pre-wrap">
 ## StopAD - Script for blocking advertisements, based on your defined hosts files<span v-if="serviceLink">
 ## For changing any parameters, please, use this link: {{ serviceLink }}</span>
 ##
