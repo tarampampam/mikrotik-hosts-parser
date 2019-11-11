@@ -2,7 +2,7 @@
     <div class="headline">
         <h1 class="logo text-white">
             <span class="logo"><i class="fas fa-bolt"></i></span>
-            MikroTik StopAD
+            <span :title="version">MikroTik StopAD</span>
             <small>Сделаем рекламы чуть меньше</small>
         </h1>
     </div>

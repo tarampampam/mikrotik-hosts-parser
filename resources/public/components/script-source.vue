@@ -1,6 +1,7 @@
 <template>
     <div>
-        <pre class="script-source mb-0"><code class="routeros">## StopAD - Script for blocking advertisements, based on your defined hosts files<span v-if="serviceLink">
+        <pre ref="source-original" v-show="false">
+## StopAD - Script for blocking advertisements, based on your defined hosts files<span v-if="serviceLink">
 ## For changing any parameters, please, use this link: {{ serviceLink }}</span>
 ##
 ## @github    &lt;{{ projectLink }}&gt;
@@ -32,7 +33,8 @@ do {
   }
 } on-error={
   :log warning "$logPrefix AD block script download FAILED";
-};</code></pre>
+};</pre>
+        <pre class="mb-0"><code class="routeros" ref="source-render"></code></pre>
     </div>
 </template>
 
@@ -79,21 +81,19 @@ do {
             },
         },
 
-        mounted: function () {
-            this.$el.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-            });
-        },
-
         watch: {
-            scriptUri: function () {
-                console.log(this.scriptUri);
-                this.$nextTick(function () {
-                    this.$el.querySelectorAll('pre code').forEach(function (block) {
-                        hljs.highlightBlock(block);
+            '$props': {
+                handler: function () {
+                    this.$nextTick(function () {
+                        const src = this.$refs['source-original'], target = this.$refs['source-render'];
+
+                        target.innerHTML = src.innerHTML; // make html code copying
+                        hljs.highlightBlock(target)
                     });
-                });
-            },
+                },
+                immediate: true,
+                deep: true,
+            }
         },
     }
 </script>

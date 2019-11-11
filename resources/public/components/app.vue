@@ -4,13 +4,13 @@
             <strong>Ooops!</strong> {{ this.errorMessage }}
         </div>
 
-        <main-header></main-header>
+        <main-header :version="version"></main-header>
 
         <about></about>
 
-        <hr class="delimiter"/>
-
         <div class="container" v-if="this.loaded">
+            <hr class="delimiter"/>
+
             <fieldset class="form-group">
                 <legend>
                     Источники
@@ -30,12 +30,12 @@
                         <input
                             type="checkbox"
                             class="custom-control-input"
-                            :id="index + '_provided'"
+                            :id="index + '_source'"
                             v-model="source.isChecked"
                         />
                         <label
                             class="custom-control-label text-light"
-                            :for="index + '_provided'"
+                            :for="index + '_source'"
                             :class="{ 'w-100': source.isUserDefined }"
                         >
                             <div v-if="source.isUserDefined">
@@ -96,7 +96,7 @@
                                        max="100000000"
                                        id="recordsLimit"
                                        class="form-control form-control-sm bg-transparent border-primary text-light"
-                                       v-model="recordsLimit"
+                                       v-model.number="recordsLimit"
                                        placeholder="0"
                                 />
                                 <label class="form-text text-muted" for="recordsLimit">
@@ -176,80 +176,6 @@
 <script>
     'use strict';
 
-    const clean = new function () {
-        /**
-         * Make string cleaning.
-         *
-         * @example
-         *   in:  QWERTYUIOPASDFGHJKLZXCVBNM \n\r\tqwertyuiop[]asdfghjkl;'zxcvbnm,./1234567890-=`~!@#$%^&*()_+ \n\r\t
-         *   out: QWERTYUIOPASDFGHJKLZXCVBNM qwertyuiop[]asdfghjkl;zxcvbnm,./1234567890-=@^*_+
-         *
-         * @param {string} string
-         * @returns {string}
-         */
-        this.string = function (string) {
-            return string
-                .trim()
-                .replace(/\s\s+/g, ' ')
-                .replace(/[^a-zа-яё0-9\*-_\.\s:]/gi, '');
-        };
-
-        /**
-         * Make IP address clean.
-         *
-         * @example
-         *   in:  qwertyQWERTY1234567890.:~`!@#$%^&*()_+-={}[]\|;"'<>?/
-         *   out: qwertyQWERTY1234567890.:
-         *
-         * @param {string} string
-         * @returns {string}
-         */
-        this.ip = function (string) {
-            return string
-                .trim()
-                .replace(/\s\s+/g, ' ')
-                .replace(/[^0-9a-z:\.]/ig, '');
-        };
-    };
-
-    /**
-     * Source object factory.
-     *
-     * @param {string} uri
-     * @param {string} name
-     * @param {number} count
-     * @param {string} desc
-     * @param {boolean} isChecked
-     * @param {boolean} isUserDefined
-     *
-     * @throws {Error} If required parameters was not passed.
-     *
-     * @returns {Source}
-     */
-    const NewSource = function (uri, name, count, desc, isChecked, isUserDefined) {
-        if (typeof uri !== 'string') {
-            throw Error('Required arguments for factory was not passed');
-        }
-
-        /**
-         * @typedef {Object} Source
-         * @property {string}  uri Source URI
-         * @property {string}  name Human-like source name
-         * @property {number}  count Approximate source entries count
-         * @property {string}  description Human-like source description
-         * @property {boolean} isChecked Checked state
-         * @property {boolean} isUserDefined Is source defined by user?
-         */
-        return {
-            uri: uri.trim(),
-            name: typeof name === "string" ? name.trim() : undefined,
-            count: typeof count === "number" ? count : NaN,
-            description: typeof desc === "string" ? desc.trim() : undefined,
-            isChecked: typeof isChecked === "boolean" ? isChecked : false,
-            isUserDefined: typeof isUserDefined === "boolean" ? isUserDefined : false,
-        };
-    };
-
     /* global module */
     /* global axios */
     /* global hljs */
@@ -269,11 +195,6 @@
                 errored: false,
                 errorMessage: 'Something went wrong',
                 maxSourcesCount: 25,
-                projectLink: 'https://github.com/tarampampam/mikrotik-hosts-parser',
-                routerScriptScriptName: 'stop_ad.script',
-                routerScriptBackupFileName: 'before_stopad',
-                routerScriptLogPrefix: '[StopAD]',
-                routerScriptEntriesComment: 'ADBlock',
                 sources: [],
                 redirectIp: '0.0.0.0',
                 recordsLimit: 5000,
@@ -298,13 +219,52 @@
         },
 
         methods: {
+            newSource:
+                /**
+                 * Source object factory.
+                 *
+                 * @param {string} uri
+                 * @param {string} name
+                 * @param {number} count
+                 * @param {string} desc
+                 * @param {boolean} isChecked
+                 * @param {boolean} isUserDefined
+                 *
+                 * @throws {Error} If required parameters was not passed.
+                 *
+                 * @returns {Source}
+                 */
+                function (uri, name, count, desc, isChecked, isUserDefined) {
+                    if (typeof uri !== 'string') {
+                        throw Error('Required arguments for factory was not passed');
+                    }
+
+                    /**
+                     * @typedef {Object} Source
+                     * @property {string}  uri Source URI
+                     * @property {string}  name Human-like source name
+                     * @property {number}  count Approximate source entries count
+                     * @property {string}  description Human-like source description
+                     * @property {boolean} isChecked Checked state
+                     * @property {boolean} isUserDefined Is source defined by user?
+                     */
+                    return {
+                        uri: uri.trim(),
+                        name: typeof name === "string" ? name.trim() : undefined,
+                        count: typeof count === "number" ? count : NaN,
+                        description: typeof desc === "string" ? desc.trim() : undefined,
+                        isChecked: typeof isChecked === "boolean" ? isChecked : false,
+                        isUserDefined: typeof isUserDefined === "boolean" ? isUserDefined : false,
+                    };
+                },
+
             addUserSource:
                 /**
                  * @param {string} sourceUri
                  * @param {boolean} isChecked
                  */
                 function (sourceUri, isChecked) {
-                    this.sources.push(NewSource(
+                    this.sources.push(this.newSource(
                         sourceUri, undefined, undefined, undefined, isChecked, true
                     ));
                 },
@@ -318,7 +278,10 @@
 
                     if (typeof event.target.value === "string") {
                         event.target.value.split("\n").forEach(/** @param {string} line */ function (line) {
-                            line = clean.string(line);
+                            line = line
+                                .trim()
+                                .replace(/\s\s+/g, ' ')
+                                .replace(/[^a-zа-яё0-9\*-_\.\s:]/gi, '');
                             if (line.length > 0 && !line.includes(' ')) {
                                 res.push(line);
                             }
@@ -377,7 +340,10 @@
                             format: this.format,
                             version: this.version,
                         },
-                        redirectIp = clean.ip(this.redirectIp),
+                        redirectIp = this.redirectIp
+                            .trim()
+                            .replace(/\s\s+/g, ' ')
+                            .replace(/[^0-9a-z:\.]/ig, ''),
                         recordsLimit = parseInt(this.recordsLimit, 10);
 
                     parts['redirect_to'] = redirectIp.length >= 4 ? redirectIp : null;
@@ -423,9 +389,9 @@
                 .request({method: 'get', url: 'https://httpbin.org/json', timeout: 5000})
                 // .request({method: 'get', url: 'https://httpbin.org/delay/2', timeout: 5000})
                 .then(function (response) {
-                    self.sources.push(NewSource('https://ya.ru/robots.txt', 'Foo name', 123, 'Foo desc', true, false));
-                    self.sources.push(NewSource('https://ya.ru/robots.txt', 'Bar name', 123, 'Foo desc', false, false));
-                    self.sources.push(NewSource('https://ya.ru/robots.txt', 'Baz name', 123, 'Foo desc', true, false));
+                    self.sources.push(self.newSource('https://ya.ru/robots.txt', 'Foo name', 123, 'Foo desc', true, false));
+                    self.sources.push(self.newSource('https://ya.ru/robots.txt', 'Bar name', 123, 'Foo desc', false, false));
+                    self.sources.push(self.newSource('https://ya.ru/robots.txt', 'Baz name', 123, 'Foo desc', true, false));
                     self.loaded = true;
                 })
                 .catch(/** @param {Error} error */ function (error) {
