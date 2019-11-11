@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"mikrotik-hosts-parser/http"
 	"mikrotik-hosts-parser/options"
 	"os"
 	"time"
@@ -23,7 +24,7 @@ func main() {
 	// Parse options and make all checks
 	opts.Parse()
 
-	server := NewServer(&HttpServerSettings{
+	server := http.NewServer(&http.ServerSettings{
 		Host:             opts.Address,
 		Port:             opts.Port,
 		PublicDir:        opts.ResourcesDir,

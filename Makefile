@@ -36,10 +36,10 @@ gofmt: ## Run gofmt tool
 	$(DC_BIN) run $(DC_RUN_ARGS) gofmt -s -w .
 
 test: ## Run app tests
-	$(DC_BIN) run $(DC_RUN_ARGS) go test -v -race
+	$(DC_BIN) run $(DC_RUN_ARGS) go test -v -race ./...
 
 cover: ## Run app tests
-	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'go test -v -covermode=count -coverprofile /tmp/cp.out && go tool cover -html=/tmp/cp.out -o ./coverage.html'
+	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'go test -v -covermode=count -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'
 	-sensible-browser ./coverage.html && sleep 1 && rm -f ./coverage.html
 
 run: ## Run app without building binary file
