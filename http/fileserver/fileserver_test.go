@@ -1,7 +1,8 @@
-package main
+package fileserver
 
 import (
 	"io/ioutil"
+	"mikrotik-hosts-parser/resources"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestHttpFileServer_ServeHTTP(t *testing.T) {
+func TestFileServer_ServeHTTP(t *testing.T) {
 	t.Parallel()
 
 	// Create directory in temporary
@@ -28,7 +29,7 @@ func TestHttpFileServer_ServeHTTP(t *testing.T) {
 		giveDirs            []string
 		giveFiles           map[string][]byte
 		giveResources       map[string][]byte
-		giveNotFoundHandler HttpFileNotFoundHandler
+		giveNotFoundHandler FileNotFoundHandler
 		giveIndexFile       string
 		giveResourcesPrefix string
 		giveError404file    string
@@ -253,20 +254,20 @@ func TestHttpFileServer_ServeHTTP(t *testing.T) {
 				root = ""
 			}
 
-			resources := newResourceBox()
+			box := resources.NewResourceBox()
 
-			// Create resources
+			// Create box
 			for name, content := range tt.giveResources {
-				resources.Add(name, content)
+				box.Add(name, content)
 			}
 
-			fileServer := &HttpFileServer{
-				root:            root,
-				resources:       resources,
+			fileServer := &FileServer{
+				Root:            root,
+				Resources:       box,
 				NotFoundHandler: tt.giveNotFoundHandler,
-				indexFile:       tt.giveIndexFile,
-				resourcesPrefix: tt.giveResourcesPrefix,
-				error404file:    tt.giveError404file,
+				IndexFile:       tt.giveIndexFile,
+				ResourcesPrefix: tt.giveResourcesPrefix,
+				Error404file:    tt.giveError404file,
 			}
 
 			var (

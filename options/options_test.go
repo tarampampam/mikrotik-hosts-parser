@@ -1,4 +1,4 @@
-package main
+package options
 
 import (
 	"bytes"
@@ -142,7 +142,7 @@ func TestOptions_Parse(t *testing.T) {
 	var (
 		exited   bool
 		exitCode int
-		exitFunc OptionsExitFunc = func(code int) {
+		exitFunc ExitFunc = func(code int) {
 			exited = true
 			exitCode = code
 		}
@@ -189,12 +189,20 @@ func TestOptions_Parse(t *testing.T) {
 			//wantStdMessages: []string{"Usage:", "Application Options:", "Help Options:"},
 		},
 		{
-			name:            "Version requested",
-			options:         options,
+			name: "Version requested",
+			options: &Options{
+				Address:    "127.0.0.1",
+				Port:       8080,
+				version:    "1.2.3",
+				onExit:     exitFunc,
+				errLog:     errLog,
+				stdLog:     stdLog,
+				parseFlags: flags.PassDoubleDash | flags.HelpFlag,
+			},
 			osArgs:          []string{"app", "-V"},
 			wantExit:        true,
 			wantExitCode:    0,
-			wantStdMessages: []string{"Version", VERSION},
+			wantStdMessages: []string{"Version", "1.2.3"},
 		},
 		{
 			name:            "Known argument with wrong value",
@@ -350,10 +358,10 @@ func TestNewOptions(t *testing.T) {
 	}
 
 	var (
-		onExit OptionsExitFunc = func(code int) {}
-		errLog                 = log.New(&bytes.Buffer{}, "", 0)
-		stdLog                 = log.New(&bytes.Buffer{}, "", 0)
-		o                      = NewOptions(stdLog, errLog, onExit)
+		onExit ExitFunc = func(code int) {}
+		errLog          = log.New(&bytes.Buffer{}, "", 0)
+		stdLog          = log.New(&bytes.Buffer{}, "", 0)
+		o               = NewOptions(stdLog, errLog, "", onExit)
 	)
 
 	if !compare(o.onExit, onExit) {

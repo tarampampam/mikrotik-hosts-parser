@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"errors"
@@ -8,14 +8,14 @@ import (
 	"testing"
 )
 
-func BenchmarkHostsFileParser_ParseLargeFile(b *testing.B) {
+func BenchmarkParser_ParseLargeFile(b *testing.B) {
 	file, err := os.Open(".tests/hosts/ad_servers.txt")
 	if err != nil {
 		panic(err)
 	}
 
 	for n := 0; n < b.N; n++ {
-		_, _ = (&HostsFileParser{}).Parse(file)
+		_, _ = (&Parser{}).Parse(file)
 	}
 
 	if err := file.Close(); err != nil {
@@ -32,42 +32,42 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 		wantHostNames int
 	}{
 		{
-			filepath:      ".tests/hosts/ad_servers.txt",
+			filepath:      "../../.tests/hosts/ad_servers.txt",
 			wantRecords:   45739,
 			wantHostNames: 45739,
 		},
 		{
-			filepath:      ".tests/hosts/block_shit.txt",
+			filepath:      "../../.tests/hosts/block_shit.txt",
 			wantRecords:   109,
 			wantHostNames: 109,
 		},
 		{
-			filepath:      ".tests/hosts/hosts_adaway.txt",
+			filepath:      "../../.tests/hosts/hosts_adaway.txt",
 			wantRecords:   411,
 			wantHostNames: 411,
 		},
 		{
-			filepath:      ".tests/hosts/hosts_malwaredomain.txt",
+			filepath:      "../../.tests/hosts/hosts_malwaredomain.txt",
 			wantRecords:   1106,
 			wantHostNames: 1106,
 		},
 		{
-			filepath:      ".tests/hosts/hosts_someonewhocares.txt", // broken entry `127.0.0.1 secret.ɢoogle.com`
+			filepath:      "../../.tests/hosts/hosts_someonewhocares.txt", // broken entry `127.0.0.1 secret.ɢoogle.com`
 			wantRecords:   14308,
 			wantHostNames: 14309, // ::1 [ip6-localhost ip6-loopback]
 		},
 		{
-			filepath:      ".tests/hosts/hosts_winhelp2002.txt",
+			filepath:      "../../.tests/hosts/hosts_winhelp2002.txt",
 			wantRecords:   11829,
 			wantHostNames: 11829,
 		},
 		{
-			filepath:      ".tests/hosts/serverlist.txt",
+			filepath:      "../../.tests/hosts/serverlist.txt",
 			wantRecords:   3064,
 			wantHostNames: 3064,
 		},
 		{
-			filepath:      ".tests/hosts/spy.txt",
+			filepath:      "../../.tests/hosts/spy.txt",
 			wantRecords:   367,
 			wantHostNames: 367,
 		},
@@ -82,7 +82,7 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 				panic(err)
 			}
 
-			res, parseErr := (&HostsFileParser{}).Parse(file)
+			res, parseErr := (&Parser{}).Parse(file)
 
 			if parseErr != nil {
 				t.Error(parseErr)
@@ -112,7 +112,7 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 	}
 }
 
-func TestHostsFileParser_validateHostname(t *testing.T) {
+func TestParser_validateHostname(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -197,7 +197,7 @@ func TestHostsFileParser_validateHostname(t *testing.T) {
 		},
 	}
 
-	parser := &HostsFileParser{}
+	parser := &Parser{}
 
 	for _, tt := range cases {
 		t.Run("Using "+tt.hostname, func(t *testing.T) {
@@ -213,7 +213,7 @@ func TestHostsFileParser_validateHostname(t *testing.T) {
 	}
 }
 
-func TestHostsFileParser_parseRawLine(t *testing.T) {
+func TestParser_parseRawLine(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -333,7 +333,7 @@ func TestHostsFileParser_parseRawLine(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run("Using "+tt.line, func(t *testing.T) {
-			res, err := (&HostsFileParser{}).parseRawLine(tt.line)
+			res, err := (&Parser{}).parseRawLine(tt.line)
 
 			if tt.wantError != nil && err.Error() != tt.wantError.Error() {
 				t.Errorf(`Want error "%v", but got "%v"`, tt.wantError, err)
@@ -360,7 +360,7 @@ func TestHostsFileParser_parseRawLine(t *testing.T) {
 	}
 }
 
-func TestHostsFileParser_startsWithRune(t *testing.T) {
+func TestParser_startsWithRune(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -397,7 +397,7 @@ func TestHostsFileParser_startsWithRune(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run("Using "+tt.giveString, func(t *testing.T) {
-			res := (&HostsFileParser{}).startsWithRune(tt.giveString, tt.giveRune)
+			res := (&Parser{}).startsWithRune(tt.giveString, tt.giveRune)
 
 			if tt.wantResult != res {
 				t.Errorf(`Want result "%v", but got "%v"`, tt.wantResult, res)

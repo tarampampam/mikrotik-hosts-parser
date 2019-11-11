@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"mikrotik-hosts-parser/http"
+	"mikrotik-hosts-parser/options"
 	"os"
 	"time"
 )
@@ -15,19 +17,19 @@ func main() {
 	)
 
 	// Precess CLI options
-	options := NewOptions(stdLog, errLog, func(code int) {
+	opts := options.NewOptions(stdLog, errLog, VERSION, func(code int) {
 		os.Exit(code)
 	})
 
 	// Parse options and make all checks
-	options.Parse()
+	opts.Parse()
 
-	server := NewServer(&HttpServerSettings{
-		Host:             options.Address,
-		Port:             options.Port,
-		PublicDir:        options.ResourcesDir,
-		IndexFile:        options.IndexFileName,
-		Error404File:     options.Error404FileName,
+	server := http.NewServer(&http.ServerSettings{
+		Host:             opts.Address,
+		Port:             opts.Port,
+		PublicDir:        opts.ResourcesDir,
+		IndexFile:        opts.IndexFileName,
+		Error404File:     opts.Error404FileName,
 		WriteTimeout:     time.Second * 15,
 		ReadTimeout:      time.Second * 15,
 		KeepAliveEnabled: false,
