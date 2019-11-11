@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mikrotik-hosts-parser/resources"
 	"net/http"
 	"os"
 	"path"
@@ -17,7 +18,7 @@ type (
 
 	HttpFileServer struct {
 		root            http.Dir
-		resources       ResourcesBox            // optionally, but strongly recommended
+		resources       resources.Box           // optionally, but strongly recommended
 		NotFoundHandler HttpFileNotFoundHandler // optionally
 		indexFile       string
 		resourcesPrefix string

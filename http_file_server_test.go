@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"mikrotik-hosts-parser/resources"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -253,16 +254,16 @@ func TestHttpFileServer_ServeHTTP(t *testing.T) {
 				root = ""
 			}
 
-			resources := newResourceBox()
+			box := resources.NewResourceBox()
 
-			// Create resources
+			// Create box
 			for name, content := range tt.giveResources {
-				resources.Add(name, content)
+				box.Add(name, content)
 			}
 
 			fileServer := &HttpFileServer{
 				root:            root,
-				resources:       resources,
+				resources:       box,
 				NotFoundHandler: tt.giveNotFoundHandler,
 				indexFile:       tt.giveIndexFile,
 				resourcesPrefix: tt.giveResourcesPrefix,

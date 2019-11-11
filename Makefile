@@ -14,7 +14,7 @@ DC_RUN_ARGS = --rm --user "$(shell id -u):$(shell id -g)" app
 APP_NAME = $(notdir $(CURDIR))
 GO_RUN_ARGS ?=
 
-.PHONY : help build update gofmt test cover run shell image clean
+.PHONY : help gen build update gofmt test cover run shell image clean
 .DEFAULT_GOAL : help
 .SILENT : test shell
 
@@ -26,8 +26,10 @@ help: ## Show this help
 update: ## Update modules (safe)
 	$(DC_BIN) run $(DC_RUN_ARGS) go get -u
 
-build: ## Build app binary file
+gen: ## Generate required files
 	$(DC_BIN) run $(DC_RUN_ARGS) go generate ./...
+
+build: gen ## Build app binary file
 	$(DC_BIN) run $(DC_RUN_ARGS) go build -ldflags=$(LDFLAGS) -o './$(APP_NAME)' .
 
 gofmt: ## Run gofmt tool

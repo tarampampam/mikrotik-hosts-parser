@@ -1,4 +1,4 @@
-package main
+package resources
 
 import (
 	"reflect"
@@ -8,27 +8,27 @@ import (
 func Test_newResourceBox(t *testing.T) {
 	t.Parallel()
 
-	got, ok := newResourceBox().(ResourcesBox)
+	got, ok := NewResourceBox().(Box)
 
 	if !ok {
-		t.Errorf("newResourceBox() = %v, want %v", got, "ResourcesBox")
+		t.Errorf("NewResourceBox() = %v, want %v", got, "Box")
 	}
 }
 
 func Test_ResourcesVariable(t *testing.T) {
 	t.Parallel()
 
-	got, ok := Resources.(ResourcesBox)
+	got, ok := Resources.(Box)
 
 	if !ok {
-		t.Errorf("Resources = %v, want %v", got, "ResourcesBox")
+		t.Errorf("Resources = %v, want %v", got, "Box")
 	}
 }
 
 func Test_resourcesBox_Get(t *testing.T) {
 	t.Parallel()
 
-	resources := newResourceBox()
+	resources := NewResourceBox()
 
 	content, ok := resources.Get("foo")
 
@@ -57,7 +57,7 @@ func Test_resourcesBox_Get(t *testing.T) {
 func Test_resourcesBox_Has(t *testing.T) {
 	t.Parallel()
 
-	resources := newResourceBox()
+	resources := NewResourceBox()
 
 	if resources.Has("foo") {
 		t.Error("Non-existing element must returns FALSE")

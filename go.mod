@@ -11,4 +11,5 @@ replace (
 	github.com/tarampampam/mikrotik-hosts-parser/hostsfile => ../hostsfile
 	github.com/tarampampam/mikrotik-hosts-parser/hostsfile/parser => ../hostsfile/parser
 	github.com/tarampampam/mikrotik-hosts-parser/options => ../options
+	github.com/tarampampam/mikrotik-hosts-parser/resources => ../resources
 )

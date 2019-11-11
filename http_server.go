@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"log"
+	"mikrotik-hosts-parser/resources"
 	"mime"
 	"net/http"
 	"os"
@@ -69,9 +70,9 @@ func (s *HttpServer) RegisterHandlers() {
 	s.Router.PathPrefix("/").
 		Handler(&HttpFileServer{
 			root:            http.Dir(s.Settings.PublicDir),
-			resources:       Resources,
+			resources:       resources.Resources,
 			indexFile:       "index.html",
-			resourcesPrefix: "/public",
+			resourcesPrefix: "/data/public",
 			error404file:    "404.html",
 		}).
 		Name("static")
