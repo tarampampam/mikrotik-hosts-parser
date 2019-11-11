@@ -1,4 +1,4 @@
-## Etc
+# Etc
 127.0.0.1 cdn.mbstatic.org
 127.0.0.1 adselector.ru
 127.0.0.1 pluso.ru

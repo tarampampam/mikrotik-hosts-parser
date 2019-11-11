@@ -22,4 +22,4 @@ about: Some entries in basic hosts file (provided by this project) need to be up
 
 > ### Pull request with changes
 >
-> You can create pull request with any changes by [following this link](https://github.com/tarampampam/mikrotik-hosts-parser/edit/master/docs/hosts/basic.txt). After this action do not forget leave a link in PR description on this issue.
+> You can create pull request with any changes by [following this link](https://github.com/tarampampam/mikrotik-hosts-parser/edit/master/hosts/basic.txt). After this action do not forget leave a link in PR description on this issue.

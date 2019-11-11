@@ -6,15 +6,20 @@ import (
 	"strings"
 )
 
-// Structure that can be "rendered" in RouterOS script format.
-type MikrotikDnsStaticEntry struct {
-	Address  string `comment:"IP address" property:"address" examples:"0.0.0.0"`
-	Comment  string `comment:"Short description of the item" property:"comment" examples:"Any text"`
-	Disabled bool   `comment:"Defines whether item is ignored or used" property:"disabled" examples:"yes,no"`
-	Name     string `comment:"Host name" property:"name" examples:"www.example.com"`
-	Regexp   string `property:"regexp" examples:".*\\.example\\.com"`
-	TTL      string `comment:"Time To Live" property:"ttl" examples:"1d"` // @todo: Need more examples
-}
+type (
+	// Structure that can be "rendered" in RouterOS script format.
+	MikrotikDnsStaticEntry struct {
+		Address  string `comment:"IP address" property:"address" examples:"0.0.0.0"`
+		Comment  string `comment:"Short description of the item" property:"comment" examples:"Any text"`
+		Disabled bool   `comment:"Defines whether item is ignored or used" property:"disabled" examples:"yes,no"`
+		Name     string `comment:"Host name" property:"name" examples:"www.example.com"`
+		Regexp   string `property:"regexp" examples:".*\\.example\\.com"`
+		TTL      string `comment:"Time To Live" property:"ttl" examples:"1d"` // @todo: Need more examples
+	}
+
+	// "Render-able" structure
+	MikrotikDnsStaticEntries []MikrotikDnsStaticEntry
+)
 
 type (
 	// Single entry "rendering" options.
@@ -28,9 +33,6 @@ type (
 		RenderEntryOptions
 		RenderEmpty bool
 	}
-
-	// "Render-able" structure
-	MikrotikDnsStaticEntries []MikrotikDnsStaticEntry
 )
 
 // Render mikrotik static dns entry and write it into some writer. Returned values is count of wrote bytes and error,

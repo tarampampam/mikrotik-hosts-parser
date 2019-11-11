@@ -359,3 +359,49 @@ func TestHostsFileParser_parseRawLine(t *testing.T) {
 		})
 	}
 }
+
+func TestHostsFileParser_startsWithRune(t *testing.T) {
+	t.Parallel()
+
+	var cases = []struct {
+		giveString string
+		giveRune   rune
+		wantResult bool
+	}{
+		{
+			giveString: "! foo",
+			giveRune:   '!',
+			wantResult: true,
+		},
+		{
+			giveString: " ! foo",
+			giveRune:   '!',
+			wantResult: false,
+		},
+		{
+			giveString: "abracadabra",
+			giveRune:   'a',
+			wantResult: true,
+		},
+		{
+			giveString: "",
+			giveRune:   'a',
+			wantResult: false,
+		},
+		{
+			giveString: "",
+			giveRune:   ' ',
+			wantResult: false,
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run("Using "+tt.giveString, func(t *testing.T) {
+			res := (&HostsFileParser{}).startsWithRune(tt.giveString, tt.giveRune)
+
+			if tt.wantResult != res {
+				t.Errorf(`Want result "%v", but got "%v"`, tt.wantResult, res)
+			}
+		})
+	}
+}

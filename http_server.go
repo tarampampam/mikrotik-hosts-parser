@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"strconv"
@@ -79,8 +80,16 @@ func (s *HttpServer) RegisterHandlers() {
 // Start proxy Server.
 func (s *HttpServer) Start() error {
 	s.startTime = time.Now()
+	if err := s.registerCustomMimeTypes(); err != nil {
+		panic(err)
+	}
 	s.stdLog.Println("Starting Server on " + s.Server.Addr)
 	return s.Server.ListenAndServe()
+}
+
+// Register custom mime types.
+func (*HttpServer) registerCustomMimeTypes() error {
+	return mime.AddExtensionType(".vue", "text/html; charset=utf-8")
 }
 
 // Stop proxy Server.

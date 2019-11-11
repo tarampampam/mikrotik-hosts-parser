@@ -1,4 +1,0 @@
-/* @see <https://stackoverflow.com/a/36187668/2252921> */
-[v-cloak] > * {
-    display: none;
-}
