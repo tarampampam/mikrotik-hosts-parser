@@ -50,7 +50,7 @@
                             </div>
                             <div v-else>
                                 {{ source.name }}
-                                <span v-if="source.count" class="badge badge-primary">~{{ source.count }} записей</span>
+                                <span v-if="source.count && source.count > 0" class="badge badge-primary">~{{ source.count }} записей</span>
 
                                 <small id="fileHelp" class="form-text text-muted mt-0">
                                     <span v-if="source.description">{{ source.description }} &mdash; </span>
@@ -203,13 +203,6 @@
                     'localhost.localdomain',
                     'broadcasthost',
                     'local',
-                    'ip6-localhost',
-                    'ip6-loopback',
-                    'ip6-localnet',
-                    'ip6-mcastprefix',
-                    'ip6-allnodes',
-                    'ip6-allrouters',
-                    'ip6-allhosts',
                 ],
                 version: 'UNKNOWN_VERSION',
                 format: 'routeros',
@@ -385,14 +378,137 @@
         mounted: function () {
             const self = this;
 
+            /**
+             * @typedef {Object} AxiosResponse
+             * @property {Object} data       Response data
+             * @property {number} status     HTTP status code
+             * @property {string} statusText HTTP status message
+             * @property {Object} headers    Headers that the server responded with. All header names are lower cased
+             * @property {Object} config     Config that was provided to `axios` for the request
+             * @property {Object} request    Request that generated this response
+             */
+
             axios
                 .request({method: 'get', url: 'https://httpbin.org/json', timeout: 5000})
                 // .request({method: 'get', url: 'https://httpbin.org/delay/2', timeout: 5000})
-                .then(function (response) {
-                    self.sources.push(self.newSource('https://ya.ru/robots.txt', 'Foo name', 123, 'Foo desc', true, false));
-                    self.sources.push(self.newSource('https://ya.ru/robots.txt', 'Bar name', 123, 'Foo desc', false, false));
-                    self.sources.push(self.newSource('https://ya.ru/robots.txt', 'Baz name', 123, 'Foo desc', true, false));
-                    self.loaded = true;
+                .then(/** @param {AxiosResponse} response */ function (response) {
+                    // <debug> ONLY FOR TEST
+                    response.data = {
+                        settings: {
+                            sources: {
+                                provided: [
+                                    {
+                                        uri: "https://ya.ru/robots.txt",
+                                        name: "Foo name",
+                                        description: "Foo desc",
+                                        default: true,
+                                        count: 123,
+                                    },
+                                    {
+                                        uri: "https://ya.ru/robots.txt",
+                                        name: "Bar name",
+                                        description: "Bar desc",
+                                        default: false,
+                                        count: 321,
+                                    },
+                                ],
+                                max: 35,
+                            },
+                            redirect: {
+                                addr: "1.0.0.0"
+                            },
+                            records: {
+                                limit: 6000,
+                            },
+                            excludes: {
+                                hosts: [
+                                    'localhost',
+                                    'localhost.localdomain',
+                                    'broadcasthost',
+                                    'local',
+                                    'ip6-localhost',
+                                    'ip6-loopback',
+                                    'ip6-localnet',
+                                    'ip6-mcastprefix',
+                                    'ip6-allnodes',
+                                    'ip6-allrouters',
+                                    'ip6-allhosts',
+                                ]
+                            },
+                        },
+                        version: "3.0.0",
+                        routes: {
+                            script_generator: {
+                                path: "script/source"
+                            }
+                        },
+                    };
+                    // </debug> ONLY FOR TEST
+                    console.log(response.data);
+
+                    // @link: <https://stackoverflow.com/a/33445095>
+                    response.data.hasOwnNestedProperty = /** @param {string} path */ function (path) {
+                        if (typeof path !== "string" || path.length <= 0) {
+                            return false;
+                        }
+
+                        for (let i = 0, properties = path.split('.'), obj = this; i < properties.length; i++) {
+                            let prop = properties[i];
+
+                            if (!obj || !obj.hasOwnProperty(prop)) {
+                                return false;
+                            } else {
+                                obj = obj[prop];
+                            }
+                        }
+
+                        return true;
+                    };
+
+                    // Append sources
+                    if (response.data.hasOwnNestedProperty('settings.sources.provided')) {
+                        /**
+                         * @typedef {Object} RawSourceData
+                         * @property {string} uri
+                         * @property {string} name
+                         * @property {string} description
+                         * @property {boolean} default
+                         * @property {number} count
+                         */
+                        response.data.settings.sources.provided.forEach(/** @param {RawSourceData} s */ function (s) {
+                            self.sources.push(self.newSource(
+                                s.uri,
+                                s.name,
+                                s.count,
+                                s.description,
+                                s.default,
+                            ));
+                        });
+                    }
+
+                    if (response.data.hasOwnNestedProperty('settings.sources.max')) {
+                        self.maxSourcesCount = response.data.settings.sources.max;
+                    }
+
+                    if (response.data.hasOwnNestedProperty('settings.redirect.addr')) {
+                        self.redirectIp = response.data.settings.redirect.addr;
+                    }
+
+                    if (response.data.hasOwnNestedProperty('settings.records.limit')) {
+                        self.recordsLimit = response.data.settings.records.limit;
+                    }
+
+                    if (response.data.hasOwnNestedProperty('settings.excludes.hosts')) {
+                        self.excludesList = response.data.settings.excludes.hosts;
+                    }
+
+                    if (response.data.hasOwnNestedProperty('version')) {
+                        self.version = response.data.version;
+                    }
+
+                    if (response.data.hasOwnNestedProperty('routes.script_generator.path')) {
+                        self.scriptGeneratorPath = response.data.routes.script_generator.path;
+                    }
                 })
                 .catch(/** @param {Error} error */ function (error) {
                     self.errored = true;
