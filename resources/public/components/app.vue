@@ -444,7 +444,6 @@
                         },
                     };
                     // </debug> ONLY FOR TEST
-                    console.log(response.data);
 
                     // @link: <https://stackoverflow.com/a/33445095>
                     response.data.hasOwnNestedProperty = /** @param {string} path */ function (path) {
@@ -487,7 +486,7 @@
                     }
 
                     if (response.data.hasOwnNestedProperty('settings.sources.max')) {
-                        self.maxSourcesCount = response.data.settings.sources.max;
+                        self.maxSourcesCount = parseInt(response.data.settings.sources.max, 10);
                     }
 
                     if (response.data.hasOwnNestedProperty('settings.redirect.addr')) {
@@ -495,7 +494,7 @@
                     }
 
                     if (response.data.hasOwnNestedProperty('settings.records.limit')) {
-                        self.recordsLimit = response.data.settings.records.limit;
+                        self.recordsLimit = parseInt(response.data.settings.records.limit, 10);
                     }
 
                     if (response.data.hasOwnNestedProperty('settings.excludes.hosts')) {
