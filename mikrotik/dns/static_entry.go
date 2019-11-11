@@ -1,4 +1,4 @@
-package main
+package dns
 
 import (
 	"io"
@@ -8,7 +8,7 @@ import (
 
 type (
 	// Structure that can be "rendered" in RouterOS script format.
-	MikrotikDnsStaticEntry struct {
+	StaticEntry struct {
 		Address  string `comment:"IP address" property:"address" examples:"0.0.0.0"`
 		Comment  string `comment:"Short description of the item" property:"comment" examples:"Any text"`
 		Disabled bool   `comment:"Defines whether item is ignored or used" property:"disabled" examples:"yes,no"`
@@ -18,7 +18,7 @@ type (
 	}
 
 	// "Render-able" structure
-	MikrotikDnsStaticEntries []MikrotikDnsStaticEntry
+	StaticEntries []StaticEntry
 )
 
 type (
@@ -37,12 +37,12 @@ type (
 
 // Render mikrotik static dns entry and write it into some writer. Returned values is count of wrote bytes and error,
 // if something goes wrong
-func (e MikrotikDnsStaticEntries) Render(to io.Writer, options *RenderOptions) (int, error) {
+func (e StaticEntries) Render(to io.Writer, options *RenderOptions) (int, error) {
 	const propertyTag string = "property"
 
 	var (
 		wroteTotal = 0
-		ref        = reflect.TypeOf(MikrotikDnsStaticEntry{})
+		ref        = reflect.TypeOf(StaticEntry{})
 		address    = e.getStructTagValue(ref, "Address", propertyTag)
 		comment    = e.getStructTagValue(ref, "Comment", propertyTag)
 		disabled   = e.getStructTagValue(ref, "Disabled", propertyTag)
@@ -119,12 +119,12 @@ func (e MikrotikDnsStaticEntries) Render(to io.Writer, options *RenderOptions) (
 }
 
 // Escape string value chars for using in rendering.
-func (MikrotikDnsStaticEntries) escapeString(s string) string {
+func (StaticEntries) escapeString(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, `\`, ``), `"`, `\"`)
 }
 
 // Small helper for getting structure tag value.
-func (MikrotikDnsStaticEntries) getStructTagValue(r reflect.Type, field, tag string) string {
+func (StaticEntries) getStructTagValue(r reflect.Type, field, tag string) string {
 	if field, ok := r.FieldByName(field); ok {
 		val, _ := field.Tag.Lookup(tag)
 

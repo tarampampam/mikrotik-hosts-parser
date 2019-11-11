@@ -1,4 +1,4 @@
-package main
+package dns
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 	}{
 		{
 			element: func() reflect.StructField {
-				field, _ := reflect.TypeOf(MikrotikDnsStaticEntry{}).FieldByName("Address")
+				field, _ := reflect.TypeOf(StaticEntry{}).FieldByName("Address")
 				return field
 			},
 			wantComment:  "IP address",
@@ -24,7 +24,7 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 		},
 		{
 			element: func() reflect.StructField {
-				field, _ := reflect.TypeOf(MikrotikDnsStaticEntry{}).FieldByName("Comment")
+				field, _ := reflect.TypeOf(StaticEntry{}).FieldByName("Comment")
 				return field
 			},
 			wantComment:  "Short description of the item",
@@ -32,7 +32,7 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 		},
 		{
 			element: func() reflect.StructField {
-				field, _ := reflect.TypeOf(MikrotikDnsStaticEntry{}).FieldByName("Disabled")
+				field, _ := reflect.TypeOf(StaticEntry{}).FieldByName("Disabled")
 				return field
 			},
 			wantComment:  "Defines whether item is ignored or used",
@@ -40,7 +40,7 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 		},
 		{
 			element: func() reflect.StructField {
-				field, _ := reflect.TypeOf(MikrotikDnsStaticEntry{}).FieldByName("Name")
+				field, _ := reflect.TypeOf(StaticEntry{}).FieldByName("Name")
 				return field
 			},
 			wantComment:  "Host name",
@@ -48,14 +48,14 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 		},
 		{
 			element: func() reflect.StructField {
-				field, _ := reflect.TypeOf(MikrotikDnsStaticEntry{}).FieldByName("Regexp")
+				field, _ := reflect.TypeOf(StaticEntry{}).FieldByName("Regexp")
 				return field
 			},
 			wantProperty: "regexp",
 		},
 		{
 			element: func() reflect.StructField {
-				field, _ := reflect.TypeOf(MikrotikDnsStaticEntry{}).FieldByName("TTL")
+				field, _ := reflect.TypeOf(StaticEntry{}).FieldByName("TTL")
 				return field
 			},
 			wantComment:  "Time To Live",
@@ -85,20 +85,20 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 	tests := []struct {
 		name          string
-		entries       *MikrotikDnsStaticEntries
+		entries       *StaticEntries
 		renderOptions *RenderOptions
 		wantResult    string
 		wantError     error
 	}{
 		{
 			name:          "Empty input",
-			entries:       &MikrotikDnsStaticEntries{{}},
+			entries:       &StaticEntries{{}},
 			renderOptions: &RenderOptions{},
 			wantResult:    "",
 		},
 		{
 			name: "Address with comment",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address: "0.0.0.0",
 				Comment: "foo comment",
 			}},
@@ -107,7 +107,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Two entries with addresses",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address: "0.0.0.0",
 			}, {
 				Address: "8.8.8.8",
@@ -117,7 +117,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Two entries (one is empty)",
-			entries: &MikrotikDnsStaticEntries{{}, {
+			entries: &StaticEntries{{}, {
 				Address: "8.8.8.8",
 			}},
 			renderOptions: &RenderOptions{},
@@ -126,7 +126,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Two entries with Prefix and Postfix",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address: "0.0.0.0",
 			}, {
 				Address: "8.8.8.8",
@@ -141,7 +141,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Entry with all fields",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address:  "1.2.3.4",
 				Comment:  "foo comment",
 				Disabled: true,
@@ -154,7 +154,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Force empty fields render",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address: "1.2.3.4",
 			}},
 			renderOptions: &RenderOptions{
@@ -164,7 +164,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Regular use-case with address, name and comment",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address: "1.2.3.4",
 				Comment: "Foo comment",
 				Name:    "Foo entry",
@@ -179,7 +179,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 		},
 		{
 			name: "Entry with all fields with unescaped values",
-			entries: &MikrotikDnsStaticEntries{{
+			entries: &StaticEntries{{
 				Address:  "1.2.3.4",
 				Comment:  `foo \"bar\" "baz"`,
 				Disabled: true,
@@ -220,7 +220,7 @@ func TestMikrotikDnsStaticEntries_escapeString(t *testing.T) {
 		{in: `foo \\"bar\\"`, wantOut: `foo \"bar\"`},
 	}
 
-	entries := MikrotikDnsStaticEntries{}
+	entries := StaticEntries{}
 
 	for _, tt := range tests {
 		t.Run(tt.in, func(t *testing.T) {
@@ -236,7 +236,7 @@ func TestMikrotikDnsStaticEntries_getStructTagValue(t *testing.T) {
 		F string `one:"1" blank:""`
 	}
 
-	entries := MikrotikDnsStaticEntries{}
+	entries := StaticEntries{}
 	ref := reflect.TypeOf(T{})
 
 	if r := entries.getStructTagValue(ref, "F", "one"); r != "1" {
