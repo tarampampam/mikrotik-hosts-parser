@@ -8,14 +8,14 @@ import (
 	"testing"
 )
 
-func BenchmarkHostsFileParser_ParseLargeFile(b *testing.B) {
+func BenchmarkParser_ParseLargeFile(b *testing.B) {
 	file, err := os.Open(".tests/hosts/ad_servers.txt")
 	if err != nil {
 		panic(err)
 	}
 
 	for n := 0; n < b.N; n++ {
-		_, _ = (&HostsFileParser{}).Parse(file)
+		_, _ = (&Parser{}).Parse(file)
 	}
 
 	if err := file.Close(); err != nil {
@@ -82,7 +82,7 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 				panic(err)
 			}
 
-			res, parseErr := (&HostsFileParser{}).Parse(file)
+			res, parseErr := (&Parser{}).Parse(file)
 
 			if parseErr != nil {
 				t.Error(parseErr)
@@ -112,7 +112,7 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 	}
 }
 
-func TestHostsFileParser_validateHostname(t *testing.T) {
+func TestParser_validateHostname(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -197,7 +197,7 @@ func TestHostsFileParser_validateHostname(t *testing.T) {
 		},
 	}
 
-	parser := &HostsFileParser{}
+	parser := &Parser{}
 
 	for _, tt := range cases {
 		t.Run("Using "+tt.hostname, func(t *testing.T) {
@@ -213,7 +213,7 @@ func TestHostsFileParser_validateHostname(t *testing.T) {
 	}
 }
 
-func TestHostsFileParser_parseRawLine(t *testing.T) {
+func TestParser_parseRawLine(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -333,7 +333,7 @@ func TestHostsFileParser_parseRawLine(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run("Using "+tt.line, func(t *testing.T) {
-			res, err := (&HostsFileParser{}).parseRawLine(tt.line)
+			res, err := (&Parser{}).parseRawLine(tt.line)
 
 			if tt.wantError != nil && err.Error() != tt.wantError.Error() {
 				t.Errorf(`Want error "%v", but got "%v"`, tt.wantError, err)
@@ -360,7 +360,7 @@ func TestHostsFileParser_parseRawLine(t *testing.T) {
 	}
 }
 
-func TestHostsFileParser_startsWithRune(t *testing.T) {
+func TestParser_startsWithRune(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -397,7 +397,7 @@ func TestHostsFileParser_startsWithRune(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run("Using "+tt.giveString, func(t *testing.T) {
-			res := (&HostsFileParser{}).startsWithRune(tt.giveString, tt.giveRune)
+			res := (&Parser{}).startsWithRune(tt.giveString, tt.giveRune)
 
 			if tt.wantResult != res {
 				t.Errorf(`Want result "%v", but got "%v"`, tt.wantResult, res)

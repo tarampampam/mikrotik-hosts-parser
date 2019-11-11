@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestMikrotikDnsStaticEntry(t *testing.T) {
+func TestStaticEntry(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -82,7 +82,7 @@ func TestMikrotikDnsStaticEntry(t *testing.T) {
 	}
 }
 
-func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
+func TestStaticEntries_Render(t *testing.T) {
 	tests := []struct {
 		name          string
 		entries       *StaticEntries
@@ -211,7 +211,7 @@ func TestMikrotikDnsStaticEntries_Render(t *testing.T) {
 	}
 }
 
-func TestMikrotikDnsStaticEntries_escapeString(t *testing.T) {
+func TestStaticEntries_escapeString(t *testing.T) {
 	tests := []struct {
 		in, wantOut string
 	}{
@@ -231,7 +231,7 @@ func TestMikrotikDnsStaticEntries_escapeString(t *testing.T) {
 	}
 }
 
-func TestMikrotikDnsStaticEntries_getStructTagValue(t *testing.T) {
+func TestStaticEntries_getStructTagValue(t *testing.T) {
 	type T struct {
 		F string `one:"1" blank:""`
 	}

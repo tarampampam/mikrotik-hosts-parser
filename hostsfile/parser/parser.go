@@ -11,12 +11,12 @@ import (
 )
 
 // Hosts file parser
-type HostsFileParser struct {
+type Parser struct {
 	hostValidate *regexp.Regexp
 }
 
 // Parse input and return slice of pointers (hosts file entries).
-func (p *HostsFileParser) Parse(in io.Reader) ([]*hostsfile.Record, error) {
+func (p *Parser) Parse(in io.Reader) ([]*hostsfile.Record, error) {
 	var (
 		result []*hostsfile.Record
 		scan   = bufio.NewScanner(in)
@@ -37,7 +37,7 @@ func (p *HostsFileParser) Parse(in io.Reader) ([]*hostsfile.Record, error) {
 }
 
 // Validate hostname using regexp.
-func (p *HostsFileParser) validateHostname(host string) bool {
+func (p *Parser) validateHostname(host string) bool {
 	// Lazy regexp init
 	if p.hostValidate == nil {
 		// @link: https://stackoverflow.com/a/26987741
@@ -48,7 +48,7 @@ func (p *HostsFileParser) validateHostname(host string) bool {
 }
 
 // Parse raw hosts file line into record.
-func (p *HostsFileParser) parseRawLine(line string) (*hostsfile.Record, error) {
+func (p *Parser) parseRawLine(line string) (*hostsfile.Record, error) {
 	const delimiter rune = '#'
 
 	// Trim whitespaces
@@ -91,6 +91,6 @@ func (p *HostsFileParser) parseRawLine(line string) (*hostsfile.Record, error) {
 }
 
 // startsWithRune make a check for string starts with passed rune
-func (p *HostsFileParser) startsWithRune(s string, r rune) bool {
+func (p *Parser) startsWithRune(s string, r rune) bool {
 	return len(s) >= 1 && []rune(s)[0] == r
 }
