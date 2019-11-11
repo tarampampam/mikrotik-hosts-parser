@@ -1,7 +1,6 @@
 <template>
     <div>
-        <pre class="script-source hljs routeros mb-0" style="word-wrap: break-word; white-space: pre-wrap">
-## StopAD - Script for blocking advertisements, based on your defined hosts files<span v-if="serviceLink">
+        <pre class="script-source mb-0"><code class="routeros">## StopAD - Script for blocking advertisements, based on your defined hosts files<span v-if="serviceLink">
 ## For changing any parameters, please, use this link: {{ serviceLink }}</span>
 ##
 ## @github    &lt;{{ projectLink }}&gt;
@@ -33,7 +32,7 @@ do {
   }
 } on-error={
   :log warning "$logPrefix AD block script download FAILED";
-};</pre>
+};</code></pre>
     </div>
 </template>
 
@@ -79,16 +78,30 @@ do {
                 type: Boolean
             },
         },
+
         mounted: function () {
-            this.$el.querySelectorAll('pre').forEach((block) => {
+            this.$el.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightBlock(block);
             });
+        },
+
+        watch: {
+            scriptUri: function () {
+                console.log(this.scriptUri);
+                this.$nextTick(function () {
+                    this.$el.querySelectorAll('pre code').forEach(function (block) {
+                        hljs.highlightBlock(block);
+                    });
+                });
+            },
         },
     }
 </script>
 
 <style scoped>
-    pre {
+    pre, pre code {
         background-color: transparent;
+        word-wrap: break-word;
+        white-space: pre-wrap;
     }
 </style>

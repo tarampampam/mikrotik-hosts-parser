@@ -25,7 +25,6 @@
                 <div class="form-check pl-1">
                     <div
                         v-for="(source, index) in this.sources"
-                        v-if="!source.isUserDefined"
                         class="custom-control custom-checkbox pb-2"
                     >
                         <input
@@ -34,41 +33,32 @@
                             :id="index + '_provided'"
                             v-model="source.isChecked"
                         />
-                        <label class="custom-control-label text-light" :for="index + '_provided'">
-                            {{ source.name }}
-                            <span v-if="source.count" class="badge badge-primary">~{{ source.count }} записей</span>
+                        <label
+                            class="custom-control-label text-light"
+                            :for="index + '_provided'"
+                            :class="{ 'w-100': source.isUserDefined }"
+                        >
+                            <div v-if="source.isUserDefined">
+                                <input
+                                    class="form-control form-control-sm bg-transparent border-primary text-light"
+                                    type="url"
+                                    placeholder="https://example.com/hosts.txt"
+                                    v-model="source.uri"
+                                    @change="validateSourceUri"
+                                    @keyup="validateSourceUri"
+                                />
+                            </div>
+                            <div v-else>
+                                {{ source.name }}
+                                <span v-if="source.count" class="badge badge-primary">~{{ source.count }} записей</span>
 
-
-                            <small id="fileHelp" class="form-text text-muted mt-0">
-                                <span v-if="source.description" v-text="source.description + ' - '"></span>
-                                <a :href="source.uri" target="_blank" class="text-muted">
-                                    <code v-text="source.uri"></code> <i class="fas fa-external-link-alt small"></i>
-                                </a>
-                            </small>
-                        </label>
-                    </div>
-
-                    <div
-                        v-for="(source, index) in this.sources"
-                        v-if="source.isUserDefined"
-                        class="custom-control custom-checkbox pb-2"
-                    >
-                        <input
-                            type="checkbox"
-                            class="custom-control-input"
-                            v-model="source.isChecked"
-                            :id="index + '_user'"
-                        />
-
-                        <label class="custom-control-label w-100" :for="index + '_user'">
-                            <input
-                                class="form-control form-control-sm bg-transparent border-primary text-light"
-                                type="url"
-                                placeholder="https://example.com/hosts.txt"
-                                v-model="source.uri"
-                                @change="validateSourceUri"
-                                @keyup="validateSourceUri"
-                            />
+                                <small id="fileHelp" class="form-text text-muted mt-0">
+                                    <span v-if="source.description">{{ source.description }} &mdash; </span>
+                                    <a :href="source.uri" target="_blank" class="text-muted">
+                                        <code v-text="source.uri"></code> <i class="fas fa-external-link-alt small"></i>
+                                    </a>
+                                </small>
+                            </div>
                         </label>
                     </div>
                 </div>
@@ -88,9 +78,9 @@
                                        v-model="redirectIp"
                                        placeholder="127.0.0.1"
                                 />
-                                <label class="form-text text-muted"
-                                       for="redirectIp">Укажите IP (v4 или v6) адрес, куда перенаправлять
-                                    запросы</label>
+                                <label class="form-text text-muted" for="redirectIp">
+                                    Укажите IP (v4 или v6) адрес, куда перенаправлять запросы
+                                </label>
                             </div>
                         </div>
                     </fieldset>
@@ -103,13 +93,15 @@
                             <div class="form-group">
                                 <input type="number"
                                        min="0"
+                                       max="100000000"
                                        id="recordsLimit"
                                        class="form-control form-control-sm bg-transparent border-primary text-light"
                                        v-model="recordsLimit"
                                        placeholder="0"
                                 />
-                                <label class="form-text text-muted"
-                                       for="recordsLimit">Укажите максимальное количество возвращаемых записей</label>
+                                <label class="form-text text-muted" for="recordsLimit">
+                                    Укажите максимальное количество возвращаемых записей
+                                </label>
                             </div>
                         </div>
                     </fieldset>
@@ -123,15 +115,14 @@
                         <div class="form-check pl-0">
                             <div class="form-group">
                                 <textarea
-                                    class="form-control bg-transparent border-primary text-light p-1 pl-2 pr-2 pb-2 min"
+                                    class="form-control bg-transparent border-primary text-light p-1 pl-2 pr-2 pb-2"
                                     id="excludesList"
                                     placeholder="adserver.yahoo.com"
                                     rows="6"
                                     @change="updateExcludesList"
                                     @keyup="updateExcludesList"
                                 >{{ excludesList.join('\n') }}</textarea>
-                                <label class="form-text text-muted"
-                                       for="excludesList">
+                                <label class="form-text text-muted" for="excludesList">
                                     Можете указать те хосты, которые необходимо исключить из итогового скрипта,
                                     одна строка для одного хоста
                                 </label>
@@ -146,11 +137,10 @@
                     Адрес скрипта
                 </legend>
                 <div class="form-check pl-3 pr-3">
-                    <a :href="getScriptGeneratorUri() + '?' + buildScriptUriParams()" target="_blank">
+                    <a :href="getScriptGeneratorUri()" target="_blank">
                         <code
                             class="font-weight-bolder" style="word-break: break-all"
-                            v-text="getScriptGeneratorUri() + '?' + buildScriptUriParams()"
-                        ></code> <i class="fas fa-external-link-alt small"></i>
+                        >{{ getScriptGeneratorUri() }}</code> <i class="fas fa-external-link-alt small"></i>
                     </a>
                 </div>
             </fieldset>
@@ -163,8 +153,8 @@
                     <script-source
                         :service-link="window.location.toString()"
                         :version="version"
-                        :script-uri="getScriptGeneratorUri() + '?' + buildScriptUriParams()"
-                        :use-ssl="window.location.protocol === 'https:'"
+                        :script-uri="getScriptGeneratorUri()"
+                        :use-ssl="useSsl"
                     ></script-source>
                 </div>
             </fieldset>
@@ -262,6 +252,7 @@
 
     /* global module */
     /* global axios */
+    /* global hljs */
 
     module.exports = {
         components: {
@@ -278,6 +269,11 @@
                 errored: false,
                 errorMessage: 'Something went wrong',
                 maxSourcesCount: 25,
+                projectLink: 'https://github.com/tarampampam/mikrotik-hosts-parser',
+                routerScriptScriptName: 'stop_ad.script',
+                routerScriptBackupFileName: 'before_stopad',
+                routerScriptLogPrefix: '[StopAD]',
+                routerScriptEntriesComment: 'ADBlock',
                 sources: [],
                 redirectIp: '0.0.0.0',
                 recordsLimit: 5000,
@@ -297,6 +293,7 @@
                 version: 'UNKNOWN_VERSION',
                 format: 'routeros',
                 scriptGeneratorPath: 'script/source',
+                useSsl: window.location.protocol === 'https:',
             }
         },
 
@@ -357,17 +354,23 @@
             getScriptGeneratorUri:
                 /**
                  * Get script generator URI.
+                 *
+                 * @return {string}
                  */
                 function () {
                     let location = window.location.toString();
-
-                    return location.substring(0, location.lastIndexOf('/'))
+                    let baseUri = location.substring(0, location.lastIndexOf('/'))
                         + '/' + this.scriptGeneratorPath.toString().replace(/^\//, '');
+                    let params = this.getScriptUriParams();
+
+                    return baseUri + (params.length > 0 ? '?' + params : '');
                 },
 
-            buildScriptUriParams:
+            getScriptUriParams:
                 /**
                  * Build script generation URI params.
+                 *
+                 * @return {string}
                  */
                 function () {
                     let parts = {
@@ -381,7 +384,7 @@
                     parts['limit'] = recordsLimit > 0 ? recordsLimit : null;
                     parts['sources_urls'] = this.sources
                         .map(/** @param {Source} source */ function (source) {
-                            if (source.isChecked === true) {
+                            if (source.isChecked === true && source.uri !== '') {
                                 return encodeURIComponent(source.uri);
                             }
 
@@ -445,5 +448,9 @@
         height: 2px;
         background-image: linear-gradient(to right, #272B30, #2d3238, #272B30);
         margin: 2em 0 1.5em;
+    }
+
+    pre {
+        background-color: transparent;
     }
 </style>

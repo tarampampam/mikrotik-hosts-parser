@@ -18,9 +18,6 @@
                 type: String
             },
         },
-        data: function () {
-            return {}
-        },
     };
 </script>
 
