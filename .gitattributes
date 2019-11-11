@@ -2,8 +2,10 @@
 
 /.github            export-ignore
 /docker*            export-ignore
+/.docker*           export-ignore
 /CODE_OF_CONDUCT.md export-ignore
 /.git*              export-ignore
+/.editorconfig      export-ignore
 /.*.yml             export-ignore
 /Makefile           export-ignore
 /Dockerfile         export-ignore
