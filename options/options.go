@@ -1,4 +1,4 @@
-package main
+package options
 
 import (
 	"errors"
@@ -17,14 +17,15 @@ type Options struct {
 	ShowVersion      bool   `short:"V" long:"version" description:"Show version and exit"`
 	stdLog           *log.Logger
 	errLog           *log.Logger
-	onExit           OptionsExitFunc
+	onExit           ExitFunc
 	parseFlags       flags.Options
+	Version 		 string
 }
 
-type OptionsExitFunc func(code int)
+type ExitFunc func(code int)
 
 // Create new options instance.
-func NewOptions(stdOut, stdErr *log.Logger, onExit OptionsExitFunc) *Options {
+func NewOptions(stdOut, stdErr *log.Logger, onExit ExitFunc) *Options {
 	if onExit == nil {
 		onExit = func(code int) {
 			os.Exit(code)
@@ -55,7 +56,7 @@ func (o *Options) Parse() *flags.Parser {
 
 	// show application version and exit, if flag `-V` passed
 	if o.ShowVersion == true {
-		o.stdLog.Println("Version: " + VERSION)
+		o.stdLog.Println("Version: " + o.Version)
 		o.onExit(0)
 	}
 
