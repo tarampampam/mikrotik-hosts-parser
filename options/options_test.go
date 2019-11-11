@@ -193,7 +193,7 @@ func TestOptions_Parse(t *testing.T) {
 			options: &Options{
 				Address:    "127.0.0.1",
 				Port:       8080,
-				Version:    "1.2.3",
+				version:    "1.2.3",
 				onExit:     exitFunc,
 				errLog:     errLog,
 				stdLog:     stdLog,
@@ -361,7 +361,7 @@ func TestNewOptions(t *testing.T) {
 		onExit ExitFunc = func(code int) {}
 		errLog          = log.New(&bytes.Buffer{}, "", 0)
 		stdLog          = log.New(&bytes.Buffer{}, "", 0)
-		o               = NewOptions(stdLog, errLog, onExit)
+		o               = NewOptions(stdLog, errLog, "", onExit)
 	)
 
 	if !compare(o.onExit, onExit) {

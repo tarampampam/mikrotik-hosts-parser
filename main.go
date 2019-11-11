@@ -16,11 +16,9 @@ func main() {
 	)
 
 	// Precess CLI options
-	opts := options.NewOptions(stdLog, errLog, func(code int) {
+	opts := options.NewOptions(stdLog, errLog, VERSION, func(code int) {
 		os.Exit(code)
 	})
-
-	opts.Version = VERSION
 
 	// Parse options and make all checks
 	opts.Parse()

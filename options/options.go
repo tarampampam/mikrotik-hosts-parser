@@ -19,13 +19,13 @@ type Options struct {
 	errLog           *log.Logger
 	onExit           ExitFunc
 	parseFlags       flags.Options
-	Version 		 string
+	version          string
 }
 
 type ExitFunc func(code int)
 
 // Create new options instance.
-func NewOptions(stdOut, stdErr *log.Logger, onExit ExitFunc) *Options {
+func NewOptions(stdOut, stdErr *log.Logger, version string, onExit ExitFunc) *Options {
 	if onExit == nil {
 		onExit = func(code int) {
 			os.Exit(code)
@@ -36,6 +36,7 @@ func NewOptions(stdOut, stdErr *log.Logger, onExit ExitFunc) *Options {
 		errLog:     stdErr,
 		onExit:     onExit,
 		parseFlags: flags.Default,
+		version:    version,
 	}
 }
 
@@ -56,7 +57,7 @@ func (o *Options) Parse() *flags.Parser {
 
 	// show application version and exit, if flag `-V` passed
 	if o.ShowVersion == true {
-		o.stdLog.Println("Version: " + o.Version)
+		o.stdLog.Println("Version: " + o.version)
 		o.onExit(0)
 	}
 

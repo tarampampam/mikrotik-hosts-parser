@@ -1,31 +1,24 @@
-package main
+package parser
 
 import (
 	"bufio"
 	"errors"
 	"io"
+	"mikrotik-hosts-parser/hostsfile"
 	"net"
 	"regexp"
 	"strings"
 )
 
-type (
-	// Hosts file record
-	HostsFileRecord struct {
-		IP    net.IP
-		Hosts []string
-	}
-
-	// Hosts file parser
-	HostsFileParser struct {
-		hostValidate *regexp.Regexp
-	}
-)
+// Hosts file parser
+type HostsFileParser struct {
+	hostValidate *regexp.Regexp
+}
 
 // Parse input and return slice of pointers (hosts file entries).
-func (p *HostsFileParser) Parse(in io.Reader) ([]*HostsFileRecord, error) {
+func (p *HostsFileParser) Parse(in io.Reader) ([]*hostsfile.Record, error) {
 	var (
-		result []*HostsFileRecord
+		result []*hostsfile.Record
 		scan   = bufio.NewScanner(in)
 	)
 
@@ -55,7 +48,7 @@ func (p *HostsFileParser) validateHostname(host string) bool {
 }
 
 // Parse raw hosts file line into record.
-func (p *HostsFileParser) parseRawLine(line string) (*HostsFileRecord, error) {
+func (p *HostsFileParser) parseRawLine(line string) (*hostsfile.Record, error) {
 	const delimiter rune = '#'
 
 	// Trim whitespaces
@@ -94,7 +87,7 @@ func (p *HostsFileParser) parseRawLine(line string) (*HostsFileRecord, error) {
 		return nil, errors.New("hosts line parser: hosts not found")
 	}
 
-	return &HostsFileRecord{IP: ip, Hosts: hosts}, nil
+	return &hostsfile.Record{IP: ip, Hosts: hosts}, nil
 }
 
 // startsWithRune make a check for string starts with passed rune

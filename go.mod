@@ -7,4 +7,8 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 )
 
-replace github.com/tarampampam/mikrotik-hosts-parser/options => ../options
+replace (
+	github.com/tarampampam/mikrotik-hosts-parser/hostsfile => ../hostsfile
+	github.com/tarampampam/mikrotik-hosts-parser/hostsfile/parser => ../hostsfile/parser
+	github.com/tarampampam/mikrotik-hosts-parser/options => ../options
+)
