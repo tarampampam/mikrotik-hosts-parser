@@ -37,18 +37,16 @@ type (
 
 // Render mikrotik static dns entry and write it into some writer. Returned values is count of wrote bytes and error,
 // if something goes wrong
-func (e StaticEntries) Render(to io.Writer, options *RenderOptions) (int, error) {
-	const propertyTag string = "property"
-
+func (e StaticEntries) Render(to io.Writer, options *RenderOptions) (int, error) { //nolint:gocyclo
 	var (
 		wroteTotal = 0
 		ref        = reflect.TypeOf(StaticEntry{})
-		address    = e.getStructTagValue(ref, "Address", propertyTag)
-		comment    = e.getStructTagValue(ref, "Comment", propertyTag)
-		disabled   = e.getStructTagValue(ref, "Disabled", propertyTag)
-		name       = e.getStructTagValue(ref, "Name", propertyTag)
-		regexp     = e.getStructTagValue(ref, "Regexp", propertyTag)
-		ttl        = e.getStructTagValue(ref, "TTL", propertyTag)
+		address    = e.getStructPropertyValue(ref, "Address")
+		comment    = e.getStructPropertyValue(ref, "Comment")
+		disabled   = e.getStructPropertyValue(ref, "Disabled")
+		name       = e.getStructPropertyValue(ref, "Name")
+		regexp     = e.getStructPropertyValue(ref, "Regexp")
+		ttl        = e.getStructPropertyValue(ref, "TTL")
 	)
 
 	var buf []byte
@@ -124,9 +122,11 @@ func (StaticEntries) escapeString(s string) string {
 }
 
 // Small helper for getting structure tag value.
-func (StaticEntries) getStructTagValue(r reflect.Type, field, tag string) string {
+func (StaticEntries) getStructPropertyValue(r reflect.Type, field string) string {
+	const propertyTag string = "property"
+
 	if field, ok := r.FieldByName(field); ok {
-		val, _ := field.Tag.Lookup(tag)
+		val, _ := field.Tag.Lookup(propertyTag)
 
 		return val
 	}

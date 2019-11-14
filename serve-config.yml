@@ -1,0 +1,75 @@
+# Allowed environment variables format: <https://github.com/a8m/envsubst#docs>
+
+listen:
+  address: ${LISTEN_ADDR:-0.0.0.0}
+  port: ${LISTEN_PORT:-8080}
+
+resources:
+  dir: ${RESOURCES_DIR}
+  index_name: index.html
+  error_404_name: 404.html
+
+sources:
+  - uri: https://cdn.jsdelivr.net/gh/tarampampam/mikrotik-hosts-parser@master/.hosts/basic.txt
+    name: Basic hosts list
+    description: AD hosts list, provided by this application
+    enabled: true
+  - uri: https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt
+    name: WindowsSpyBlocker
+    description: Windows telemetry services
+    enabled: false
+    count: 360
+  - uri: https://adaway.org/hosts.txt
+    name: AdAway default blocklist
+    description: Blocking mobile ad providers and some analytics providers
+    enabled: true
+    count: 400
+  - uri: https://www.malwaredomainlist.com/hostslist/hosts.txt
+    name: Malware domain list
+    enabled: true
+    count: 1100
+  - uri: https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext
+    name: AD servers by yoyo.org
+    description: Block ads, trackers, and other nasty things
+    enabled: true
+    count: 3000
+  - uri: https://someonewhocares.org/hosts/hosts
+    name: someonewhocares.org
+    description: AD servers list by Dan Pollock
+    enabled: false
+    count: 14500
+  - uri: http://winhelp2002.mvps.org/hosts.txt
+    name: winhelp2002.mvps.org
+    description: MVPS HOSTS file
+    enabled: false
+    count: 12000
+  - uri: https://hosts-file.net/ad_servers.txt
+    name: hpHosts
+    description: Ad and Tracking servers only
+    enabled: false
+    count: 46000
+
+cache:
+  files:
+    dir: ${TMPDIR:-/tmp}
+  lifetime_sec: ${CACHE_LIFETIME_SEC:-10}
+
+router_script:
+  redirect:
+    address: 127.0.0.1
+  exclude:
+    hosts:
+      - localhost
+      - localhost.localdomain
+      - broadcasthost
+      - local
+      - ip6-localhost
+      - ip6-loopback
+      - ip6-localnet
+      - ip6-mcastprefix
+      - ip6-allnodes
+      - ip6-allrouters
+      - ip6-allhosts
+  comment: ADBlock
+  max_sources: ${MAX_SOURCES_COUNT:-8}
+  max_source_size: ${MAX_SOURCES_SIZE:-2097152} # In bytes; 2048 Kb by default

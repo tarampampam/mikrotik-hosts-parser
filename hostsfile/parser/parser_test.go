@@ -94,8 +94,7 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 
 			var hostsCount int = 0
 			for _, p := range res {
-				hostsCount = hostsCount + len(p.Hosts)
-				//fmt.Printf("%s\t%s\n", p.IP.String(), p.Hosts[0])
+				hostsCount += len(p.Hosts)
 				if len(p.Hosts) > 1 {
 					fmt.Println(p.IP, p.Hosts)
 				}
@@ -213,7 +212,7 @@ func TestParser_validateHostname(t *testing.T) {
 	}
 }
 
-func TestParser_parseRawLine(t *testing.T) {
+func TestParser_parseRawLine(t *testing.T) { //nolint:funlen
 	t.Parallel()
 
 	var cases = []struct {

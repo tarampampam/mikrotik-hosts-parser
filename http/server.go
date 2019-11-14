@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"log"
 	"mikrotik-hosts-parser/http/fileserver"
 	"mikrotik-hosts-parser/resources"
@@ -12,6 +11,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type (

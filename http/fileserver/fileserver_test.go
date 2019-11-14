@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestFileServer_ServeHTTP(t *testing.T) {
+func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
 	t.Parallel()
 
 	// Create directory in temporary
@@ -33,7 +33,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 		giveIndexFile       string
 		giveResourcesPrefix string
 		giveError404file    string
-		giveRequestUri      string
+		giveRequestURI      string
 		giveRequestMethod   string
 		wantResponseCode    int
 		wantResponseBody    []byte
@@ -45,7 +45,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveFiles: map[string][]byte{
 				"test1.txt": []byte("test content"),
 			},
-			giveRequestUri:    "/test1.txt",
+			giveRequestURI:    "/test1.txt",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusOK,
 			wantResponseBody:  []byte("test content"),
@@ -56,7 +56,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveFiles: map[string][]byte{
 				"test1.html": []byte("<html>test content</html>"),
 			},
-			giveRequestUri:    "/test1.html",
+			giveRequestURI:    "/test1.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusOK,
 			wantResponseBody:  []byte("<html>test content</html>"),
@@ -67,7 +67,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveResources: map[string][]byte{
 				"/test1.txt": []byte("test content"),
 			},
-			giveRequestUri:    "/test1.txt",
+			giveRequestURI:    "/test1.txt",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusOK,
 			wantResponseBody:  []byte("test content"),
@@ -78,7 +78,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveResources: map[string][]byte{
 				"/test1.html": []byte("<html>test content</html>"),
 			},
-			giveRequestUri:    "/test1.html",
+			giveRequestURI:    "/test1.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusOK,
 			wantResponseBody:  []byte("<html>test content</html>"),
@@ -92,7 +92,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveResources: map[string][]byte{
 				"/test1.txt": []byte("from resource"),
 			},
-			giveRequestUri:    "/test1.txt",
+			giveRequestURI:    "/test1.txt",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusOK,
 			wantResponseBody:  []byte("from file"),
@@ -101,7 +101,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 		{
 			name:              "Redirect from .../index.html to .../",
 			giveIndexFile:     "indx.html",
-			giveRequestUri:    "/indx.html",
+			giveRequestURI:    "/indx.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusMovedPermanently,
 			wantRedirectTo:    "/",
@@ -109,7 +109,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 		{
 			name:              "Redirect from .../index.html to .../ insime some directory",
 			giveIndexFile:     "indx.html",
-			giveRequestUri:    "/some/indx.html",
+			giveRequestURI:    "/some/indx.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusMovedPermanently,
 			wantRedirectTo:    "/some/",
@@ -120,7 +120,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 				"indx.html": []byte("test content"),
 			},
 			giveIndexFile:     "indx.html",
-			giveRequestUri:    "",
+			giveRequestURI:    "",
 			giveRequestMethod: "GET",
 			wantResponseBody:  []byte("test content"),
 			wantResponseCode:  http.StatusOK,
@@ -134,7 +134,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 				filepath.Join("foo", "indx.html"): []byte("index in foo"),
 			},
 			giveIndexFile:     "indx.html",
-			giveRequestUri:    "/foo/",
+			giveRequestURI:    "/foo/",
 			giveRequestMethod: "GET",
 			wantResponseBody:  []byte("index in foo"),
 			wantResponseCode:  http.StatusOK,
@@ -148,18 +148,18 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 				filepath.Join("foo", "indx.html"): []byte("index in foo"),
 			},
 			giveIndexFile:     "indx.html",
-			giveRequestUri:    "/foo",
+			giveRequestURI:    "/foo",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusNotFound,
 		},
 		{
 			name:              "NotFoundHandler handling",
 			giveIndexFile:     "indx.html",
-			giveRequestUri:    "/foo",
+			giveRequestURI:    "/foo",
 			giveRequestMethod: "GET",
 			giveNotFoundHandler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(444)
-				w.Write([]byte("foo bar"))
+				_, _ = w.Write([]byte("foo bar"))
 				w.Header().Set("Content-Type", "blah blah")
 			},
 			wantResponseCode: 444,
@@ -171,7 +171,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveFiles: map[string][]byte{
 				"404.html": []byte("error 404 file"),
 			},
-			giveRequestUri:    "/foo",
+			giveRequestURI:    "/foo",
 			giveError404file:  "404.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusNotFound,
@@ -183,7 +183,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveResources: map[string][]byte{
 				"/404.html": []byte("error 404 resource"),
 			},
-			giveRequestUri:    "/foo",
+			giveRequestURI:    "/foo",
 			giveError404file:  "404.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusNotFound,
@@ -198,7 +198,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			giveResources: map[string][]byte{
 				"/404.html": []byte("from resource"),
 			},
-			giveRequestUri:    "/foo",
+			giveRequestURI:    "/foo",
 			giveError404file:  "404.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusNotFound,
@@ -206,8 +206,8 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			wantContentType:   "text/html; charset=utf-8",
 		},
 		{
-			name:              "Error 404 fail-back",
-			giveRequestUri:    "/foo",
+			name:              "Error 404 fallback",
+			giveRequestURI:    "/foo",
 			giveError404file:  "404.html",
 			giveRequestMethod: "GET",
 			wantResponseCode:  http.StatusNotFound,
@@ -271,7 +271,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			}
 
 			var (
-				req, _ = http.NewRequest(tt.giveRequestMethod, tt.giveRequestUri, nil)
+				req, _ = http.NewRequest(tt.giveRequestMethod, tt.giveRequestURI, nil)
 				rr     = httptest.NewRecorder()
 			)
 
@@ -292,8 +292,6 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			if rt := rr.Header().Get("Location"); tt.wantRedirectTo != "" && tt.wantRedirectTo != rt {
 				t.Errorf("Wrong redirect to location. Want %s, got %s", tt.wantRedirectTo, rt)
 			}
-
-			//t.Log(rr)
 		})
 	}
 }

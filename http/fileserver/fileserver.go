@@ -27,7 +27,7 @@ type (
 )
 
 // Serve requests to the "public" files and directories.
-func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,funlen
 	// redirect .../index.html to .../
 	if strings.HasSuffix(r.URL.Path, "/"+fileServer.IndexFile) {
 		http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fileServer.IndexFile)], http.StatusMovedPermanently)
@@ -74,7 +74,7 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 				if info, err := f.Stat(); err == nil {
 					modTime = info.ModTime()
 				} else {
-					modTime = time.Now() // fail-back
+					modTime = time.Now() // fallback
 				}
 				// serve fie content
 				http.ServeContent(
@@ -146,7 +146,7 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// fail-back
+	// fallback
 	if _, err := fmt.Fprint(w, "<html><body><h1>ERROR 404</h1><h2>Requested file was not found</h2></body></html>"); err != nil {
 		panic(err)
 	}

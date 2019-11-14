@@ -82,7 +82,7 @@ func TestStaticEntry(t *testing.T) {
 	}
 }
 
-func TestStaticEntries_Render(t *testing.T) {
+func TestStaticEntries_Render(t *testing.T) { //nolint:funlen
 	tests := []struct {
 		name          string
 		entries       *StaticEntries
@@ -233,25 +233,23 @@ func TestStaticEntries_escapeString(t *testing.T) {
 
 func TestStaticEntries_getStructTagValue(t *testing.T) {
 	type T struct {
-		F string `one:"1" blank:""`
+		A1 string `property:"1"`
+		A2 string `property:""`
+		A3 string `bar:""`
 	}
 
 	entries := StaticEntries{}
 	ref := reflect.TypeOf(T{})
 
-	if r := entries.getStructTagValue(ref, "F", "one"); r != "1" {
+	if r := entries.getStructPropertyValue(ref, "A1"); r != "1" {
 		t.Errorf("Struct tag getter returns %v, but want %v", r, "1")
 	}
 
-	if r := entries.getStructTagValue(ref, "F", "blank"); r != "" {
+	if r := entries.getStructPropertyValue(ref, "A2"); r != "" {
 		t.Errorf("Struct tag getter returns %v for blank tag", r)
 	}
 
-	if r := entries.getStructTagValue(ref, "F", "miss"); r != "" {
+	if r := entries.getStructPropertyValue(ref, "A3"); r != "" {
 		t.Errorf("Struct tag getter returns %v for non-existing tag", r)
-	}
-
-	if r := entries.getStructTagValue(ref, "foo", "bar"); r != "" {
-		t.Errorf("Struct tag getter returns %v for non-existing property and tag", r)
 	}
 }
