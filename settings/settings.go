@@ -95,7 +95,7 @@ func FromYaml(in []byte, expandEnv bool) (*Settings, error) {
 }
 
 // PrintInfo about most important settings values into writer.
-func (s *Settings) PrintInfo(out io.Writer) {
+func (s *Settings) PrintInfo(out io.Writer) error {
 	w := tabwriter.NewWriter(out, 2, 8, 1, '\t', tabwriter.AlignRight)
 	defer w.Flush()
 
@@ -113,6 +113,11 @@ func (s *Settings) PrintInfo(out io.Writer) {
 	}
 
 	for _, line := range lines {
-		_, _ = fmt.Fprintf(w, strings.Repeat("%v\t|\t", len(line))+"\n", line...)
+		_, err := fmt.Fprintf(w, strings.Repeat("%v\t|\t", len(line))+"\n", line...)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

@@ -1,13 +1,15 @@
 package settings
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-func TestFromYaml(t *testing.T) { //nolint:funlen
+func TestFromYaml(t *testing.T) {
 	t.Parallel()
 
 	var cases = []struct {
@@ -256,6 +258,87 @@ listen:
 						tt.wantSettings,
 						settings,
 					)
+				}
+			}
+		})
+	}
+}
+
+func TestSettings_PrintInfo(t *testing.T) {
+	t.Parallel()
+
+	var cases = []struct {
+		name           string
+		giveSettings   *Settings
+		wantEntries    []string
+		wantLinesCount byte
+	}{
+		{
+			name: "Regular use-case",
+			giveSettings: &Settings{
+				Listen: listen{
+					Address: "1.2.3.4",
+					Port:    112233,
+				},
+				Resources: resources{
+					DirPath:      "FooDirPath",
+					IndexName:    "FooIndexName",
+					Error404Name: "FooError404Name",
+				},
+				Sources: []source{
+					{URI: "source URI", Name: "source name", Description: "source desc", EnabledByDefault: true, RecordsCount: 123},
+				},
+				Cache: cache{
+					File: cacheFiles{
+						DirPath: "/tmp/foo/bar",
+					},
+					LifetimeSec: 321,
+				},
+				RouterScript: routerScript{
+					Redirect: redirect{
+						Address: "",
+					},
+					Exclude: excludes{
+						Hosts: []string{},
+					},
+					Comment:       "",
+					MaxSources:    222,
+					MaxSourceSize: 333,
+				},
+			},
+			wantEntries: []string{
+				"Listen address", "1.2.3.4",
+				"Listen port", "112233",
+				"Resources dir", "FooDirPath",
+				"Index file name", "FooIndexName",
+				"Error 404 file name", "FooError404Name",
+				"Sources count", "1",
+				"Cache lifetime (sec)", "321",
+				"Cache files directory", "/tmp/foo/bar",
+				"Max sources count", "222",
+				"Max source response size (bytes)", "333",
+			},
+			wantLinesCount: 10,
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			var b bytes.Buffer
+
+			err := tt.giveSettings.PrintInfo(&b)
+
+			if err != nil {
+				t.Fatalf("Got an error: %v", err)
+			}
+
+			if linesCount := strings.Count(b.String(), "\n"); byte(linesCount) != tt.wantLinesCount {
+				t.Errorf("Want lines count %d, got: %d", tt.wantLinesCount, linesCount)
+			}
+
+			for _, line := range tt.wantEntries {
+				if !strings.Contains(b.String(), line) {
+					t.Errorf("Result [%s] does not contains required substring: [%s]", b.String(), line)
 				}
 			}
 		})

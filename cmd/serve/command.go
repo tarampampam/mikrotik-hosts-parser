@@ -36,18 +36,18 @@ type (
 )
 
 // Convert struct into string representation.
-func (s *listenAddress) String() string {
-	return string(*s)
+func (s listenAddress) String() string {
+	return string(s)
 }
 
 // Convert struct into string representation.
-func (s *resourcesDirPath) String() string {
-	return string(*s)
+func (s resourcesDirPath) String() string {
+	return string(s)
 }
 
 // Convert struct into string representation.
-func (s *configFilePath) String() string {
-	return string(*s)
+func (s configFilePath) String() string {
+	return string(s)
 }
 
 // Validate address for listening on.
@@ -128,7 +128,7 @@ func (c *Command) Execute(_ []string) error {
 
 	server.RegisterHandlers()
 
-	sets.PrintInfo(os.Stdout)
+	_ = sets.PrintInfo(os.Stdout)
 
 	return server.Start()
 }
