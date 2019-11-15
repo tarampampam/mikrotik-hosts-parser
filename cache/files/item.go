@@ -51,6 +51,10 @@ func (i *Item) GetKey() string {
 
 // Get retrieves the value of the item from the cache associated with this object's key
 func (i *Item) Get(to io.Writer) error {
+	// lock self and hot buffer for preventing concurrent buffer/content reading
+	i.mutex.Lock()
+	defer i.mutex.Unlock()
+
 	// deferred hot buffer cleaning
 	if i.hotBuffer.ttl > 0 && !i.hotBuffer.cleaningDeferred {
 		i.hotBuffer.cleaningDeferred = true
@@ -66,10 +70,6 @@ func (i *Item) Get(to io.Writer) error {
 			}(hb)
 		}(i.hotBuffer)
 	}
-
-	// lock self and hot buffer for preventing concurrent buffer/content reading
-	i.mutex.Lock()
-	defer i.mutex.Unlock()
 
 	// check for data existing in hot buffer
 	if len(i.hotBuffer.buf) > 0 {
