@@ -155,6 +155,7 @@
                         :version="version"
                         :script-uri="getScriptGeneratorUri()"
                         :use-ssl="useSsl"
+                        :entriesComment="entriesComment"
                     ></script-source>
                 </div>
             </fieldset>
@@ -206,6 +207,7 @@
                 ],
                 version: 'UNKNOWN_VERSION',
                 format: 'routeros',
+                entriesComment: 'ADBlock',
                 scriptGeneratorPath: 'script/source',
                 useSsl: window.location.protocol === 'https:',
             }
@@ -418,7 +420,7 @@
                                 addr: "1.0.0.0"
                             },
                             records: {
-                                limit: 6000,
+                                comment: "FooComment",
                             },
                             excludes: {
                                 hosts: [
@@ -493,10 +495,6 @@
                         self.redirectIp = response.data.settings.redirect.addr;
                     }
 
-                    if (response.data.hasOwnNestedProperty('settings.records.limit')) {
-                        self.recordsLimit = parseInt(response.data.settings.records.limit, 10);
-                    }
-
                     if (response.data.hasOwnNestedProperty('settings.excludes.hosts')) {
                         self.excludesList = response.data.settings.excludes.hosts;
                     }
@@ -507,6 +505,10 @@
 
                     if (response.data.hasOwnNestedProperty('routes.script_generator.path')) {
                         self.scriptGeneratorPath = response.data.routes.script_generator.path;
+                    }
+
+                    if (response.data.hasOwnNestedProperty('settings.records.comment')) {
+                        self.entriesComment = response.data.settings.records.comment;
                     }
                 })
                 .catch(/** @param {Error} error */ function (error) {

@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"log"
 	"mikrotik-hosts-parser/http/fileserver"
 	"mikrotik-hosts-parser/resources"
@@ -12,6 +11,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -40,7 +41,7 @@ type (
 func NewServer(settings *ServerSettings) *Server {
 	var (
 		router     = *mux.NewRouter()
-		stdLog     = log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds)
+		stdLog     = log.New(os.Stdout, "", log.Ldate|log.Lmicroseconds)
 		errLog     = log.New(os.Stderr, "[error] ", log.LstdFlags)
 		httpServer = &http.Server{
 			Addr:         settings.Host + ":" + strconv.Itoa(settings.Port), // TCP address and port to listen on

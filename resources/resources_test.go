@@ -54,7 +54,7 @@ func Test_resourcesBox_Get(t *testing.T) {
 	}
 }
 
-func Test_resourcesBox_Has(t *testing.T) {
+func Test_ResourcesBox_Has(t *testing.T) {
 	t.Parallel()
 
 	resources := NewResourceBox()

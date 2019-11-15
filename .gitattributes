@@ -9,5 +9,5 @@
 /.*.yml             export-ignore
 /Makefile           export-ignore
 /Dockerfile         export-ignore
-/*_test.go          export-ignore
+*_test.go           export-ignore
 /.tests             export-ignore

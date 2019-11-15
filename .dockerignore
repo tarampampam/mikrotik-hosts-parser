@@ -5,5 +5,4 @@ docker*.yml
 .gitignore
 .editorconfig
 .idea
-.git
 .github

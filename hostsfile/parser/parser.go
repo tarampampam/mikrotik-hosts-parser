@@ -40,8 +40,9 @@ func (p *Parser) Parse(in io.Reader) ([]*hostsfile.Record, error) {
 func (p *Parser) validateHostname(host string) bool {
 	// Lazy regexp init
 	if p.hostValidate == nil {
+		const r string = `(?i)^((-?)(xn--|_)?[a-z0-9-_]{0,61}[a-z0-9-_]\.)*(xn--)?([a-z0-9][a-z0-9\-]{0,60}|[a-z0-9-]{1,30}\.[a-z]{2,})$`
 		// @link: https://stackoverflow.com/a/26987741
-		p.hostValidate = regexp.MustCompile(`(?i)^((-?)(xn--|_)?[a-z0-9-_]{0,61}[a-z0-9-_]\.)*(xn--)?([a-z0-9][a-z0-9\-]{0,60}|[a-z0-9-]{1,30}\.[a-z]{2,})$`)
+		p.hostValidate = regexp.MustCompile(r)
 	}
 
 	return p.hostValidate.Match([]byte(host))

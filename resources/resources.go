@@ -13,8 +13,7 @@ type Box interface {
 	Has(file string) bool
 }
 
-// Resource expose
-var Resources = NewResourceBox()
+var Resources = NewResourceBox() // Expose resources
 
 func NewResourceBox() Box {
 	return &box{storage: make(map[string][]byte)}

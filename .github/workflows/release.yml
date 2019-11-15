@@ -24,6 +24,9 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Generate version value
+        run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
+
       - name: Run codegeneration
         run: go generate ./...
 
@@ -31,7 +34,7 @@ jobs:
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
-        run: go build -ldflags '-s -w' -o ./../build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
+        run: go build -ldflags="-s -w -X main.Version=${version}" -o ./../build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
 
       - name: Pack binary
         uses: docker://gact/upx:latest # https://github.com/marketplace/actions/upx-action
@@ -40,9 +43,11 @@ jobs:
           upx_args: '-7'
 
       - name: Upload to release
-        uses: docker://gact/upload-to-release:latest # https://github.com/actions-github/upload-to-release
+        uses: actions/upload-release-asset@v1.0.1 # https://github.com/actions/upload-release-asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "./build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
-          type: 'application/octet-stream'
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "./build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
+          asset_name: "mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
+          asset_content_type: 'application/octet-stream'
