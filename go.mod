@@ -10,6 +10,8 @@ require (
 )
 
 replace (
+	github.com/tarampampam/mikrotik-hosts-parser/cache => ../cache
+	github.com/tarampampam/mikrotik-hosts-parser/cache/files => ../cache/files
 	github.com/tarampampam/mikrotik-hosts-parser/cmd => ../cmd
 	github.com/tarampampam/mikrotik-hosts-parser/cmd/serve => ../cmd/serve
 	github.com/tarampampam/mikrotik-hosts-parser/cmd/version => ../cmd/version
