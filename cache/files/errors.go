@@ -11,6 +11,8 @@ const (
 	ErrUnknown ErrorType = iota
 	ErrFileOpening
 	ErrFileReading
+	ErrFileWriting
+	ErrBufferWriting
 )
 
 type Error struct {
@@ -33,6 +35,10 @@ func (e ErrorType) String() string {
 		return "cannot open file"
 	case ErrFileReading:
 		return "cannot read file"
+	case ErrFileWriting:
+		return "cannot write file"
+	case ErrBufferWriting:
+		return "cannot write buffer"
 	}
 
 	return "unrecognized error type"

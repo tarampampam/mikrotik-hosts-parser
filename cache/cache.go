@@ -10,7 +10,7 @@ type Item interface {
 	GetKey() string                 // Returns the key for the current cache item
 	Get(to io.Writer) error         // Retrieves the value of the item from the cache associated with this object's key
 	IsHit() bool                    // Confirms if the cache item lookup resulted in a cache hit
-	Set(data []byte) error          // Sets the value represented by this cache item
+	Set(from io.Reader) error       // Sets the value represented by this cache item
 	ExpiresAt(when time.Time) error // Sets the expiration time for this cache item
 }
 
