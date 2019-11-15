@@ -324,7 +324,7 @@ func TestResourcesDirPath_IsValidValue(t *testing.T) {
 	}
 }
 
-func TestCommand_getSettings(t *testing.T) {
+func TestCommand_getSettings(t *testing.T) { //nolint:gocyclo
 	t.Parallel()
 
 	// Create temporary file inside just created temporary directory.
@@ -349,7 +349,7 @@ func TestCommand_getSettings(t *testing.T) {
 		giveCommand  *Command
 		giveFilePath func(t *testing.T) string
 		wantSettings *settings.Settings
-		wantError    error
+		wantError    bool
 	}{
 		{
 			name:        "Without overriding settings from config file",
@@ -381,7 +381,6 @@ resources:
 					DirPath: "/tmp",
 				},
 			},
-			wantError: nil,
 		},
 		{
 			name: "With settings overriding",
@@ -421,7 +420,15 @@ resources:
 					DirPath: "/tmp/foo/bar",
 				},
 			},
-			wantError: nil,
+		},
+		{
+			name:        "With missing config file path",
+			giveCommand: &Command{},
+			giveFilePath: func(t *testing.T) string {
+				return "foo bar"
+			},
+			wantSettings: &settings.Settings{},
+			wantError:    true,
 		},
 	}
 
@@ -429,7 +436,13 @@ resources:
 		t.Run(tt.name, func(t *testing.T) {
 			filePath := tt.giveFilePath(t)
 			defer func(tmpFile string) {
-				dirPath, _ := filepath.Abs(filepath.Dir(tmpFile))
+				if info, err := os.Stat(tmpFile); err != nil || !info.Mode().IsRegular() {
+					return
+				}
+				dirPath, err := filepath.Abs(filepath.Dir(tmpFile))
+				if err != nil {
+					t.Fatal(err)
+				}
 				if err := os.RemoveAll(dirPath); err != nil {
 					t.Fatal(err)
 				}
@@ -437,13 +450,13 @@ resources:
 
 			gotSettings, err := tt.giveCommand.getSettings(filePath)
 
-			if err != nil && tt.wantError == nil {
-				t.Errorf("Unexpected error %v returned", err)
-			} else if tt.wantError != nil && err.Error() != tt.wantError.Error() {
-				t.Errorf("Wrong error returned. Want: %v, got: %v", tt.wantError, err)
+			if err != nil && !tt.wantError {
+				t.Errorf("Unexpected error [%v] returned", err)
+			} else if tt.wantError && err == nil {
+				t.Error("Expects error, but nothing returned")
 			}
 
-			if !reflect.DeepEqual(gotSettings, tt.wantSettings) {
+			if !tt.wantError && !reflect.DeepEqual(gotSettings, tt.wantSettings) {
 				t.Errorf("Unexpected settings returned. Want: %v, got: %v", tt.wantSettings, gotSettings)
 			}
 		})
