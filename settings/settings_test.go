@@ -27,7 +27,7 @@ listen:
  port: 321
 `),
 			wantSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "1.2.3.4",
 					Port:    321,
 				},
@@ -42,7 +42,7 @@ listen:
  port: ${__TEST_PORT_NUM}
 `),
 			wantSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "8.7.8.7",
 					Port:    4567,
 				},
@@ -57,7 +57,7 @@ listen:
  port: 0
 `),
 			wantSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "${__TEST_IP_ADDR}",
 					Port:    0,
 				},
@@ -72,7 +72,7 @@ listen:
   port: ${__NON_EXISTING_VALUE_FOR_PORT__:-1234}
 `),
 			wantSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "3.4.5.6",
 					Port:    1234,
 				},
@@ -124,16 +124,16 @@ router_script:
  max_source_size: -4
 `),
 			wantSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "1.2.3.4",
 					Port:    321,
 				},
-				Resources: resources{
+				Resources: Resources{
 					DirPath:      "/tmp",
 					IndexName:    "idx.html",
 					Error404Name: "err404.asp",
 				},
-				Sources: []source{{
+				Sources: []Source{{
 					URI:              "http://goo.gl/hosts.txt",
 					Name:             "Foo name",
 					Description:      "Foo desc",
@@ -149,17 +149,17 @@ router_script:
 					URI:          "http://goo.gl/txt.stsoh",
 					RecordsCount: -2,
 				}},
-				Cache: cache{
-					File: cacheFiles{
+				Cache: Cache{
+					File: CacheFiles{
 						DirPath: "/foo/bar",
 					},
 					LifetimeSec: 10,
 				},
-				RouterScript: routerScript{
-					Redirect: redirect{
+				RouterScript: RouterScript{
+					Redirect: Redirect{
 						Address: "0.1.1.0",
 					},
-					Exclude: excludes{
+					Exclude: Excludes{
 						Hosts: []string{"foo", "bar"},
 					},
 					MaxSources:    1,
@@ -212,7 +212,7 @@ listen:
   port: 321
 `),
 			wantSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "1.2.3.4",
 					Port:    321,
 				},
@@ -276,29 +276,29 @@ func TestSettings_PrintInfo(t *testing.T) {
 		{
 			name: "Regular use-case",
 			giveSettings: &Settings{
-				Listen: listen{
+				Listen: Listen{
 					Address: "1.2.3.4",
 					Port:    112233,
 				},
-				Resources: resources{
+				Resources: Resources{
 					DirPath:      "FooDirPath",
 					IndexName:    "FooIndexName",
 					Error404Name: "FooError404Name",
 				},
-				Sources: []source{
+				Sources: []Source{
 					{URI: "source URI", Name: "source name", Description: "source desc", EnabledByDefault: true, RecordsCount: 123},
 				},
-				Cache: cache{
-					File: cacheFiles{
+				Cache: Cache{
+					File: CacheFiles{
 						DirPath: "/tmp/foo/bar",
 					},
 					LifetimeSec: 321,
 				},
-				RouterScript: routerScript{
-					Redirect: redirect{
+				RouterScript: RouterScript{
+					Redirect: Redirect{
 						Address: "",
 					},
-					Exclude: excludes{
+					Exclude: Excludes{
 						Hosts: []string{},
 					},
 					Comment:       "",

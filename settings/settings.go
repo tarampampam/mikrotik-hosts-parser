@@ -12,18 +12,18 @@ import (
 )
 
 type (
-	listen struct {
+	Listen struct {
 		Address string `yaml:"address"`
 		Port    int    `yaml:"port"`
 	}
 
-	resources struct {
+	Resources struct {
 		DirPath      string `yaml:"dir"`
 		IndexName    string `yaml:"index_name"`
 		Error404Name string `yaml:"error_404_name"`
 	}
 
-	source struct {
+	Source struct {
 		URI              string `yaml:"uri"`
 		Name             string `yaml:"name"`
 		Description      string `yaml:"description"`
@@ -31,39 +31,39 @@ type (
 		RecordsCount     int    `yaml:"count"` // approximate quantity
 	}
 
-	redirect struct {
+	Redirect struct {
 		Address string `yaml:"address"`
 	}
 
-	excludes struct {
+	Excludes struct {
 		Hosts []string `yaml:"hosts"`
 	}
 
-	cache struct {
-		File        cacheFiles `yaml:"files"`
+	Cache struct {
+		File        CacheFiles `yaml:"files"`
 		LifetimeSec int        `yaml:"lifetime_sec"`
 	}
 
-	cacheFiles struct {
+	CacheFiles struct {
 		DirPath string `yaml:"dir"`
 	}
 
-	routerScript struct {
-		Redirect      redirect `yaml:"redirect"`
-		Exclude       excludes `yaml:"exclude"`
+	RouterScript struct {
+		Redirect      Redirect `yaml:"redirect"`
+		Exclude       Excludes `yaml:"exclude"`
 		Comment       string   `yaml:"comment"`
 		MaxSources    int      `yaml:"max_sources"`
 		MaxSourceSize int      `yaml:"max_source_size"` // in bytes
 	}
-
-	Settings struct {
-		Listen       listen       `yaml:"listen"`
-		Resources    resources    `yaml:"resources"`
-		Sources      []source     `yaml:"sources"`
-		Cache        cache        `yaml:"cache"`
-		RouterScript routerScript `yaml:"router_script"`
-	}
 )
+
+type Settings struct {
+	Listen       Listen       `yaml:"listen"`
+	Resources    Resources    `yaml:"resources"`
+	Sources      []Source     `yaml:"sources"`
+	Cache        Cache        `yaml:"cache"`
+	RouterScript RouterScript `yaml:"router_script"`
+}
 
 // Creates new settings instance using YAML file.
 func FromYamlFile(filename string, expandEnv bool) (*Settings, error) {

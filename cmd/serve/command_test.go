@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"mikrotik-hosts-parser/settings"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -321,4 +322,134 @@ func TestResourcesDirPath_IsValidValue(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCommand_getSettings(t *testing.T) {
+	t.Parallel()
+
+	// Create temporary file inside just created temporary directory.
+	createTempFile := func(t *testing.T) (*os.File, string) {
+		t.Helper()
+
+		tmpDir, err := ioutil.TempDir("", "test-")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		tmpFile, fileErr := os.Create(filepath.Join(tmpDir, "test-file"))
+		if fileErr != nil {
+			t.Fatal(fileErr)
+		}
+
+		return tmpFile, tmpDir
+	}
+
+	tests := []struct {
+		name         string
+		giveCommand  *Command
+		giveFilePath func(t *testing.T) string
+		wantSettings *settings.Settings
+		wantError    error
+	}{
+		{
+			name:        "Without overriding settings from config file",
+			giveCommand: &Command{},
+			giveFilePath: func(t *testing.T) string {
+				tmpFile, _ := createTempFile(t)
+				defer func() {
+					if err := tmpFile.Close(); err != nil {
+						t.Fatal(err)
+					}
+				}()
+
+				_, _ = tmpFile.Write([]byte(`
+listen:
+  address: '1.2.3.4'
+  port: 321
+resources:
+  dir: /tmp
+`))
+
+				return tmpFile.Name()
+			},
+			wantSettings: &settings.Settings{
+				Listen: settings.Listen{
+					Address: "1.2.3.4",
+					Port:    321,
+				},
+				Resources: settings.Resources{
+					DirPath: "/tmp",
+				},
+			},
+			wantError: nil,
+		},
+		{
+			name: "With settings overriding",
+			giveCommand: &Command{
+				ServingOptions: listenOptions{
+					Address: "8.8.8.8",
+					Port:    666,
+				},
+				ResourcesOptions: resourcesOptions{
+					ResourcesDir: "/tmp/foo/bar",
+				},
+			},
+			giveFilePath: func(t *testing.T) string {
+				tmpFile, _ := createTempFile(t)
+				defer func() {
+					if err := tmpFile.Close(); err != nil {
+						t.Fatal(err)
+					}
+				}()
+
+				_, _ = tmpFile.Write([]byte(`
+listen:
+  address: '1.2.3.4'
+  port: 321
+resources:
+  dir: /tmp
+`))
+
+				return tmpFile.Name()
+			},
+			wantSettings: &settings.Settings{
+				Listen: settings.Listen{
+					Address: "8.8.8.8",
+					Port:    666,
+				},
+				Resources: settings.Resources{
+					DirPath: "/tmp/foo/bar",
+				},
+			},
+			wantError: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filePath := tt.giveFilePath(t)
+			defer func(tmpFile string) {
+				dirPath, _ := filepath.Abs(filepath.Dir(tmpFile))
+				if err := os.RemoveAll(dirPath); err != nil {
+					t.Fatal(err)
+				}
+			}(filePath)
+
+			gotSettings, err := tt.giveCommand.getSettings(filePath)
+
+			if err != nil && tt.wantError == nil {
+				t.Errorf("Unexpected error %v returned", err)
+			} else if tt.wantError != nil && err.Error() != tt.wantError.Error() {
+				t.Errorf("Wrong error returned. Want: %v, got: %v", tt.wantError, err)
+			}
+
+			if !reflect.DeepEqual(gotSettings, tt.wantSettings) {
+				t.Errorf("Unexpected settings returned. Want: %v, got: %v", tt.wantSettings, gotSettings)
+			}
+		})
+	}
+}
+
+func TestCommand_Execute(t *testing.T) {
+	t.Skip("Not implemented yet")
 }
