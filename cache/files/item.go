@@ -58,17 +58,20 @@ func (i *Item) Get(to io.Writer) error {
 	// deferred hot buffer cleaning
 	if i.hotBuffer.ttl > 0 && !i.hotBuffer.cleaningDeferred {
 		i.hotBuffer.cleaningDeferred = true
-		defer func(hb *hotBuffer) {
-			go func(hb *hotBuffer) {
-				time.Sleep(hb.ttl)
+		defer func(i *Item) {
+			go func(i *Item) {
+				time.Sleep(i.hotBuffer.ttl)
+
+				i.mutex.Lock()
+				defer i.mutex.Unlock()
 
 				// make sure that deferring state was not changed
 				if i.hotBuffer.cleaningDeferred {
-					hb.clean()
-					hb.cleaningDeferred = false
+					i.hotBuffer.clean()
+					i.hotBuffer.cleaningDeferred = false
 				}
-			}(hb)
-		}(i.hotBuffer)
+			}(i)
+		}(i)
 	}
 
 	// check for data existing in hot buffer
