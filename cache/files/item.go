@@ -8,7 +8,6 @@ import (
 )
 
 type hotBuffer struct {
-	mutex            *sync.Mutex
 	buf              []byte
 	maxLen           int
 	ttl              time.Duration
@@ -24,7 +23,6 @@ type Item struct {
 
 func newHotBuffer(maxLen int, ttl time.Duration) *hotBuffer {
 	return &hotBuffer{
-		mutex:  &sync.Mutex{},
 		buf:    make([]byte, 0),
 		maxLen: maxLen,
 		ttl:    ttl,
@@ -46,15 +44,13 @@ func (hb *hotBuffer) clean() {
 	hb.buf = make([]byte, 0)
 }
 
+// GetKey returns the key for the current cache item
 func (i *Item) GetKey() string {
 	return i.key
 }
 
+// Get retrieves the value of the item from the cache associated with this object's key
 func (i *Item) Get(to io.Writer) error {
-	// lock hot buffer for preventing concurrent buffer/content reading
-	i.hotBuffer.mutex.Lock()
-	defer i.hotBuffer.mutex.Unlock()
-
 	// deferred hot buffer cleaning
 	if i.hotBuffer.ttl > 0 && !i.hotBuffer.cleaningDeferred {
 		i.hotBuffer.cleaningDeferred = true
@@ -64,15 +60,16 @@ func (i *Item) Get(to io.Writer) error {
 
 				// make sure that deferring state was not changed
 				if i.hotBuffer.cleaningDeferred {
-					hb.mutex.Lock() // @todo: make check for concurrent mutex locking
-					defer hb.mutex.Unlock()
-
 					hb.clean()
 					hb.cleaningDeferred = false
 				}
 			}(hb)
 		}(i.hotBuffer)
 	}
+
+	// lock self and hot buffer for preventing concurrent buffer/content reading
+	i.mutex.Lock()
+	defer i.mutex.Unlock()
 
 	// check for data existing in hot buffer
 	if len(i.hotBuffer.buf) > 0 {
@@ -82,10 +79,6 @@ func (i *Item) Get(to io.Writer) error {
 		}
 		return nil
 	}
-
-	// now we should lock self also
-	i.mutex.Lock()
-	defer i.mutex.Unlock()
 
 	// try to open file for reading
 	file, err := os.Open(i.filePath)
@@ -131,19 +124,16 @@ func (i *Item) Get(to io.Writer) error {
 	return nil
 }
 
+// IsHit confirms if the cache item lookup resulted in a cache hit
 func (i *Item) IsHit() bool {
-	// lock hot buffer for preventing concurrent buffer/content reading
-	i.hotBuffer.mutex.Lock()
-	defer i.hotBuffer.mutex.Unlock()
+	// lock hot buffer and self for preventing concurrent buffer/content reading
+	i.mutex.Lock()
+	defer i.mutex.Unlock()
 
 	// fast check based on hot buffer size - if size is not equals zero - file must be exists
 	if len(i.hotBuffer.buf) != 0 {
 		return true
 	}
-
-	// now we should lock self also
-	i.mutex.Lock()
-	defer i.mutex.Unlock()
 
 	// check for file exists
 	if info, err := os.Stat(i.filePath); err == nil && info.Mode().IsRegular() {
@@ -153,23 +143,22 @@ func (i *Item) IsHit() bool {
 	return false
 }
 
+// Set the value represented by this cache item
 func (i *Item) Set(from io.Reader) error {
 	// lock self and hot buffer
 	i.mutex.Lock()
-	i.hotBuffer.mutex.Lock()
 	defer i.mutex.Unlock()
-	defer i.hotBuffer.mutex.Unlock()
 
 	// reset hot buffer deferred cleaning state
 	i.hotBuffer.cleaningDeferred = false
 
 	// make hot buf cleaning
 	if len(i.hotBuffer.buf) != 0 {
-		i.hotBuffer.buf = i.hotBuffer.buf[:0]
+		i.hotBuffer.clean()
 	}
 
 	// try to open file for writing
-	file, err := os.OpenFile(i.filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(i.filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0664)
 	if err != nil {
 		return newErrorf(ErrFileOpening, err, "file [%s] cannot be opened", i.filePath)
 	}
@@ -211,6 +200,7 @@ func (i *Item) Set(from io.Reader) error {
 	return nil
 }
 
+// ExpiresAt sets the expiration time for this cache item
 func (i *Item) ExpiresAt(when time.Time) error {
 	panic("implement me")
 }
