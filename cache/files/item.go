@@ -11,30 +11,30 @@ type hotBuffer struct {
 	mutex            *sync.Mutex
 	buf              []byte
 	maxLen           int
-	TTL              time.Duration
+	ttl              time.Duration
 	cleaningDeferred bool
 }
 
-type item struct {
+type Item struct {
 	mutex     *sync.Mutex
 	hotBuffer *hotBuffer
 	key       string
 	filePath  string
 }
 
-func newHotBuffer(maxLen int, TTL time.Duration) *hotBuffer {
+func newHotBuffer(maxLen int, ttl time.Duration) *hotBuffer {
 	return &hotBuffer{
 		mutex:  &sync.Mutex{},
 		buf:    make([]byte, 0),
 		maxLen: maxLen,
-		TTL:    TTL,
+		ttl:    ttl,
 	}
 }
 
 // NewItem creates cache item.
 // Maximum hot buffer length should be defined in bytes (set `0` to disable hot cache).
-func NewItem(filePath, key string, hotBufLen int, hotBufTTL time.Duration) *item {
-	return &item{
+func NewItem(filePath, key string, hotBufLen int, hotBufTTL time.Duration) *Item {
+	return &Item{
 		mutex:     &sync.Mutex{},
 		hotBuffer: newHotBuffer(hotBufLen, hotBufTTL),
 		key:       key,
@@ -46,21 +46,21 @@ func (hb *hotBuffer) clean() {
 	hb.buf = make([]byte, 0)
 }
 
-func (i *item) GetKey() string {
+func (i *Item) GetKey() string {
 	return i.key
 }
 
-func (i *item) Get(to io.Writer) error {
+func (i *Item) Get(to io.Writer) error {
 	// lock hot buffer for preventing concurrent buffer/content reading
 	i.hotBuffer.mutex.Lock()
 	defer i.hotBuffer.mutex.Unlock()
 
 	// deferred hot buffer cleaning
-	if i.hotBuffer.TTL > 0 && !i.hotBuffer.cleaningDeferred {
+	if i.hotBuffer.ttl > 0 && !i.hotBuffer.cleaningDeferred {
 		i.hotBuffer.cleaningDeferred = true
 		defer func(hb *hotBuffer) {
 			go func(hb *hotBuffer) {
-				time.Sleep(hb.TTL)
+				time.Sleep(hb.ttl)
 
 				// make sure that deferring state was not changed
 				if i.hotBuffer.cleaningDeferred {
@@ -131,7 +131,7 @@ func (i *item) Get(to io.Writer) error {
 	return nil
 }
 
-func (i *item) IsHit() bool {
+func (i *Item) IsHit() bool {
 	// lock hot buffer for preventing concurrent buffer/content reading
 	i.hotBuffer.mutex.Lock()
 	defer i.hotBuffer.mutex.Unlock()
@@ -153,7 +153,7 @@ func (i *item) IsHit() bool {
 	return false
 }
 
-func (i *item) Set(from io.Reader) error {
+func (i *Item) Set(from io.Reader) error {
 	// lock self and hot buffer
 	i.mutex.Lock()
 	i.hotBuffer.mutex.Lock()
@@ -211,6 +211,6 @@ func (i *item) Set(from io.Reader) error {
 	return nil
 }
 
-func (i *item) ExpiresAt(when time.Time) error {
+func (i *Item) ExpiresAt(when time.Time) error {
 	panic("implement me")
 }

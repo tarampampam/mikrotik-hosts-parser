@@ -19,8 +19,8 @@ func TestItem_GetAndSetWithoutHotBuffering(t *testing.T) {
 
 	// Remove temporary directory when test is completed
 	defer func() {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			t.Fatal(err)
+		if rErr := os.RemoveAll(tmpDir); rErr != nil {
+			t.Fatal(rErr)
 		}
 	}()
 
@@ -42,7 +42,7 @@ func TestItem_GetAndSetWithoutHotBuffering(t *testing.T) {
 		t.Errorf("Got unexpected error on data GET: %v", err)
 	}
 
-	if bytes.Compare(buf.Bytes(), content) != 0 {
+	if !bytes.Equal(buf.Bytes(), content) {
 		t.Errorf(
 			"Got unexpected content from cache item. Want: %v (%s), got: %v (%s)",
 			content,
