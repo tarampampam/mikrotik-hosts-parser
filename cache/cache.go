@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Main cache interfaces idea taken from <https://www.php-fig.org/psr/psr-6/>
+// Main cache interfaces idea was looked in <https://www.php-fig.org/psr/psr-6/>
 
 // Item defines an interface for interacting with objects inside a cache
 type Item interface {
