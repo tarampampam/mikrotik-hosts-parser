@@ -1,17 +1,21 @@
 package files
 
 import (
+	"encoding/binary"
 	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 	"time"
 )
 
 type hotBuffer struct {
-	buf              []byte
-	maxLen           int
-	ttl              time.Duration
-	cleaningDeferred bool
+	buf                 []byte
+	exp                 *time.Time
+	maxLen              int
+	ttl                 time.Duration
+	bufCleaningDeferred bool
+	expCleaningDeferred bool
 }
 
 type Item struct {
@@ -19,59 +23,67 @@ type Item struct {
 	hotBuffer *hotBuffer
 	key       string
 	filePath  string
-}
-
-func newHotBuffer(maxLen int, ttl time.Duration) *hotBuffer {
-	return &hotBuffer{
-		buf:    make([]byte, 0),
-		maxLen: maxLen,
-		ttl:    ttl,
-	}
+	perm      os.FileMode
 }
 
 // NewItem creates cache item.
 // Maximum hot buffer length should be defined in bytes (set `0` to disable hot cache).
 func NewItem(filePath, key string, hotBufLen int, hotBufTTL time.Duration) *Item {
 	return &Item{
-		mutex:     &sync.Mutex{},
-		hotBuffer: newHotBuffer(hotBufLen, hotBufTTL),
-		key:       key,
-		filePath:  filePath,
+		mutex: &sync.Mutex{},
+		hotBuffer: &hotBuffer{
+			buf:    make([]byte, 0),
+			exp:    nil,
+			maxLen: hotBufLen,
+			ttl:    hotBufTTL,
+		},
+		key:      key,
+		filePath: filePath,
+		perm:     0664, // creation files permissions
 	}
 }
 
-func (hb *hotBuffer) clean() {
+// Make buffer cleaning.
+func (hb *hotBuffer) bufClean() {
 	hb.buf = make([]byte, 0)
 }
 
-// GetKey returns the key for the current cache item
+// GetKey returns the key for the current cache item.
 func (i *Item) GetKey() string {
 	return i.key
 }
 
-// Get retrieves the value of the item from the cache associated with this object's key
+// expFilePath returns path to the file with expiration timestamp.
+func (i *Item) expFilePath() string {
+	return i.filePath + ".expire"
+}
+
+// deferred hot buffer cleaning (if needed).
+func (i *Item) deferCleanHotBuf() {
+	i.hotBuffer.bufCleaningDeferred = true
+	go func(i *Item) {
+		time.Sleep(i.hotBuffer.ttl)
+
+		i.mutex.Lock()
+		defer i.mutex.Unlock()
+
+		// make sure that deferring state was not changed
+		if i.hotBuffer.bufCleaningDeferred {
+			i.hotBuffer.bufClean()
+			i.hotBuffer.bufCleaningDeferred = false
+		}
+	}(i)
+}
+
+// Get retrieves the value of the item from the cache associated with this object's key.
 func (i *Item) Get(to io.Writer) error {
-	// lock self and hot buffer for preventing concurrent buffer/content reading
+	// lock self for preventing concurrent buffer/content reading
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 
 	// deferred hot buffer cleaning
-	if i.hotBuffer.ttl > 0 && !i.hotBuffer.cleaningDeferred {
-		i.hotBuffer.cleaningDeferred = true
-		defer func(i *Item) {
-			go func(i *Item) {
-				time.Sleep(i.hotBuffer.ttl)
-
-				i.mutex.Lock()
-				defer i.mutex.Unlock()
-
-				// make sure that deferring state was not changed
-				if i.hotBuffer.cleaningDeferred {
-					i.hotBuffer.clean()
-					i.hotBuffer.cleaningDeferred = false
-				}
-			}(i)
-		}(i)
+	if i.hotBuffer.ttl > 0 && !i.hotBuffer.bufCleaningDeferred {
+		defer i.deferCleanHotBuf()
 	}
 
 	// check for data existing in hot buffer
@@ -115,7 +127,7 @@ func (i *Item) Get(to io.Writer) error {
 		if read <= i.hotBuffer.maxLen {
 			i.hotBuffer.buf = append(i.hotBuffer.buf, buf...)
 		} else if len(i.hotBuffer.buf) != 0 { // otherwise we should clean buffer
-			i.hotBuffer.clean()
+			i.hotBuffer.bufClean()
 		}
 
 		// write just read data into writer
@@ -127,9 +139,9 @@ func (i *Item) Get(to io.Writer) error {
 	return nil
 }
 
-// IsHit confirms if the cache item lookup resulted in a cache hit
+// IsHit confirms if the cache item lookup resulted in a cache hit.
 func (i *Item) IsHit() bool {
-	// lock hot buffer and self for preventing concurrent buffer/content reading
+	// lock self for preventing concurrent buffer/content reading
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 
@@ -146,22 +158,22 @@ func (i *Item) IsHit() bool {
 	return false
 }
 
-// Set the value represented by this cache item
+// Set the value represented by this cache item.
 func (i *Item) Set(from io.Reader) error {
-	// lock self and hot buffer
+	// lock self for preventing concurrent buffer/content reading
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 
 	// reset hot buffer deferred cleaning state
-	i.hotBuffer.cleaningDeferred = false
+	i.hotBuffer.bufCleaningDeferred = false
 
 	// make hot buf cleaning
 	if len(i.hotBuffer.buf) != 0 {
-		i.hotBuffer.clean()
+		i.hotBuffer.bufClean()
 	}
 
 	// try to open file for writing
-	file, err := os.OpenFile(i.filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0664)
+	file, err := os.OpenFile(i.filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, i.perm)
 	if err != nil {
 		return newErrorf(ErrFileOpening, err, "file [%s] cannot be opened", i.filePath)
 	}
@@ -196,14 +208,104 @@ func (i *Item) Set(from io.Reader) error {
 		if wrote <= i.hotBuffer.maxLen {
 			i.hotBuffer.buf = append(i.hotBuffer.buf, buf...)
 		} else if len(i.hotBuffer.buf) != 0 { // otherwise we should clean buffer
-			i.hotBuffer.clean()
+			i.hotBuffer.bufClean()
+		}
+	}
+
+	// deferred hot buffer cleaning
+	if len(i.hotBuffer.buf) != 0 && i.hotBuffer.ttl > 0 && !i.hotBuffer.bufCleaningDeferred {
+		defer i.deferCleanHotBuf()
+	}
+
+	return nil
+}
+
+// delayed cleaning expiring data in hot buffer.
+func (i *Item) deferCleanHotBufExpData() {
+	i.hotBuffer.expCleaningDeferred = true
+	go func(i *Item) {
+		time.Sleep(i.hotBuffer.ttl)
+
+		i.mutex.Lock()
+		defer i.mutex.Unlock()
+
+		// make sure that deferring state was not changed
+		if i.hotBuffer.expCleaningDeferred {
+			i.hotBuffer.exp = nil
+			i.hotBuffer.expCleaningDeferred = false
+		}
+	}(i)
+}
+
+// Indicates if cache item expiration time is exceeded. If expiration data was not set - error will be returned.
+func (i *Item) IsExpired() (bool, error) {
+	if exp := i.ExpiresAt(); exp != nil {
+		return exp.UnixNano() < time.Now().UnixNano(), nil
+	}
+
+	return false, newError(ErrExpirationDataNotAvailable, "expiration data is not available", nil)
+}
+
+// ExpiresAt returns the expiration time for this cache item. If expiration doesn't set - nil will be returned.
+func (i *Item) ExpiresAt() *time.Time {
+	// lock self for preventing concurrent buffer/content reading
+	i.mutex.Lock()
+	defer i.mutex.Unlock()
+
+	// defer expiring data cleaning (if needed)
+	if i.hotBuffer.ttl > 0 && !i.hotBuffer.expCleaningDeferred {
+		defer i.deferCleanHotBufExpData()
+	}
+
+	// check exp data in hot buffer at first
+	if i.hotBuffer.exp != nil {
+		return i.hotBuffer.exp
+	}
+
+	filePath := i.expFilePath()
+
+	if file, err := os.Open(filePath); err == nil {
+		defer file.Close()
+		if data, err := ioutil.ReadAll(file); err == nil {
+			// convert just read bytes slice into time struct
+			exp := time.Unix(0, int64(binary.LittleEndian.Uint64(data)))
+
+			// refresh exp time in hot buffer
+			if !i.hotBuffer.expCleaningDeferred {
+				i.hotBuffer.exp = &exp
+			}
+
+			return &exp
 		}
 	}
 
 	return nil
 }
 
-// ExpiresAt sets the expiration time for this cache item
-func (i *Item) ExpiresAt(when time.Time) error {
-	panic("implement me")
+// SetExpiresAt sets the expiration time for this cache item.
+func (i *Item) SetExpiresAt(when time.Time) error {
+	slice := make([]byte, 8)
+	filePath := i.expFilePath()
+	// make copy - `exp == when` but `&exp != &when`
+	exp := when
+
+	binary.LittleEndian.PutUint64(slice, uint64(exp.UnixNano()))
+
+	// lock self for preventing concurrent buffer/content reading
+	i.mutex.Lock()
+	defer i.mutex.Unlock()
+
+	if err := ioutil.WriteFile(filePath, slice, i.perm); err != nil {
+		return newErrorf(ErrFileWriting, err, "cannot write into file [%s]", filePath)
+	}
+
+	// set expiring data in hot buffer
+	i.hotBuffer.exp = &exp
+
+	// defer expiring data cleaning (if needed)
+	if i.hotBuffer.ttl > 0 && !i.hotBuffer.expCleaningDeferred {
+		defer i.deferCleanHotBufExpData()
+	}
+
+	return nil
 }

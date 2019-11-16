@@ -12,6 +12,7 @@ const (
 	ErrFileOpening
 	ErrFileReading
 	ErrFileWriting
+	ErrExpirationDataNotAvailable
 	ErrBufferWriting
 )
 
@@ -39,6 +40,8 @@ func (e ErrorType) String() string {
 		return "cannot write file"
 	case ErrBufferWriting:
 		return "cannot write buffer"
+	case ErrExpirationDataNotAvailable:
+		return "expiration data is not available"
 	}
 
 	return "unrecognized error type"
