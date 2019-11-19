@@ -202,11 +202,12 @@ func (f *File) getExpiresAtUnixMs() (uint64, error) {
 	return binary.LittleEndian.Uint64(buf), nil
 }
 
-// SetExpiresAt
+// SetExpiresAt sets the expiration time for current file.
 func (f *File) SetExpiresAt(t time.Time) error {
 	return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond)))
 }
 
+// setExpiresAtUnixMs takes unix timestamp (in milliseconds) and write them into required file block as a bytes slice.
 func (f *File) setExpiresAtUnixMs(ts uint64) error {
 	from, to := f.getBlockPosition(bFMetaExpAtUnixMS)
 	buf := make([]byte, to-from)
@@ -215,7 +216,6 @@ func (f *File) setExpiresAtUnixMs(ts uint64) error {
 	binary.LittleEndian.PutUint64(buf, ts)
 
 	n, err := f.file.WriteAt(buf, int64(from))
-
 	if n != len(buf) {
 		return errors.New("wrong wrote bytes length")
 	}
