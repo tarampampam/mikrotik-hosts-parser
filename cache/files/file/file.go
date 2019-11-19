@@ -17,7 +17,7 @@ type FType string
 const (
 	// File block offsets are below:
 	// +------------+-----------------------+--------------------+--------------+
-	// | FType 0..7 |  FMeta 8..247         | FDataSHA1 248..288 | FData 289..n |
+	// | FType 0..7 |     FMeta 8..247      | FDataSHA1 248..288 | FData 289..n |
 	// +------------+-----------------------+--------------------+--------------+
 	// |            | ExpiresAtUnixMs 8..22 |                    |              |
 	// +------------+-----------------------+--------------------+--------------+
@@ -30,7 +30,7 @@ const (
 	// 14 bits for storing ExpiresAt in unix MILLI-seconds (1000 millisecond is equals to 1 second)
 	oFMetaExpAtUnixMsFrom fOffset = oFMetaFrom
 	oFMetaExpAtUnixMsTo   fOffset = oFMetaExpAtUnixMsFrom + 14
-	// bits 22..246 are reserved
+	// bits 23..247 are reserved
 	oFMetaTo fOffset = 247
 	// SHA1 hast of stored data
 	oFDataSHA1From fOffset = oFMetaTo + 1

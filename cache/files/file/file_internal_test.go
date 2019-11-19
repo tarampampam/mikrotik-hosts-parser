@@ -163,6 +163,10 @@ func TestFile_GetAndSetExpiresAt(t *testing.T) {
 		t.Errorf("Expected error does not returned (value is %v)", v)
 	}
 
+	if tp, _ := f.GetType(); tp != TUnknown {
+		t.Errorf("Wrong type is set by default: %v", tp)
+	}
+
 	exp := time.Now()
 
 	if err := f.SetExpiresAt(exp); err != nil {
