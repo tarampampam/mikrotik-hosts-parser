@@ -1,6 +1,8 @@
 package file
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -181,6 +183,58 @@ func TestFile_GetAndSetExpiresAt(t *testing.T) {
 	if gotExp.Unix() != exp.Unix() {
 		t.Errorf("Got wrong experation time value. Want: %v, got: %v", exp, gotExp)
 	}
+}
+
+func TestFile_hashSha1Methods(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		giveString string
+		wantError bool
+	}{
+		{giveString: "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde", wantError: false},
+		{giveString: "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcd€", wantError: true}, // `€` is [226 130 172] - 3 bytes
+		{giveString: "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde11", wantError: true}, // too long
+		{giveString: "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabc", wantError: true}, // too short
+		{giveString: "", wantError: true}, // too short
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.giveString, func(t *testing.T) {
+			h, err := newHashSha1([]byte(tt.giveString))
+
+			if tt.wantError && err == nil {
+				t.Error("Expects error, but nothing returned")
+			}
+
+			if !tt.wantError && h.String() != tt.giveString {
+				t.Errorf("Wrong hash to string convertation. Want %v, got %v", tt.giveString, h)
+			}
+		})
+	}
+}
+
+func TestFile_SetData(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := createTempDir(t)
+	defer removeTempDir(t, tmpDir)
+
+	f, createErr := Create(filepath.Join(tmpDir, "a"), 0664)
+	if createErr != nil {
+		t.Fatalf("Got unexpected error on file creation: %v", createErr)
+	}
+	defer f.Close()
+
+	content := []byte(strings.Repeat("Test", 2))
+	data := bytes.NewBuffer(content)
+
+	if err := f.SetData(data); err != nil {
+		t.Fatalf("Got unexpected error on data setting: %v", err)
+	}
+
+	_data, _ := ioutil.ReadAll(f.file)
+	fmt.Println(_data)
 }
 
 // Create temporary directory.

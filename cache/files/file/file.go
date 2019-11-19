@@ -1,6 +1,7 @@
 package file
 
 import (
+	"crypto/sha1"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -13,6 +14,9 @@ type fOffset uint16
 
 // File type
 type FType string
+
+// SHA1 hash type
+type hashSha1 [20]byte
 
 const (
 	// File block offsets are below:
@@ -41,7 +45,7 @@ const (
 
 // File type definitions (important: max length is 8 bytes, UTF-8)
 const (
-	TRegularCacheEntry FType = "CACHE"
+	TRegularCacheEntry FType = "CACHE" // @todo: rewrite to [...]byte type (remove string type)
 	TUnknown           FType = "UNKNOWN"
 )
 
@@ -58,8 +62,30 @@ const (
 
 // Cache file representation
 type File struct {
-	file *os.File
+	file    *os.File  // file on filesystem
 }
+
+// crypto-algorithms (required for hash calculation)
+var hashing = sha1.New()
+
+// Create new SHA1 hash structure based on passed slice of bytes.
+func newHashSha1(in []byte) (hashSha1, error) {
+	res := hashSha1{}
+
+	if len(in) != cap(res) {
+		return res, errors.New("wrong hash length passed")
+	}
+
+	// copy byte-to-byte
+	for i := range in {
+		res[i] = in[i]
+	}
+
+	return res, nil
+}
+
+// Convert hash bytes slice into string.
+func (h *hashSha1) String() string { return string(h[:]) }
 
 // Open opens the named file for reading. If successful, methods on the returned file can be used for reading; the
 // associated file descriptor has mode O_RDONLY.
@@ -162,7 +188,7 @@ func (f *File) setType(fType FType) error {
 	}
 
 	// fill-up bytes slice from end to start
-	var j = byte(len(buf) - 1)
+	var j = byte(len(buf) - 1) // @todo: this is needed? maybe write left-to-right as usual?
 	for i := len(fType) - 1; i >= 0; i-- {
 		buf[j] = fType[i]
 		j--
@@ -221,4 +247,75 @@ func (f *File) setExpiresAtUnixMs(ts uint64) error {
 	}
 
 	return err
+}
+
+// setDataSHA1 sets the hash value into current file.
+func (f *File) setDataSHA1(h hashSha1) error {
+	from, to := f.getBlockPosition(bFDataSHA1)
+	buf := make([]byte, to-from)
+	buf = h[:]
+
+	n, err := f.file.WriteAt(buf, int64(from))
+
+	if n != len(buf) {
+		return errors.New("wrong wrote bytes length")
+	}
+
+	return err
+}
+
+// setDataSHA1 sets the hash value into current file.
+func (f *File) getDataSHA1() (hashSha1, error) {
+	from, to := f.getBlockPosition(bFDataSHA1)
+	buf := make([]byte, to-from)
+
+	_, err := f.file.ReadAt(buf, int64(from))
+
+	if err != nil && err != io.EOF {
+		return hashSha1{}, err
+	}
+
+	return newHashSha1(buf)
+}
+
+func (f *File) SetData(in io.Reader) error {
+	return f.setData(in)
+}
+
+func (f *File) setData(in io.Reader) error {
+	buf := make([]byte, 32)
+	off := int64(oFDataFrom)
+	hashing.Reset()
+
+	for {
+		// read part of input data
+		_, err := in.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				return err
+			}
+			break
+		}
+
+		// write content into required position
+		wroteBytes, writeErr := f.file.WriteAt(buf, off)
+		if writeErr != nil {
+			return writeErr
+		}
+		// write into "hasher" too for hash sum calculation
+		hashing.Write(buf)
+
+		// move offset
+		off += int64(wroteBytes)
+	}
+
+	hash, hashErr := newHashSha1(hashing.Sum(nil))
+	if hashErr != nil {
+		return hashErr
+	}
+	if err := f.setDataSHA1(hash); err != nil {
+		return err
+	}
+
+	return nil
 }
