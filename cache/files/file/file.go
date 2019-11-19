@@ -1,107 +1,131 @@
 package file
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"time"
 )
 
-// File offset type
-type fOffset uint16
+// Read/write buffer size in bytes
+const rwBufferSize byte = 32
 
-// File type
-type FType string
+type (
+	// File signature
+	FSignature []byte
 
-// SHA1 hash type
-type hashSha1 [20]byte
+	// File field offset and length
+	offset uint8
+	length uint8
 
-const (
-	// File block offsets are below:
-	// +------------+-----------------------+--------------------+--------------+
-	// | FType 0..7 |     FMeta 8..247      | FDataSHA1 248..288 | FData 289..n |
-	// +------------+-----------------------+--------------------+--------------+
-	// |            | ExpiresAtUnixMs 8..22 |                    |              |
-	// +------------+-----------------------+--------------------+--------------+
+	// File field for storing "File signature" (special flag for file identification among other files)
+	ffSignature struct {
+		offset
+		length
+	}
 
-	// File type bits (0..7)
-	oFTypeFrom fOffset = 0
-	oFTypeTo   fOffset = 7
-	// File meta-information
-	oFMetaFrom fOffset = oFTypeTo + 1
-	// 14 bits for storing ExpiresAt in unix MILLI-seconds (1000 millisecond is equals to 1 second)
-	oFMetaExpAtUnixMsFrom fOffset = oFMetaFrom
-	oFMetaExpAtUnixMsTo   fOffset = oFMetaExpAtUnixMsFrom + 14
-	// bits 23..247 are reserved
-	oFMetaTo fOffset = 247
-	// SHA1 hast of stored data
-	oFDataSHA1From fOffset = oFMetaTo + 1
-	oFDataSHA1To   fOffset = oFDataSHA1From + 40
-	// Useful data
-	oFDataFrom fOffset = oFDataSHA1To + 1
+	// File field for storing "Expires At" label (in unix timestamp format with milliseconds)
+	ffExpiresAtUnixMs struct {
+		offset
+		length
+	}
+
+	// File field for storing data "hash sum" (in SHA1 format)
+	ffDataSha1 struct {
+		offset
+		length
+	}
+
+	// Field for useful data
+	ffData struct {
+		offset
+	}
+
+	// Cache file representation (all offsets must be set manually on instance creation action)
+	File struct {
+		ffSignature
+		ffExpiresAtUnixMs
+		ffDataSha1
+		ffData
+		Signature FSignature
+		file *os.File // file on filesystem
+	}
 )
 
-// File type definitions (important: max length is 8 bytes, UTF-8)
-const (
-	TRegularCacheEntry FType = "CACHE" // @todo: rewrite to [...]byte type (remove string type)
-	TUnknown           FType = "UNKNOWN"
-)
-
-// Block type
-type blockType byte
-
-// Block type definitions
-const (
-	bFType            blockType = iota // File type
-	bFMeta                             // Meta-information
-	bFMetaExpAtUnixMS                  // Meta - ExpiresAt in unix milliseconds
-	bFDataSHA1                         // Data SHA1 hash
-)
-
-// Cache file representation
-type File struct {
-	file    *os.File  // file on filesystem
-}
-
-// crypto-algorithms (required for hash calculation)
+// SHA1 "generator" (required for hash sum calculation)
 var hashing = sha1.New()
 
-// Create new SHA1 hash structure based on passed slice of bytes.
-func newHashSha1(in []byte) (hashSha1, error) {
-	res := hashSha1{}
+var DefaultSignature = FSignature("#/CACHE ") // 35, 47, 67, 65, 67, 72, 69, 32
 
-	if len(in) != cap(res) {
-		return res, errors.New("wrong hash length passed")
+// Create new file instance.
+func newFile(file *os.File, signature FSignature) *File {
+	// setup default file type bytes slice
+	if signature == nil || len(signature) == 0 {
+		signature = DefaultSignature
 	}
 
-	// copy byte-to-byte
-	for i := range in {
-		res[i] = in[i]
+	// File block offsets are below (bytes 23..63 is reserved):
+	// +----------------+-----------------------+-----------------+------------+
+	// | Signature 0..7 |    Meta Data 8..63    | DataSHA1 64..83 | Data 84..n |
+	// +----------------+-----------------------+-----------------+------------+
+	// |                | ExpiresAtUnixMs 8..22 |                 |            |
+	// +----------------+-----------------------+-----------------+------------+
+	return &File{
+		ffSignature: ffSignature{
+			offset: 0,
+			length: 8,
+		},
+		ffExpiresAtUnixMs: ffExpiresAtUnixMs{
+			offset: 8,
+			length: 14,
+		},
+		ffDataSha1: ffDataSha1{
+			offset: 64,
+			length: 20,
+		},
+		ffData: ffData{
+			offset: 84,
+		},
+		Signature: signature,
+		file: file,
 	}
-
-	return res, nil
 }
 
-// Convert hash bytes slice into string.
-func (h *hashSha1) String() string { return string(h[:]) }
+// Create creates or truncates the named file. If the file already exists, it is truncated. If the file does not exist,
+// it is created with passed mode (permissions).
+// signature can be omitted (nil) - in this case will be used default file signature.
+// Important: file with signature will be created immediately.
+func Create(name string, perm os.FileMode, signature FSignature) (*File, error) {
+	f, openErr := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
+	if openErr != nil {
+		return nil, openErr
+	}
+
+	file := newFile(f, signature)
+
+	// write file signature
+	if sigErr := file.SetSignature(file.Signature); sigErr != nil {
+		return file, sigErr
+	}
+
+	return file, nil
+}
 
 // Open opens the named file for reading. If successful, methods on the returned file can be used for reading; the
 // associated file descriptor has mode O_RDONLY.
 // If there is an error, it will be of type *os.PathError.
-func Open(name string) (*File, error) {
-	f, err := os.OpenFile(name, os.O_RDONLY, 0)
-	return &File{file: f}, err
-}
+// signature can be omitted (nil) - in this case will be used default file signature.
+func Open(name string, perm os.FileMode, signature FSignature) (*File, error) {
+	f, err := os.OpenFile(name, os.O_RDWR, perm)
+	if err != nil {
+		return nil, err
+	}
 
-// Create creates or truncates the named file. If the file already exists, it is truncated. If the file does not exist,
-// it is created with passed mode (permissions). If successful, methods on the returned File can be used for I/O; the
-// associated file descriptor has mode O_RDWR.
-// If there is an error, it will be of type *PathError.
-func Create(name string, perm os.FileMode) (*File, error) {
-	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
-	return &File{file: f}, err
+	return newFile(f, signature), nil
 }
 
 // Name returns the name of the file as presented to Open.
@@ -114,93 +138,51 @@ func (f *File) Close() error {
 	return f.file.Close()
 }
 
-// Remove "empty" (which is equals to zeros) bytes from slice.
-func (f *File) rmEmptyBytes(in []byte) []byte {
-	// calculate offset with "empty" bytes on lent side
-	var off byte = 0
-	for i, el := range in {
-		if el != 0 {
-			off = byte(i)
-			break
-		}
+// SignatureMatched checks for file signature matching. Signature should be set on file creation. This function can
+// helps you to detect files that created by current package.
+func (f *File) SignatureMatched() (bool, error) {
+	fType, err := f.getSignature()
+	if err != nil {
+		return false, err
 	}
 
-	return in[off:]
+	return bytes.Equal(*fType, f.Signature), nil
 }
 
-// getBlockPosition returns offset for passed block type.
-func (f *File) getBlockPosition(bType blockType) (from, to fOffset) {
-	switch bType {
-	case bFType:
-		from = oFTypeFrom
-		to = oFTypeTo
-	case bFMeta:
-		from = oFMetaFrom
-		to = oFMetaTo
-	case bFMetaExpAtUnixMS:
-		from = oFMetaExpAtUnixMsFrom
-		to = oFMetaExpAtUnixMsTo
-	case bFDataSHA1:
-		from = oFDataSHA1From
-		to = oFDataSHA1To
-	}
-	return
+// GetSignature of current file signature as a typed slice of a bytes.
+func (f *File) GetSignature() (*FSignature, error) {
+	return f.getSignature()
 }
 
-// GetType of cache file. If file provided by this package - type should be `TRegularCacheEntry`.
-func (f *File) GetType() (FType, error) {
-	typeBytes, err := f.getType()
+// getSignature of current file signature as a typed slice of a bytes.
+func (f *File) getSignature() (*FSignature, error) {
+	buf := make(FSignature, f.ffSignature.length)
 
-	switch FType(typeBytes) {
-	case TRegularCacheEntry:
-		return TRegularCacheEntry, nil
-	default:
-		return TUnknown, err
-	}
-}
-
-// getType of a file as a bytes slice (with "empty" bytes removing), declared in file content.
-func (f *File) getType() ([]byte, error) {
-	from, to := f.getBlockPosition(bFType)
-	buf := make([]byte, to-from+1)
-	_, err := f.file.ReadAt(buf, int64(from))
-
-	if err != nil && err != io.EOF {
+	if _, err := f.file.ReadAt(buf, int64(f.ffSignature.offset)); err != nil && err != io.EOF {
 		return nil, err
 	}
 
-	return f.rmEmptyBytes(buf), nil
+	return &buf, nil
 }
 
-// SetType of cache file. During working with this package you should set `TRegularCacheEntry` type.
-func (f *File) SetType(fType FType) error {
-	return f.setType(fType)
+// SetSignature for current file.
+func (f *File) SetSignature(signature FSignature) error {
+	return f.setSignature(signature)
 }
 
-// setType of a cache file. This function converts type into bytes slice with "empty prefix" and write it into required
-// position in a file.
-func (f *File) setType(fType FType) error {
-	from, to := f.getBlockPosition(bFType)
-	buf := make([]byte, to-from+1)
-
-	if len(fType) > len(buf) {
-		return errors.New("cannot set file type: type is too long")
+// setSignature allows to use only bytes slice of signature with length defined in file structure.
+func (f *File) setSignature(signature FSignature) error {
+	if l := len(signature); l != int(f.ffSignature.length) {
+		return fmt.Errorf("wrong signature length: required length: %d, passed: %d", f.ffSignature.length, l)
 	}
 
-	// fill-up bytes slice from end to start
-	var j = byte(len(buf) - 1) // @todo: this is needed? maybe write left-to-right as usual?
-	for i := len(fType) - 1; i >= 0; i-- {
-		buf[j] = fType[i]
-		j--
-	}
-
-	n, err := f.file.WriteAt(buf, int64(from))
-
-	if n != len(buf) {
+	if n, err := f.file.WriteAt(signature, int64(f.ffSignature.offset)); err != nil {
+		return err
+	} else if n != len(signature) {
 		return errors.New("wrong wrote bytes length")
 	}
 
-	return err
+	return nil
 }
 
 // GetExpiresAt for current file (with milliseconds).
@@ -217,65 +199,57 @@ func (f *File) GetExpiresAt() (time.Time, error) {
 
 // getExpiresAtUnixMs returns unsigned integer value with ExpiresAt in UNIX timestamp format in milliseconds.
 func (f *File) getExpiresAtUnixMs() (uint64, error) {
-	from, to := f.getBlockPosition(bFMetaExpAtUnixMS)
-	buf := make([]byte, to-from)
-	_, err := f.file.ReadAt(buf, int64(from))
+	buf := make([]byte, f.ffExpiresAtUnixMs.length)
 
-	if err != nil && err != io.EOF {
+	if _, err := f.file.ReadAt(buf, int64(f.ffExpiresAtUnixMs.offset)); err != nil && err != io.EOF {
 		return 0, err
 	}
 
 	return binary.LittleEndian.Uint64(buf), nil
 }
 
-// SetExpiresAt sets the expiration time for current file.
 func (f *File) SetExpiresAt(t time.Time) error {
 	return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond)))
 }
 
-// setExpiresAtUnixMs takes unix timestamp (in milliseconds) and write them into required file block as a bytes slice.
 func (f *File) setExpiresAtUnixMs(ts uint64) error {
-	from, to := f.getBlockPosition(bFMetaExpAtUnixMS)
-	buf := make([]byte, to-from)
+	buf := make([]byte, f.ffExpiresAtUnixMs.length)
 
 	// pack unsigned integer into slice of bytes
 	binary.LittleEndian.PutUint64(buf, ts)
 
-	n, err := f.file.WriteAt(buf, int64(from))
-	if n != len(buf) {
+	if n, err := f.file.WriteAt(buf, int64(f.ffExpiresAtUnixMs.offset)); err != nil {
+		return err
+	} else if n != len(buf) {
 		return errors.New("wrong wrote bytes length")
 	}
 
-	return err
+	return nil
 }
 
-// setDataSHA1 sets the hash value into current file.
-func (f *File) setDataSHA1(h hashSha1) error {
-	from, to := f.getBlockPosition(bFDataSHA1)
-	buf := make([]byte, to-from)
-	buf = h[:]
+func (f *File) setDataSHA1(h []byte) error {
+	if l := len(h); l != int(f.ffDataSha1.length) {
+		return fmt.Errorf("wrong hash length: required length: %d, passed: %d", f.ffDataSha1.length, l)
+	}
 
-	n, err := f.file.WriteAt(buf, int64(from))
-
-	if n != len(buf) {
+	if n, err := f.file.WriteAt(h, int64(f.ffDataSha1.offset)); err != nil {
+		return err
+	} else if n != len(h) {
 		return errors.New("wrong wrote bytes length")
 	}
 
-	return err
+	return nil
 }
 
 // setDataSHA1 sets the hash value into current file.
-func (f *File) getDataSHA1() (hashSha1, error) {
-	from, to := f.getBlockPosition(bFDataSHA1)
-	buf := make([]byte, to-from)
+func (f *File) getDataSHA1() ([]byte, error) {
+	buf := make([]byte, f.ffDataSha1.length)
 
-	_, err := f.file.ReadAt(buf, int64(from))
-
-	if err != nil && err != io.EOF {
-		return hashSha1{}, err
+	if _, err := f.file.ReadAt(buf, int64(f.ffDataSha1.offset)); err != nil && err != io.EOF {
+		return buf, err
 	}
 
-	return newHashSha1(buf)
+	return buf, nil
 }
 
 func (f *File) SetData(in io.Reader) error {
@@ -283,13 +257,13 @@ func (f *File) SetData(in io.Reader) error {
 }
 
 func (f *File) setData(in io.Reader) error {
-	buf := make([]byte, 32)
-	off := int64(oFDataFrom)
+	buf := make([]byte, rwBufferSize)
+	off := int64(f.ffData.offset)
 	hashing.Reset()
 
 	for {
 		// read part of input data
-		_, err := in.Read(buf)
+		n, err := in.Read(buf)
 		if err != nil {
 			if err != io.EOF {
 				return err
@@ -297,25 +271,30 @@ func (f *File) setData(in io.Reader) error {
 			break
 		}
 
+		// limit length for too small reading results
+		if l := len(buf); n != l {
+			buf = buf[0:n]
+		}
+
 		// write content into required position
 		wroteBytes, writeErr := f.file.WriteAt(buf, off)
 		if writeErr != nil {
 			return writeErr
 		}
-		// write into "hasher" too for hash sum calculation
+		// write into "hashing" too for hash sum calculation
 		hashing.Write(buf)
 
 		// move offset
 		off += int64(wroteBytes)
 	}
 
-	hash, hashErr := newHashSha1(hashing.Sum(nil))
-	if hashErr != nil {
-		return hashErr
-	}
-	if err := f.setDataSHA1(hash); err != nil {
+	if err := f.setDataSHA1(hashing.Sum(nil)); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (f *File) getData(out io.Writer) error {
 	return nil
 }
