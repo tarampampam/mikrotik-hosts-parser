@@ -1,8 +1,11 @@
 package file
 
 import (
+	"encoding/binary"
 	"errors"
+	"io"
 	"os"
+	"time"
 )
 
 // File offset type
@@ -13,20 +16,20 @@ type FType string
 
 const (
 	// File block offsets are below:
-	// +------------+-----------------+--------------------+--------------+
-	// | FType 0..7 |  FMeta 8..247   | FDataSHA1 248..288 | FData 289..n |
-	// +------------+-----------------+--------------------+--------------+
-	// |            | TTLUnixMs 8..22 |                    |              |
-	// +------------+-----------------+--------------------+--------------+
+	// +------------+-----------------------+--------------------+--------------+
+	// | FType 0..7 |  FMeta 8..247         | FDataSHA1 248..288 | FData 289..n |
+	// +------------+-----------------------+--------------------+--------------+
+	// |            | ExpiresAtUnixMs 8..22 |                    |              |
+	// +------------+-----------------------+--------------------+--------------+
 
 	// File type bits (0..7)
 	oFTypeFrom fOffset = 0
 	oFTypeTo   fOffset = 7
 	// File meta-information
 	oFMetaFrom fOffset = oFTypeTo + 1
-	// 14 bits for storing TTL in unix MILLI-seconds (1000 millisecond is equals to 1 second)
-	oFMetaTTLUnixMsFrom fOffset = oFMetaFrom
-	oFMetaTTLUnixMsTo   fOffset = oFMetaTTLUnixMsFrom + 14
+	// 14 bits for storing ExpiresAt in unix MILLI-seconds (1000 millisecond is equals to 1 second)
+	oFMetaExpAtUnixMsFrom fOffset = oFMetaFrom
+	oFMetaExpAtUnixMsTo   fOffset = oFMetaExpAtUnixMsFrom + 14
 	// bits 22..246 are reserved
 	oFMetaTo fOffset = 247
 	// SHA1 hast of stored data
@@ -38,8 +41,8 @@ const (
 
 // File type definitions (important: max length is 8 bytes, UTF-8)
 const (
-	tRegularCacheEntry FType = "CACHE"
-	tUnknown           FType = "UNKNOWN"
+	TRegularCacheEntry FType = "CACHE"
+	TUnknown           FType = "UNKNOWN"
 )
 
 // Block type
@@ -47,10 +50,10 @@ type blockType byte
 
 // Block type definitions
 const (
-	bFType          blockType = iota // File type
-	bFMeta                           // Meta-information
-	bFMetaTTLUnixMS                  // Meta - TTL in unix milliseconds
-	bFDataSHA1                       // Data SHA1 hash
+	bFType            blockType = iota // File type
+	bFMeta                             // Meta-information
+	bFMetaExpAtUnixMS                  // Meta - ExpiresAt in unix milliseconds
+	bFDataSHA1                         // Data SHA1 hash
 )
 
 // Cache file representation
@@ -85,6 +88,20 @@ func (f *File) Close() error {
 	return f.file.Close()
 }
 
+// Remove "empty" (which is equals to zeros) bytes from slice.
+func (f *File) rmEmptyBytes(in []byte) []byte {
+	// calculate offset with "empty" bytes on lent side
+	var off byte = 0
+	for i, el := range in {
+		if el != 0 {
+			off = byte(i)
+			break
+		}
+	}
+
+	return in[off:]
+}
+
 // getBlockPosition returns offset for passed block type.
 func (f *File) getBlockPosition(bType blockType) (from, to fOffset) {
 	switch bType {
@@ -94,9 +111,9 @@ func (f *File) getBlockPosition(bType blockType) (from, to fOffset) {
 	case bFMeta:
 		from = oFMetaFrom
 		to = oFMetaTo
-	case bFMetaTTLUnixMS:
-		from = oFMetaTTLUnixMsFrom
-		to = oFMetaTTLUnixMsTo
+	case bFMetaExpAtUnixMS:
+		from = oFMetaExpAtUnixMsFrom
+		to = oFMetaExpAtUnixMsTo
 	case bFDataSHA1:
 		from = oFDataSHA1From
 		to = oFDataSHA1To
@@ -104,15 +121,15 @@ func (f *File) getBlockPosition(bType blockType) (from, to fOffset) {
 	return
 }
 
-// GetType of cache file. If file provided by this package - type should be `tRegularCacheEntry`.
+// GetType of cache file. If file provided by this package - type should be `TRegularCacheEntry`.
 func (f *File) GetType() (FType, error) {
 	typeBytes, err := f.getType()
 
 	switch FType(typeBytes) {
-	case tRegularCacheEntry:
-		return tRegularCacheEntry, nil
+	case TRegularCacheEntry:
+		return TRegularCacheEntry, nil
 	default:
-		return tUnknown, err
+		return TUnknown, err
 	}
 }
 
@@ -120,27 +137,16 @@ func (f *File) GetType() (FType, error) {
 func (f *File) getType() ([]byte, error) {
 	from, to := f.getBlockPosition(bFType)
 	buf := make([]byte, to-from+1)
-	n, err := f.file.ReadAt(buf, int64(from))
+	_, err := f.file.ReadAt(buf, int64(from))
 
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, err
-	} else if n != len(buf) {
-		return nil, errors.New("wrong bytes read length")
 	}
 
-	// calculate offset with "empty" bytes on lent side
-	var off byte = 0
-	for i, el := range buf {
-		if el != 0 {
-			off = byte(i)
-			break
-		}
-	}
-
-	return buf[off:], nil
+	return f.rmEmptyBytes(buf), nil
 }
 
-// SetType of cache file. During working with this package you should set `tRegularCacheEntry` type.
+// SetType of cache file. During working with this package you should set `TRegularCacheEntry` type.
 func (f *File) SetType(fType FType) error {
 	return f.setType(fType)
 }
@@ -148,12 +154,12 @@ func (f *File) SetType(fType FType) error {
 // setType of a cache file. This function converts type into bytes slice with "empty prefix" and write it into required
 // position in a file.
 func (f *File) setType(fType FType) error {
-	if len(fType) > 8 {
-		return errors.New("cannot set file type: type is too long")
-	}
-
 	from, to := f.getBlockPosition(bFType)
 	buf := make([]byte, to-from+1)
+
+	if len(fType) > len(buf) {
+		return errors.New("cannot set file type: type is too long")
+	}
 
 	// fill-up bytes slice from end to start
 	var j = byte(len(buf) - 1)
@@ -165,7 +171,53 @@ func (f *File) setType(fType FType) error {
 	n, err := f.file.WriteAt(buf, int64(from))
 
 	if n != len(buf) {
-		return errors.New("wrong bytes read length")
+		return errors.New("wrong wrote bytes length")
+	}
+
+	return err
+}
+
+// GetExpiresAt for current file (with milliseconds).
+func (f *File) GetExpiresAt() (time.Time, error) {
+	ms, err := f.getExpiresAtUnixMs()
+
+	// check for "value was set?"
+	if ms == 0 && err == nil {
+		err = errors.New("value was not set")
+	}
+
+	return time.Unix(0, int64(ms*uint64(time.Millisecond))), err
+}
+
+// getExpiresAtUnixMs returns unsigned integer value with ExpiresAt in UNIX timestamp format in milliseconds.
+func (f *File) getExpiresAtUnixMs() (uint64, error) {
+	from, to := f.getBlockPosition(bFMetaExpAtUnixMS)
+	buf := make([]byte, to-from)
+	_, err := f.file.ReadAt(buf, int64(from))
+
+	if err != nil && err != io.EOF {
+		return 0, err
+	}
+
+	return binary.LittleEndian.Uint64(buf), nil
+}
+
+// SetExpiresAt
+func (f *File) SetExpiresAt(t time.Time) error {
+	return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond)))
+}
+
+func (f *File) setExpiresAtUnixMs(ts uint64) error {
+	from, to := f.getBlockPosition(bFMetaExpAtUnixMS)
+	buf := make([]byte, to-from)
+
+	// pack unsigned integer into slice of bytes
+	binary.LittleEndian.PutUint64(buf, ts)
+
+	n, err := f.file.WriteAt(buf, int64(from))
+
+	if n != len(buf) {
+		return errors.New("wrong wrote bytes length")
 	}
 
 	return err

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFTypeOffsetConstants(t *testing.T) {
@@ -19,8 +20,8 @@ func TestFTypeOffsetConstants(t *testing.T) {
 		{constName: "oFTypeFrom", giveConst: oFTypeFrom, wantValue: 0},
 		{constName: "oFTypeTo", giveConst: oFTypeTo, wantValue: 7},
 		{constName: "oFMetaFrom", giveConst: oFMetaFrom, wantValue: 8},
-		{constName: "oFMetaTTLUnixMsFrom", giveConst: oFMetaTTLUnixMsFrom, wantValue: 8},
-		{constName: "oFMetaTTLUnixMsTo", giveConst: oFMetaTTLUnixMsTo, wantValue: 22},
+		{constName: "oFMetaExpAtUnixMsFrom", giveConst: oFMetaExpAtUnixMsFrom, wantValue: 8},
+		{constName: "oFMetaExpAtUnixMsTo", giveConst: oFMetaExpAtUnixMsTo, wantValue: 22},
 		{constName: "oFMetaTo", giveConst: oFMetaTo, wantValue: 247},
 		{constName: "oFDataSHA1From", giveConst: oFDataSHA1From, wantValue: 248},
 		{constName: "oFDataSHA1To", giveConst: oFDataSHA1To, wantValue: 288},
@@ -49,7 +50,7 @@ func Test_getBlockPosition(t *testing.T) {
 	}{
 		{blockName: "bFType", giveBlockType: bFType, wantFrom: oFTypeFrom, wantTo: oFTypeTo},
 		{blockName: "bFMeta", giveBlockType: bFMeta, wantFrom: oFMetaFrom, wantTo: oFMetaTo},
-		{blockName: "bFMetaTTLUnixMS", giveBlockType: bFMetaTTLUnixMS, wantFrom: oFMetaTTLUnixMsFrom, wantTo: oFMetaTTLUnixMsTo},
+		{blockName: "bFMetaExpAtUnixMS", giveBlockType: bFMetaExpAtUnixMS, wantFrom: oFMetaExpAtUnixMsFrom, wantTo: oFMetaExpAtUnixMsTo},
 		{blockName: "bFDataSHA1", giveBlockType: bFDataSHA1, wantFrom: oFDataSHA1From, wantTo: oFDataSHA1To},
 		{blockName: "unknown", giveBlockType: unknown, wantFrom: 0, wantTo: 0},
 	}
@@ -79,9 +80,9 @@ func TestFile_GetAndSetType(t *testing.T) {
 		giveType FType
 		wantType FType
 	}{
-		{giveType: tUnknown, wantType: tUnknown},
-		{giveType: tRegularCacheEntry, wantType: tRegularCacheEntry},
-		{giveType: fakeType, wantType: tUnknown},
+		{giveType: TUnknown, wantType: TUnknown},
+		{giveType: TRegularCacheEntry, wantType: TRegularCacheEntry},
+		{giveType: fakeType, wantType: TUnknown},
 	}
 
 	for _, tt := range tests {
@@ -89,14 +90,23 @@ func TestFile_GetAndSetType(t *testing.T) {
 			f, createErr := Create(filepath.Join(tmpDir, string(tt.giveType)), 0664)
 
 			if createErr != nil {
-				t.Errorf("Got unexpected error on file creation: %v", createErr)
+				t.Fatalf("Got unexpected error on file creation: %v", createErr)
+			}
+
+			fType, getErr := f.GetType()
+			if getErr != nil {
+				t.Errorf("Got unexpected error on type getting: %v", getErr)
+			}
+
+			if fType != TUnknown {
+				t.Errorf("Unexpected type returned. Want: %v, got: %v", TUnknown, fType)
 			}
 
 			if setErr := f.SetType(tt.giveType); setErr != nil {
 				t.Errorf("Got unexpected error on type setting: %v", setErr)
 			}
 
-			fType, getErr := f.GetType()
+			fType, getErr = f.GetType()
 			if getErr != nil {
 				t.Errorf("Got unexpected error on type getting: %v", getErr)
 			}
@@ -107,7 +117,7 @@ func TestFile_GetAndSetType(t *testing.T) {
 			}
 
 			if closeErr := f.Close(); closeErr != nil {
-				t.Errorf("Got unexpected error on file closing: %v", closeErr)
+				t.Fatalf("Got unexpected error on file closing: %v", closeErr)
 			}
 		})
 	}
@@ -132,8 +142,40 @@ func TestFile_SetTypeWithWrongValue(t *testing.T) {
 	}
 
 	fType, _ := f.GetType()
-	if fType != tUnknown {
-		t.Errorf("Got unexpected error on type getting: %v. Want: %v", fType, tUnknown)
+	if fType != TUnknown {
+		t.Errorf("Got unexpected error on type getting: %v. Want: %v", fType, TUnknown)
+	}
+}
+
+func TestFile_GetAndSetExpiresAt(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := createTempDir(t)
+	defer removeTempDir(t, tmpDir)
+
+	f, createErr := Create(filepath.Join(tmpDir, "a"), 0664)
+	if createErr != nil {
+		t.Fatalf("Got unexpected error on file creation: %v", createErr)
+	}
+	defer f.Close()
+
+	if v, err := f.GetExpiresAt(); err == nil {
+		t.Errorf("Expected error does not returned (value is %v)", v)
+	}
+
+	exp := time.Now()
+
+	if err := f.SetExpiresAt(exp); err != nil {
+		t.Fatalf("Got unexpected error on experation setting: %v", err)
+	}
+
+	gotExp, getErr := f.GetExpiresAt()
+	if getErr != nil {
+		t.Fatalf("Got unexpected error on experation getting: %v", getErr)
+	}
+
+	if gotExp.Unix() != exp.Unix() {
+		t.Errorf("Got wrong experation time value. Want: %v, got: %v", exp, gotExp)
 	}
 }
 
