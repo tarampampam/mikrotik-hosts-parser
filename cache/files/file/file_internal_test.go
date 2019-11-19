@@ -122,11 +122,10 @@ func TestFile_SetTypeWithWrongValue(t *testing.T) {
 	const wrongType FType = "X12345678"
 
 	f, createErr := Create(filepath.Join(tmpDir, string(wrongType)), 0664)
-	defer f.Close()
-
 	if createErr != nil {
-		t.Errorf("Got unexpected error on file creation: %v", createErr)
+		t.Fatalf("Got unexpected error on file creation: %v", createErr)
 	}
+	defer f.Close()
 
 	if setErr := f.SetType(wrongType); setErr == nil {
 		t.Error("Expected error was not returned")

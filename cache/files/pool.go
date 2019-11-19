@@ -1,7 +1,7 @@
 package files
 
 import (
-	"crypto/md5"
+	"crypto/md5" // nolint:gosec
 	"encoding/hex"
 	"hash"
 	"mikrotik-hosts-parser/cache"
@@ -25,13 +25,13 @@ func NewPool(cachePath string, hotBufLen int, hotBufTTL time.Duration) *Pool {
 		hotBufLen: hotBufLen,
 		hotBufTTL: hotBufTTL,
 		mutex:     &sync.Mutex{},
-		items:     make(map[string]cache.Item, 0),
-		hash:      md5.New(), // selected hash algorithm
+		items:     make(map[string]cache.Item),
+		hash:      md5.New(), // nolint:gosec // selected hash algorithm
 	}
 }
 
 func (p *Pool) keyToHash(key string) string {
-	slice := md5.Sum([]byte(key))
+	slice := md5.Sum([]byte(key)) // nolint:gosec
 
 	return strings.ToLower(hex.EncodeToString(slice[:]))
 }

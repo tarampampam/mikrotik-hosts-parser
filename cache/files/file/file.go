@@ -86,7 +86,7 @@ func (f *File) Close() error {
 }
 
 // getBlockPosition returns offset for passed block type.
-func (f *File) getBlockPosition(bType blockType) (from fOffset, to fOffset) {
+func (f *File) getBlockPosition(bType blockType) (from, to fOffset) {
 	switch bType {
 	case bFType:
 		from = oFTypeFrom
@@ -111,9 +111,9 @@ func (f *File) GetType() (FType, error) {
 	switch FType(typeBytes) {
 	case tRegularCacheEntry:
 		return tRegularCacheEntry, nil
+	default:
+		return tUnknown, err
 	}
-
-	return tUnknown, err
 }
 
 // getType of a file as a bytes slice (with "empty" bytes removing), declared in file content.
