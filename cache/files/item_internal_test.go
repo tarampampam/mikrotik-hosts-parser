@@ -400,6 +400,7 @@ func TestItem_IsExpired(t *testing.T) {
 	}
 }
 
+//nolint:gocritic
 //func TestItem_ExpiringUsesHotBuffer(t *testing.T) {
 //	t.Parallel()
 //

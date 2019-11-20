@@ -114,6 +114,7 @@ func Create(name string, perm os.FileMode, signature FSignature) (*File, error) 
 		return nil, err
 	}
 
+	// requires for hashsum init
 	if err := file.SetData(bytes.NewBuffer([]byte{})); err != nil {
 		return nil, err
 	}
