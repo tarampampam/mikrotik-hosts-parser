@@ -11,7 +11,7 @@ DC_RUN_ARGS = --rm --user "$(shell id -u):$(shell id -g)" app
 APP_NAME = $(notdir $(CURDIR))
 GO_RUN_ARGS ?=
 
-.PHONY : help gen build update fix gotest test lint cover run shell image clean
+.PHONY : help gen build update fmt gotest test lint cover run shell image clean
 .DEFAULT_GOAL : help
 .SILENT : test shell
 
@@ -29,7 +29,7 @@ gen: ## Generate required files
 build: gen ## Build app binary file
 	$(DC_BIN) run $(DC_RUN_ARGS) go build -ldflags=$(LDFLAGS) -o './$(APP_NAME)' .
 
-fix: ## Run source code formatter tools
+fmt: ## Run source code formatter tools
 	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'GO111MODULE=off go get golang.org/x/tools/cmd/goimports && $$GOPATH/bin/goimports -d -w .'
 	$(DC_BIN) run $(DC_RUN_ARGS) gofmt -s -w -d .
 
@@ -42,9 +42,8 @@ gotest: ## Run app tests
 test: lint gotest ## Run app tests and linters
 
 cover: ## Run app tests with coverage report
-	-rm -f ./coverage.html
-	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'go test -v -race -covermode=atomic -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'
-	-sensible-browser ./coverage.html && sleep 1 && rm -f ./coverage.html
+	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'go test -race -covermode=atomic -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'
+	-sleep 1 && sensible-browser ./coverage.html && sleep 1 && rm -f ./coverage.html
 
 run: ## Run app without building binary file
 	$(DC_BIN) run $(DC_RUN_ARGS) go run . $(GO_RUN_ARGS)

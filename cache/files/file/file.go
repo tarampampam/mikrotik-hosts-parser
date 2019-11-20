@@ -2,7 +2,7 @@ package file
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -52,12 +52,12 @@ type (
 		ffDataSha1
 		ffData
 		Signature FSignature
-		file *os.File // file on filesystem
+		file      *os.File // file on filesystem
 	}
 )
 
 // SHA1 "generator" (required for hash sum calculation)
-var hashing = sha1.New()
+var hashing = sha1.New() //nolint:gosec
 
 var DefaultSignature = FSignature("#/CACHE ") // 35, 47, 67, 65, 67, 72, 69, 32
 
@@ -91,7 +91,7 @@ func newFile(file *os.File, signature FSignature) *File {
 			offset: 84,
 		},
 		Signature: signature,
-		file: file,
+		file:      file,
 	}
 }
 
@@ -282,7 +282,9 @@ func (f *File) setData(in io.Reader) error {
 			return writeErr
 		}
 		// write into "hashing" too for hash sum calculation
-		hashing.Write(buf)
+		if _, err := hashing.Write(buf); err != nil {
+			return err
+		}
 
 		// move offset
 		off += int64(wroteBytes)
@@ -295,6 +297,59 @@ func (f *File) setData(in io.Reader) error {
 	return nil
 }
 
+func (f *File) GetData(out io.Writer) error {
+	return f.getData(out)
+}
+
 func (f *File) getData(out io.Writer) error {
+	buf := make([]byte, rwBufferSize)
+	off := uint64(f.ffData.offset)
+	hashing.Reset()
+
+	for {
+		// read part of input data
+		n, readErr := f.file.ReadAt(buf, int64(off))
+		if readErr != nil {
+			if readErr != io.EOF {
+				return readErr
+			}
+		}
+		// limit length for too small reading results
+		if l := len(buf); n != l {
+			buf = buf[0:n]
+		}
+
+		// write content into required position
+		wroteBytes, writeErr := out.Write(buf)
+		if writeErr != nil {
+			return writeErr
+		}
+		// write into "hashing" too for hash sum calculation
+		if _, err := hashing.Write(buf); err != nil {
+			return err
+		}
+
+		// move offset
+		off += uint64(wroteBytes)
+
+		if readErr != nil {
+			break
+		}
+	}
+
+	// calculate just read data hash
+	dataHash := hashing.Sum(nil)
+
+	// get existing hash
+	existsHash, hashErr := f.getDataSHA1()
+	if hashErr != nil {
+		return hashErr
+	}
+
+	// if hashes mismatched - data was broken
+	if !bytes.Equal(dataHash, existsHash) {
+		return fmt.Errorf("data hashes mismatched. want: %s, got: %s", existsHash, dataHash)
+	}
+
 	return nil
 }

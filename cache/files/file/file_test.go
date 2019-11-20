@@ -2,7 +2,6 @@ package file
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -18,11 +17,10 @@ func TestCreate(t *testing.T) {
 	defer removeTempDir(t, tmpDir)
 
 	f, createErr := Create(filepath.Join(tmpDir, "a"), 0664, nil)
-	defer f.Close()
-
 	if createErr != nil {
 		t.Fatalf("Got unexpected error on file creation: %v", createErr)
 	}
+	defer f.Close()
 
 	if !bytes.Equal(f.Signature, DefaultSignature) {
 		t.Errorf("Created file has non-default signature. Got: %v, want: %v", f.Signature, DefaultSignature)
@@ -54,11 +52,11 @@ func TestCreateUsingDifferentParameters(t *testing.T) {
 		wantErrorWords []string
 	}{
 		{
-			name:           "correct short signature",
-			giveFilePath:   filepath.Join(tmpDir, "a"),
-			giveSignature:  &FSignature{0, 1, 2, 3, 4, 5, 6, 7},
-			givePerms:      0664,
-			wantError:      false,
+			name:          "correct short signature",
+			giveFilePath:  filepath.Join(tmpDir, "a"),
+			giveSignature: &FSignature{0, 1, 2, 3, 4, 5, 6, 7},
+			givePerms:     0664,
+			wantError:     false,
 		},
 		{
 			name:           "too short signature",
@@ -118,9 +116,9 @@ func TestOpen(t *testing.T) {
 
 	f1, _ := Create(filepath.Join(tmpDir, "a"), 0664, nil)
 	f2, _ := os.Create(filepath.Join(tmpDir, "b"))
-	f2.WriteString("foo bar")
-	f1.Close()
-	f2.Close()
+	_, _ = f2.WriteString("foo bar")
+	_ = f1.Close()
+	_ = f2.Close()
 
 	file1, file1err := Open(f1.Name(), 0664, nil)
 	if file1err != nil {
@@ -129,7 +127,7 @@ func TestOpen(t *testing.T) {
 	if ok, _ := file1.SignatureMatched(); !ok {
 		t.Error("Signature mismatched for correct file")
 	}
-	file1.Close()
+	_ = file1.Close()
 
 	file2, file2err := Open(f2.Name(), 0664, nil)
 	if file2err != nil {
@@ -138,7 +136,7 @@ func TestOpen(t *testing.T) {
 	if ok, _ := file2.SignatureMatched(); ok {
 		t.Error("Signature must be mismatched for incorrect file")
 	}
-	file2.Close()
+	_ = file2.Close()
 
 	_, file3err := Open(tmpDir, 0664, nil)
 	if file3err == nil {
@@ -199,8 +197,7 @@ func TestFile_SetData(t *testing.T) {
 	f, _ := Create(filepath.Join(tmpDir, "a"), 0664, nil)
 	defer f.Close()
 
-	//content := []byte(strings.Repeat("Test", 2))
-	content := []byte{111, 222}
+	content := []byte(strings.Repeat("Test", 2))
 	data := bytes.NewBuffer(content)
 
 	exp := time.Now()
@@ -209,11 +206,20 @@ func TestFile_SetData(t *testing.T) {
 	}
 
 	if err := f.SetData(data); err != nil {
-		t.Fatalf("Got unexpected error on data setting: %v", err)
+		t.Errorf("Got unexpected error on data setting: %v", err)
 	}
 
-	_data, _ := ioutil.ReadAll(f.file)
-	fmt.Println("==>", string(_data), _data)
+	reader := bytes.NewBuffer([]byte{})
+
+	if err := f.GetData(reader); err != nil {
+		t.Errorf("Got unexpected error on data getting: %v. Read data is: %v", err, reader.Bytes())
+	}
+
+	if !bytes.Equal(content, reader.Bytes()) {
+		t.Errorf("Wrong content returned. Want: %v, got: %v", content, reader.Bytes())
+	}
+
+	t.Log(ioutil.ReadAll(f.file)) // for debug
 }
 
 // Create temporary directory.
