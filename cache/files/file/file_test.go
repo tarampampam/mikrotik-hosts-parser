@@ -3,6 +3,7 @@ package file
 import (
 	"bytes"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +21,7 @@ func TestCreate(t *testing.T) {
 	if createErr != nil {
 		t.Fatalf("Got unexpected error on file creation: %v", createErr)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if !bytes.Equal(f.Signature, DefaultSignature) {
 		t.Errorf("Created file has non-default signature. Got: %v, want: %v", f.Signature, DefaultSignature)
@@ -87,11 +88,6 @@ func TestCreateUsingDifferentParameters(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f, createErr := Create(tt.giveFilePath, tt.givePerms, *tt.giveSignature)
-			defer func() {
-				if f != nil {
-					f.Close()
-				}
-			}()
 
 			if createErr == nil && tt.wantError {
 				t.Fatal("Expected error was not returned")
@@ -103,6 +99,10 @@ func TestCreateUsingDifferentParameters(t *testing.T) {
 						t.Errorf("Required word [%s] was not found in eror message [%s]", word, createErr.Error())
 					}
 				}
+			}
+
+			if f != nil {
+				_ = f.Close()
 			}
 		})
 	}
@@ -152,11 +152,12 @@ func TestFile_Name(t *testing.T) {
 
 	name := filepath.Join(tmpDir, "a")
 	f, _ := Create(name, 0664, nil)
-	defer f.Close()
 
 	if f.Name() != name {
 		t.Errorf("Wrong name. Want [%s], got: [%s]", name, f.Name())
 	}
+
+	_ = f.Close()
 }
 
 func TestFile_GetAndSetExpiresAt(t *testing.T) {
@@ -166,7 +167,7 @@ func TestFile_GetAndSetExpiresAt(t *testing.T) {
 	defer removeTempDir(t, tmpDir)
 
 	f, _ := Create(filepath.Join(tmpDir, "a"), 0664, nil)
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if v, err := f.GetExpiresAt(); err == nil {
 		t.Errorf("Expected error was not returned (value is %v)", v)
@@ -188,38 +189,140 @@ func TestFile_GetAndSetExpiresAt(t *testing.T) {
 	}
 }
 
-func TestFile_SetData(t *testing.T) {
+func TestFile_GetAndSetData(t *testing.T) { //nolint:gocyclo
 	t.Parallel()
 
 	tmpDir := createTempDir(t)
 	defer removeTempDir(t, tmpDir)
 
-	f, _ := Create(filepath.Join(tmpDir, "a"), 0664, nil)
-	defer f.Close()
+	// genRandomContent generates slice of random bytes with passed length
+	genRandomContent := func(t *testing.T, len int) []byte {
+		t.Helper()
 
-	content := []byte(strings.Repeat("Test", 2))
-	data := bytes.NewBuffer(content)
+		buf := make([]byte, 0)
+		rand.Seed(time.Now().UnixNano())
 
-	exp := time.Now()
-	if err := f.SetExpiresAt(exp); err != nil {
-		t.Errorf("Got unexpected error on experation setting: %v", err)
+		for i := 1; i <= len; i++ {
+			buf = append(buf, byte(rand.Intn(255)))
+		}
+
+		return buf
 	}
 
-	if err := f.SetData(data); err != nil {
-		t.Errorf("Got unexpected error on data setting: %v", err)
+	tests := []struct {
+		name        string
+		giveFile    func(t *testing.T) *File // file fabric
+		giveContent []byte
+	}{
+		{
+			name: "without content",
+			giveFile: func(t *testing.T) *File {
+				f, err := Create(filepath.Join(tmpDir, "a"), 0664, nil)
+				if err != nil {
+					t.Fatalf("Got unexpected error on file creation: %v", err)
+				}
+				return f
+			},
+			giveContent: genRandomContent(t, 0),
+		},
+		{
+			name: "8 bytes content",
+			giveFile: func(t *testing.T) *File {
+				f, err := Create(filepath.Join(tmpDir, "b"), 0664, nil)
+				if err != nil {
+					t.Fatalf("Got unexpected error on file creation: %v", err)
+				}
+				return f
+			},
+			giveContent: genRandomContent(t, 8),
+		},
+		{
+			name: "medium content size",
+			giveFile: func(t *testing.T) *File {
+				f, err := Create(filepath.Join(tmpDir, "c"), 0664, nil)
+				if err != nil {
+					t.Fatalf("Got unexpected error on file creation: %v", err)
+				}
+				return f
+			},
+			giveContent: genRandomContent(t, 1024*2),
+		},
+		{
+			name: "large content size",
+			giveFile: func(t *testing.T) *File {
+				f, err := Create(filepath.Join(tmpDir, "d"), 0664, nil)
+				if err != nil {
+					t.Fatalf("Got unexpected error on file creation: %v", err)
+				}
+				return f
+			},
+			giveContent: genRandomContent(t, 1024*512),
+		},
 	}
 
-	reader := bytes.NewBuffer([]byte{})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := tt.giveFile(t)
+			defer func(f *File) { _ = f.Close() }(f)
 
-	if err := f.GetData(reader); err != nil {
-		t.Errorf("Got unexpected error on data getting: %v. Read data is: %v", err, reader.Bytes())
+			justCreatedHash, getHashErr := f.GetDataHash()
+			// get hashsum
+			if len(justCreatedHash) == 0 {
+				t.Errorf("Hashsum for just created file should be non-empty: %v", justCreatedHash)
+			} else if getHashErr != nil {
+				t.Errorf("Got unexpected error on hashsum getting: %v", getHashErr)
+			}
+
+			exp := time.Now()
+
+			// set expiration date/time
+			if err := f.SetExpiresAt(exp); err != nil {
+				t.Errorf("Got unexpected error on experation setting: %v", err)
+			}
+
+			// get data (should be empty)
+			writeTo := bytes.NewBuffer([]byte{})
+			if err := f.GetData(writeTo); err != nil {
+				t.Errorf("Got unexpected error on data getting: %v", err)
+			}
+			if data := writeTo.Bytes(); len(data) != 0 {
+				t.Errorf("For just created file data should be empty. Got: %v", data)
+			}
+
+			// set some data
+			readFrom := bytes.NewBuffer(tt.giveContent)
+			if err := f.SetData(readFrom); err != nil {
+				t.Errorf("Got unexpected error on data setting: %v", err)
+			}
+
+			// hashsum must changes
+			if len(tt.giveContent) > 0 {
+				if h, err := f.GetDataHash(); bytes.Equal(justCreatedHash, h) {
+					t.Errorf("Hashes after data setting [%v] and just created file [%v] should be different", h, justCreatedHash)
+				} else if err != nil {
+					t.Errorf("Got unexpected error on hashsum getting: %v", err)
+				}
+			}
+
+			// get data back
+			writeBackTo := bytes.NewBuffer([]byte{})
+			if err := f.GetData(writeBackTo); err != nil {
+				t.Errorf("Got unexpected error on data getting: %v", err)
+			}
+			if data := writeBackTo.Bytes(); !bytes.Equal(data, tt.giveContent) {
+				t.Errorf("Wrong content returned. Want: %v, got: %v", tt.giveContent, data)
+			}
+
+			// check expiring date/time
+			if fExp, err := f.GetExpiresAt(); fExp.Unix() != exp.Unix() {
+				t.Errorf("Got unexpected expiring date/time. Want: %v, got: %v", exp, fExp)
+			} else if err != nil {
+				t.Errorf("Got unexpected error on experation getting: %v", err)
+			}
+
+			// for debug: `t.Log(ioutil.ReadAll(f.file))`
+		})
 	}
-
-	if !bytes.Equal(content, reader.Bytes()) {
-		t.Errorf("Wrong content returned. Want: %v, got: %v", content, reader.Bytes())
-	}
-
-	t.Log(ioutil.ReadAll(f.file)) // for debug
 }
 
 // Create temporary directory.

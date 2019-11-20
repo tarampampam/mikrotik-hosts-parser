@@ -43,7 +43,7 @@ test: lint gotest ## Run app tests and linters
 
 cover: ## Run app tests with coverage report
 	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'go test -race -covermode=atomic -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'
-	-sleep 1 && sensible-browser ./coverage.html && sleep 1 && rm -f ./coverage.html
+	-sensible-browser ./coverage.html && sleep 2 && rm -f ./coverage.html
 
 run: ## Run app without building binary file
 	$(DC_BIN) run $(DC_RUN_ARGS) go run . $(GO_RUN_ARGS)

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 	"time"
@@ -52,12 +53,10 @@ type (
 		ffDataSha1
 		ffData
 		Signature FSignature
-		file      *os.File // file on filesystem
+		file      *os.File  // file on filesystem
+		hashing   hash.Hash // SHA1 "generator" (required for hash sum calculation)
 	}
 )
-
-// SHA1 "generator" (required for hash sum calculation)
-var hashing = sha1.New() //nolint:gosec
 
 var DefaultSignature = FSignature("#/CACHE ") // 35, 47, 67, 65, 67, 72, 69, 32
 
@@ -68,11 +67,13 @@ func newFile(file *os.File, signature FSignature) *File {
 		signature = DefaultSignature
 	}
 
-	// File block offsets are below (bytes 23..63 is reserved):
+	// File block offsets are below:
 	// +----------------+-----------------------+-----------------+------------+
 	// | Signature 0..7 |    Meta Data 8..63    | DataSHA1 64..83 | Data 84..n |
 	// +----------------+-----------------------+-----------------+------------+
 	// |                | ExpiresAtUnixMs 8..22 |                 |            |
+	// +----------------+-----------------------+-----------------+------------+
+	// |                |    RESERVED 23..63    |                 |            |
 	// +----------------+-----------------------+-----------------+------------+
 	return &File{
 		ffSignature: ffSignature{
@@ -92,6 +93,7 @@ func newFile(file *os.File, signature FSignature) *File {
 		},
 		Signature: signature,
 		file:      file,
+		hashing:   sha1.New(), //nolint:gosec
 	}
 }
 
@@ -108,8 +110,12 @@ func Create(name string, perm os.FileMode, signature FSignature) (*File, error) 
 	file := newFile(f, signature)
 
 	// write file signature
-	if sigErr := file.SetSignature(file.Signature); sigErr != nil {
-		return file, sigErr
+	if err := file.SetSignature(file.Signature); err != nil {
+		return nil, err
+	}
+
+	if err := file.SetData(bytes.NewBuffer([]byte{})); err != nil {
+		return nil, err
 	}
 
 	return file, nil
@@ -158,8 +164,11 @@ func (f *File) GetSignature() (*FSignature, error) {
 func (f *File) getSignature() (*FSignature, error) {
 	buf := make(FSignature, f.ffSignature.length)
 
-	if _, err := f.file.ReadAt(buf, int64(f.ffSignature.offset)); err != nil && err != io.EOF {
+	if n, err := f.file.ReadAt(buf, int64(f.ffSignature.offset)); err != nil && err != io.EOF {
 		return nil, err
+	} else if l := len(buf); n != l {
+		// limit length for too small reading results
+		buf = buf[0:n]
 	}
 
 	return &buf, nil
@@ -241,7 +250,10 @@ func (f *File) setDataSHA1(h []byte) error {
 	return nil
 }
 
-// setDataSHA1 sets the hash value into current file.
+func (f *File) GetDataHash() ([]byte, error) {
+	return f.getDataSHA1()
+}
+
 func (f *File) getDataSHA1() ([]byte, error) {
 	buf := make([]byte, f.ffDataSha1.length)
 
@@ -259,7 +271,7 @@ func (f *File) SetData(in io.Reader) error {
 func (f *File) setData(in io.Reader) error {
 	buf := make([]byte, rwBufferSize)
 	off := int64(f.ffData.offset)
-	hashing.Reset()
+	f.hashing.Reset()
 
 	for {
 		// read part of input data
@@ -282,7 +294,7 @@ func (f *File) setData(in io.Reader) error {
 			return writeErr
 		}
 		// write into "hashing" too for hash sum calculation
-		if _, err := hashing.Write(buf); err != nil {
+		if _, err := f.hashing.Write(buf); err != nil {
 			return err
 		}
 
@@ -290,7 +302,7 @@ func (f *File) setData(in io.Reader) error {
 		off += int64(wroteBytes)
 	}
 
-	if err := f.setDataSHA1(hashing.Sum(nil)); err != nil {
+	if err := f.setDataSHA1(f.hashing.Sum(nil)); err != nil {
 		return err
 	}
 
@@ -304,10 +316,10 @@ func (f *File) GetData(out io.Writer) error {
 func (f *File) getData(out io.Writer) error {
 	buf := make([]byte, rwBufferSize)
 	off := uint64(f.ffData.offset)
-	hashing.Reset()
+	f.hashing.Reset()
 
 	for {
-		// read part of input data
+		// read part of useful data
 		n, readErr := f.file.ReadAt(buf, int64(off))
 		if readErr != nil {
 			if readErr != io.EOF {
@@ -319,13 +331,13 @@ func (f *File) getData(out io.Writer) error {
 			buf = buf[0:n]
 		}
 
-		// write content into required position
+		// write content into out writer
 		wroteBytes, writeErr := out.Write(buf)
 		if writeErr != nil {
 			return writeErr
 		}
 		// write into "hashing" too for hash sum calculation
-		if _, err := hashing.Write(buf); err != nil {
+		if _, err := f.hashing.Write(buf); err != nil {
 			return err
 		}
 
@@ -338,7 +350,7 @@ func (f *File) getData(out io.Writer) error {
 	}
 
 	// calculate just read data hash
-	dataHash := hashing.Sum(nil)
+	dataHash := f.hashing.Sum(nil)
 
 	// get existing hash
 	existsHash, hashErr := f.getDataSHA1()
@@ -348,7 +360,7 @@ func (f *File) getData(out io.Writer) error {
 
 	// if hashes mismatched - data was broken
 	if !bytes.Equal(dataHash, existsHash) {
-		return fmt.Errorf("data hashes mismatched. want: %s, got: %s", existsHash, dataHash)
+		return fmt.Errorf("data hashes mismatched. required: %v, current: %v", existsHash, dataHash)
 	}
 
 	return nil

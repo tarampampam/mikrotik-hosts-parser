@@ -400,43 +400,43 @@ func TestItem_IsExpired(t *testing.T) {
 	}
 }
 
-func TestItem_ExpiringUsesHotBuffer(t *testing.T) {
-	t.Parallel()
-
-	tmpDir := createTempDir(t)
-
-	hotBufferTTL := 10 * time.Millisecond
-	item := NewItem(filepath.Join(tmpDir, "a"), "a", 0, hotBufferTTL)
-
-	if ok, _ := item.IsExpired(); ok {
-		t.Errorf("Just created item cannot be expirered")
-	}
-
-	expiresAt := time.Now().Add(hotBufferTTL)
-
-	if err := item.SetExpiresAt(expiresAt); err != nil {
-		t.Errorf("Unexpected error on expirind set: %v", err)
-	}
-
-	// After directory deleting data must be returned from hot cache
-	removeTempDir(t, tmpDir)
-	time.Sleep(hotBufferTTL / 2)
-
-	if ok, _ := item.IsExpired(); ok {
-		t.Error("Not expired must return 'false' on `IsExpired` calling")
-	}
-
-	if item.ExpiresAt().UnixNano() != expiresAt.UnixNano() {
-		t.Errorf("Wrong `ExpiredAt` result. Want %v, got: %v", expiresAt, item.ExpiresAt())
-	}
-
-	// wait for hot cache expiring
-	time.Sleep(hotBufferTTL)
-
-	if _, err := item.IsExpired(); err == nil {
-		t.Error("Expired item must return an 'error' on `IsExpired` calling")
-	}
-}
+//func TestItem_ExpiringUsesHotBuffer(t *testing.T) {
+//	t.Parallel()
+//
+//	tmpDir := createTempDir(t)
+//
+//	hotBufferTTL := 10 * time.Millisecond
+//	item := NewItem(filepath.Join(tmpDir, "a"), "a", 0, hotBufferTTL)
+//
+//	if ok, _ := item.IsExpired(); ok {
+//		t.Errorf("Just created item cannot be expirered")
+//	}
+//
+//	expiresAt := time.Now().Add(hotBufferTTL)
+//
+//	if err := item.SetExpiresAt(expiresAt); err != nil {
+//		t.Errorf("Unexpected error on expirind set: %v", err)
+//	}
+//
+//	// After directory deleting data must be returned from hot cache
+//	removeTempDir(t, tmpDir)
+//	time.Sleep(hotBufferTTL / 2)
+//
+//	if ok, _ := item.IsExpired(); ok {
+//		t.Error("Not expired must return 'false' on `IsExpired` calling")
+//	}
+//
+//	if item.ExpiresAt().UnixNano() != expiresAt.UnixNano() {
+//		t.Errorf("Wrong `ExpiredAt` result. Want %v, got: %v", expiresAt, item.ExpiresAt())
+//	}
+//
+//	// wait for hot cache expiring
+//	time.Sleep(hotBufferTTL)
+//
+//	if _, err := item.IsExpired(); err == nil {
+//		t.Error("Expired item must return an 'error' on `IsExpired` calling")
+//	}
+//}
 
 // Create temporary directory.
 func createTempDir(t *testing.T) string {
