@@ -1,3 +1,4 @@
+// File implementation for using as a cache entry.
 package file
 
 import (
@@ -63,7 +64,7 @@ var DefaultSignature = FSignature("#/CACHE ") // 35, 47, 67, 65, 67, 72, 69, 32
 // Create new file instance.
 func newFile(file *os.File, signature FSignature) *File {
 	// setup default file type bytes slice
-	if signature == nil || len(signature) == 0 {
+	if signature == nil {
 		signature = DefaultSignature
 	}
 
@@ -100,7 +101,7 @@ func newFile(file *os.File, signature FSignature) *File {
 // Create creates or truncates the named file. If the file already exists, it is truncated. If the file does not exist,
 // it is created with passed mode (permissions).
 // signature can be omitted (nil) - in this case will be used default file signature.
-// Important: file with signature will be created immediately.
+// Important: file with signature and data hashsum will be created immediately.
 func Create(name string, perm os.FileMode, signature FSignature) (*File, error) {
 	f, openErr := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
 	if openErr != nil {
@@ -157,9 +158,7 @@ func (f *File) SignatureMatched() (bool, error) {
 }
 
 // GetSignature of current file signature as a typed slice of a bytes.
-func (f *File) GetSignature() (*FSignature, error) {
-	return f.getSignature()
-}
+func (f *File) GetSignature() (*FSignature, error) { return f.getSignature() }
 
 // getSignature of current file signature as a typed slice of a bytes.
 func (f *File) getSignature() (*FSignature, error) {
@@ -176,9 +175,7 @@ func (f *File) getSignature() (*FSignature, error) {
 }
 
 // SetSignature for current file.
-func (f *File) SetSignature(signature FSignature) error {
-	return f.setSignature(signature)
-}
+func (f *File) SetSignature(signature FSignature) error { return f.setSignature(signature) }
 
 // setSignature allows to use only bytes slice of signature with length defined in file structure.
 func (f *File) setSignature(signature FSignature) error {
@@ -218,10 +215,10 @@ func (f *File) getExpiresAtUnixMs() (uint64, error) {
 	return binary.LittleEndian.Uint64(buf), nil
 }
 
-func (f *File) SetExpiresAt(t time.Time) error {
-	return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond)))
-}
+// SetExpiresAt sets the expiring value.
+func (f *File) SetExpiresAt(t time.Time) error { return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond))) }
 
+// setExpiresAtUnixMs sets the expiring time in milliseconds in file content.
 func (f *File) setExpiresAtUnixMs(ts uint64) error {
 	buf := make([]byte, f.ffExpiresAtUnixMs.length)
 
@@ -237,6 +234,7 @@ func (f *File) setExpiresAtUnixMs(ts uint64) error {
 	return nil
 }
 
+// setDataSHA1 sets data hashsum as s slice ob bytes. Hash length must be correct.
 func (f *File) setDataSHA1(h []byte) error {
 	if l := len(h); l != int(f.ffDataSha1.length) {
 		return fmt.Errorf("wrong hash length: required length: %d, passed: %d", f.ffDataSha1.length, l)
@@ -251,10 +249,10 @@ func (f *File) setDataSHA1(h []byte) error {
 	return nil
 }
 
-func (f *File) GetDataHash() ([]byte, error) {
-	return f.getDataSHA1()
-}
+// GetDataHash returns file data hash.
+func (f *File) GetDataHash() ([]byte, error) { return f.getDataSHA1() }
 
+// getDataSHA1 returns file data hash.
 func (f *File) getDataSHA1() ([]byte, error) {
 	buf := make([]byte, f.ffDataSha1.length)
 
@@ -265,10 +263,10 @@ func (f *File) getDataSHA1() ([]byte, error) {
 	return buf, nil
 }
 
-func (f *File) SetData(in io.Reader) error {
-	return f.setData(in)
-}
+// SetData sets the file data (content will be read from the passed reader instance).
+func (f *File) SetData(in io.Reader) error { return f.setData(in) }
 
+// setData sets the file data (content will be read from the passed reader instance).
 func (f *File) setData(in io.Reader) error {
 	buf := make([]byte, rwBufferSize)
 	off := int64(f.ffData.offset)
@@ -310,10 +308,10 @@ func (f *File) setData(in io.Reader) error {
 	return nil
 }
 
-func (f *File) GetData(out io.Writer) error {
-	return f.getData(out)
-}
+// GetData read file data and write it to the writer.
+func (f *File) GetData(out io.Writer) error { return f.getData(out) }
 
+// getData read file data and write it to the writer.
 func (f *File) getData(out io.Writer) error {
 	buf := make([]byte, rwBufferSize)
 	off := uint64(f.ffData.offset)
@@ -345,7 +343,7 @@ func (f *File) getData(out io.Writer) error {
 		// move offset
 		off += uint64(wroteBytes)
 
-		if readErr != nil {
+		if readErr == io.EOF {
 			break
 		}
 	}
