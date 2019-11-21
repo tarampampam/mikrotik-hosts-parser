@@ -1,63 +1,82 @@
 package files
 
 import (
-	"crypto/md5" // nolint:gosec
-	"encoding/hex"
-	"hash"
+	"io/ioutil"
 	"mikrotik-hosts-parser/cache"
-	"strings"
+	"mikrotik-hosts-parser/cache/files/file"
+	"os"
 	"sync"
-	"time"
 )
 
 type Pool struct {
-	cachePath string
-	hotBufLen int
-	hotBufTTL time.Duration
-	mutex     *sync.Mutex
-	items     map[string]cache.Item // "cache" of item objects
-	hash      hash.Hash
+	cacheDirPath string
+	mutex        *sync.Mutex
 }
 
-func NewPool(cachePath string, hotBufLen int, hotBufTTL time.Duration) *Pool {
+// NewPool creates new cache items pool
+func NewPool(cacheDirPath string) *Pool {
 	return &Pool{
-		cachePath: cachePath,
-		hotBufLen: hotBufLen,
-		hotBufTTL: hotBufTTL,
-		mutex:     &sync.Mutex{},
-		items:     make(map[string]cache.Item),
-		hash:      md5.New(), // nolint:gosec // selected hash algorithm
+		cacheDirPath: cacheDirPath,
+		mutex:        &sync.Mutex{},
 	}
 }
 
-func (p *Pool) keyToHash(key string) string {
-	slice := md5.Sum([]byte(key)) // nolint:gosec
-
-	return strings.ToLower(hex.EncodeToString(slice[:]))
+// GetItem returns a Cache Item representing the specified key
+func (p *Pool) GetItem(key string) cache.Item {
+	return NewItem(p.cacheDirPath, key)
 }
 
-func (p *Pool) GetItem(key string) (cache.Item, error) {
-	// hash passed key
-	key = p.keyToHash(key)
+// GetItems returns a map of cache items
+func (p Pool) GetItems(keys []string) map[string]cache.Item {
+	res := make(map[string]cache.Item)
 
-	// check for existing in items map
-	if item, ok := p.items[key]; ok {
-		return item, nil
+	for _, key := range keys {
+		res[key] = p.GetItem(key)
 	}
 
-	panic("implement me")
+	return res
 }
 
-func (p Pool) GetItems(keys []string) ([]cache.Item, error) {
-	panic("implement me")
+// HasItem confirms if the cache contains specified cache item
+func (p Pool) HasItem(key string) bool {
+	return p.GetItem(key).IsHit()
 }
 
-func (p Pool) HasItem(key string) (bool, error) {
-	panic("implement me")
-}
-
+// Clear deletes all items in the pool
 func (p Pool) Clear() (bool, error) {
-	panic("implement me")
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	return p.clear()
+}
+
+func (p Pool) clear() (bool, error) {
+	files, err := ioutil.ReadDir(p.cacheDirPath)
+	if err != nil {
+		return false, err
+	}
+
+	for _, f := range files {
+		cacheFile, err := file.OpenRead(f.Name(), DefaultItemFileSignature)
+
+		// skip "wrong" or errored file
+		if err != nil || cacheFile == nil {
+			continue
+		}
+		// verify file signature
+		matched, err := cacheFile.SignatureMatched()
+		if closeErr := cacheFile.Close(); closeErr != nil {
+			return false, closeErr
+		}
+		// if file signature is ok and we have no errors - remove the file
+		if matched && err == nil {
+			if rmErr := os.Remove(f.Name()); rmErr != nil {
+				return false, rmErr
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func (p Pool) DeleteItem(key string) (bool, error) {

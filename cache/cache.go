@@ -34,13 +34,13 @@ type Item interface {
 // Pool generates CacheItemInterface objects
 type Pool interface {
 	// Returns a Cache Item representing the specified key
-	GetItem(key string) (Item, error)
+	GetItem(key string) Item
 
-	// Returns a slice set of cache items
-	GetItems(keys []string) ([]Item, error)
+	// Returns a map of cache items
+	GetItems(keys []string) map[string]Item
 
 	// Confirms if the cache contains specified cache item
-	HasItem(key string) (bool, error)
+	HasItem(key string) bool
 
 	// Deletes all items in the pool
 	Clear() (bool, error)

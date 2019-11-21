@@ -79,6 +79,7 @@ func TestItem_GetAndSetConcurrent(t *testing.T) { // nolint:gocyclo
 				wg.Add(1)
 				go func(item *Item) {
 					defer wg.Done()
+					item.GetKey()
 					if err := item.Get(bytes.NewBuffer([]byte{})); err != nil {
 						t.Errorf("Got unexpected error on data GET: %v", err)
 					}

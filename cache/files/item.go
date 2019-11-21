@@ -159,9 +159,7 @@ func (i *Item) ExpiresAt() *time.Time {
 }
 
 func (i *Item) expiresAt() (*time.Time, error) {
-	var filePath = i.getFilePath()
-
-	f, openErr := file.Open(filePath, DefaultItemFilePerms, DefaultItemFileSignature)
+	f, openErr := file.Open(i.getFilePath(), DefaultItemFilePerms, DefaultItemFileSignature)
 	if openErr != nil {
 		return nil, openErr
 	}
@@ -186,9 +184,7 @@ func (i *Item) SetExpiresAt(when time.Time) error {
 }
 
 func (i *Item) setExpiresAt(when time.Time) error {
-	var filePath = i.getFilePath()
-
-	f, err := i.openOrCreateFile(filePath, DefaultItemFilePerms, DefaultItemFileSignature)
+	f, err := i.openOrCreateFile(i.getFilePath(), DefaultItemFilePerms, DefaultItemFileSignature)
 	if err != nil {
 		return err
 	}

@@ -123,12 +123,22 @@ func Create(name string, perm os.FileMode, signature FSignature) (*File, error) 
 	return file, nil
 }
 
-// Open opens the named file for reading. If successful, methods on the returned file can be used for reading; the
-// associated file descriptor has mode O_RDONLY.
-// If there is an error, it will be of type *os.PathError.
+// Open opens the named file for reading and writing. If successful, methods on the returned file can be used for
+// reading and writing. If there is an error, it will be of type *os.PathError.
 // signature can be omitted (nil) - in this case will be used default file signature.
 func Open(name string, perm os.FileMode, signature FSignature) (*File, error) {
-	f, err := os.OpenFile(name, os.O_RDWR, perm)
+	return open(name, os.O_RDWR, perm, signature)
+}
+
+// Open opens the named file for reading. If successful, methods on the returned file can be used for reading; the
+// associated file descriptor has mode O_RDONLY. If there is an error, it will be of type *os.PathError.
+// signature can be omitted (nil) - in this case will be used default file signature.
+func OpenRead(name string, signature FSignature) (*File, error) {
+	return open(name, os.O_RDONLY, 0, signature)
+}
+
+func open(name string, flag int, perm os.FileMode, signature FSignature) (*File, error) {
+	f, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
 	}

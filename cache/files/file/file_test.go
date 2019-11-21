@@ -144,6 +144,33 @@ func TestOpen(t *testing.T) {
 	}
 }
 
+func TestOpenRead(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := createTempDir(t)
+	defer removeTempDir(t, tmpDir)
+
+	f1, _ := Create(filepath.Join(tmpDir, "a"), 0664, nil)
+	_ = f1.Close()
+
+	file1, file1err := OpenRead(f1.Name(), nil)
+	if file1err != nil {
+		t.Errorf("Got unexpected error: %v", file1err)
+	}
+	if ok, _ := file1.SignatureMatched(); !ok {
+		t.Error("Signature mismatched for correct file")
+	}
+	if err := file1.SetData(bytes.NewBuffer([]byte{1})); err == nil {
+		t.Error("Expected error not returned")
+	}
+	_ = file1.Close()
+
+	_, file3err := Open(tmpDir, 0664, nil)
+	if file3err == nil {
+		t.Error("Expected error not returned")
+	}
+}
+
 func TestFile_Name(t *testing.T) {
 	t.Parallel()
 
