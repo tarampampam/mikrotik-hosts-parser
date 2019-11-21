@@ -216,7 +216,9 @@ func (f *File) getExpiresAtUnixMs() (uint64, error) {
 }
 
 // SetExpiresAt sets the expiring value.
-func (f *File) SetExpiresAt(t time.Time) error { return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond))) }
+func (f *File) SetExpiresAt(t time.Time) error {
+	return f.setExpiresAtUnixMs(uint64(t.UnixNano() / int64(time.Millisecond)))
+}
 
 // setExpiresAtUnixMs sets the expiring time in milliseconds in file content.
 func (f *File) setExpiresAtUnixMs(ts uint64) error {

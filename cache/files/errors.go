@@ -1,11 +1,7 @@
 package files
 
-import (
-	"fmt"
-)
-
 // Cache error types
-type ErrorType uint
+type ErrorType uint8
 
 const (
 	ErrUnknown ErrorType = iota
@@ -13,7 +9,6 @@ const (
 	ErrFileReading
 	ErrFileWriting
 	ErrExpirationDataNotAvailable
-	ErrBufferWriting
 )
 
 type Error struct {
@@ -38,8 +33,6 @@ func (e ErrorType) String() string {
 		return "cannot read file"
 	case ErrFileWriting:
 		return "cannot write file"
-	case ErrBufferWriting:
-		return "cannot write buffer"
 	case ErrExpirationDataNotAvailable:
 		return "expiration data is not available"
 	}
@@ -60,9 +53,4 @@ func (e *Error) Unwrap() error {
 // Creates new error instance. Previous error can be nil.
 func newError(tp ErrorType, message string, prev error) *Error {
 	return &Error{Type: tp, Message: message, previous: prev}
-}
-
-// Creates new error instance with message formatting.
-func newErrorf(tp ErrorType, prev error, format string, args ...interface{}) *Error {
-	return newError(tp, fmt.Sprintf(format, args...), prev)
 }
