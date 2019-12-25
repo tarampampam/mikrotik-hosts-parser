@@ -2,8 +2,6 @@ package files
 
 import (
 	"bytes"
-	"io/ioutil"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -154,31 +152,5 @@ func TestItem_ExpiringGetSetAndCheck(t *testing.T) {
 
 	if item.ExpiresAt().Unix() != expiresAt.Unix() {
 		t.Errorf("Wrong `ExpiredAt` result. Want %v, got: %v", expiresAt, item.ExpiresAt())
-	}
-}
-
-// Create temporary directory.
-func createTempDir(t *testing.T) string {
-	t.Helper()
-
-	tmpDir, err := ioutil.TempDir("", "test-")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return tmpDir
-}
-
-// Remove temporary directory.
-func removeTempDir(t *testing.T, dirPath string) {
-	t.Helper()
-
-	if !strings.HasPrefix(dirPath, os.TempDir()) {
-		t.Fatalf("Wrong tmp dir path: %s", dirPath)
-		return
-	}
-
-	if err := os.RemoveAll(dirPath); err != nil {
-		t.Fatal(err)
 	}
 }

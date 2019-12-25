@@ -73,7 +73,7 @@ func (i *Item) get(to io.Writer) error {
 
 // IsHit confirms if the cache item lookup resulted in a cache hit.
 func (i *Item) IsHit() bool {
-	i.mutex.Lock() // @todo: blocking is required?
+	i.mutex.Lock() // @todo: blocking is required here?
 	defer i.mutex.Unlock()
 
 	return i.isHit()

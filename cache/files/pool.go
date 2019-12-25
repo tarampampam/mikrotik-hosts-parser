@@ -23,37 +23,33 @@ func NewPool(cacheDirPath string) *Pool {
 
 // GetItem returns a Cache Item representing the specified key
 func (p *Pool) GetItem(key string) cache.Item {
+	return p.getItem(key)
+}
+
+func (p *Pool) getItem(key string) *Item {
 	return NewItem(p.cacheDirPath, key)
 }
 
 // GetItems returns a map of cache items
-func (p Pool) GetItems(keys []string) map[string]cache.Item {
+func (p *Pool) GetItems(keys []string) map[string]cache.Item {
 	res := make(map[string]cache.Item)
 
 	for _, key := range keys {
-		res[key] = p.GetItem(key)
+		res[key] = p.getItem(key)
 	}
 
 	return res
 }
 
 // HasItem confirms if the cache contains specified cache item
-func (p Pool) HasItem(key string) bool {
-	return p.GetItem(key).IsHit()
+func (p *Pool) HasItem(key string) bool {
+	return p.getItem(key).IsHit()
 }
 
-// Clear deletes all items in the pool
-func (p Pool) Clear() (bool, error) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-
-	return p.clear()
-}
-
-func (p Pool) clear() (bool, error) {
+func (p *Pool) walkCacheFiles(fn func(os.FileInfo)) error {
 	files, err := ioutil.ReadDir(p.cacheDirPath)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	for _, f := range files {
@@ -63,30 +59,79 @@ func (p Pool) clear() (bool, error) {
 		if err != nil || cacheFile == nil {
 			continue
 		}
-		// verify file signature
-		matched, err := cacheFile.SignatureMatched()
-		if closeErr := cacheFile.Close(); closeErr != nil {
-			return false, closeErr
-		}
-		// if file signature is ok and we have no errors - remove the file
-		if matched && err == nil {
-			if rmErr := os.Remove(f.Name()); rmErr != nil {
-				return false, rmErr
-			}
+		// verify file signature and close file (closing error will be skipped)
+		matched, _ := cacheFile.SignatureMatched()
+		if closeErr := cacheFile.Close(); matched && closeErr == nil {
+			// if all is ok - fall the func
+			fn(f)
 		}
 	}
 
-	return false, nil
+	return nil
 }
 
-func (p Pool) DeleteItem(key string) (bool, error) {
-	panic("implement me")
+// Clear deletes all items in the pool
+func (p *Pool) Clear() (bool, error) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	return p.clear()
 }
 
-func (p Pool) DeleteItems(keys []string) (bool, error) {
-	panic("implement me")
+func (p *Pool) clear() (bool, error) {
+	var lastErr error
+
+	err := p.walkCacheFiles(func(info os.FileInfo) {
+		if rmErr := os.Remove(info.Name()); rmErr != nil {
+			lastErr = rmErr
+		}
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	if lastErr != nil {
+		return false, lastErr
+	}
+
+	return true, nil
 }
 
-func (p Pool) Save(item cache.Item) (bool, error) {
+// DeleteItem removes the item from the pool
+func (p *Pool) DeleteItem(key string) (bool, error) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	return p.deleteItem(key)
+}
+
+// DeleteItem removes the item from the pool
+func (p *Pool) deleteItem(key string) (bool, error) {
+	if rmErr := os.Remove(p.getItem(key).getFilePath()); rmErr != nil {
+		return false, rmErr
+	}
+
+	return true, nil
+}
+
+// DeleteItems removes multiple items from the pool
+func (p *Pool) DeleteItems(keys []string) (bool, error) {
+	var lastErr error
+
+	for _, key := range keys {
+		if ok, delErr := p.deleteItem(key); !ok || delErr != nil {
+			lastErr = delErr
+		}
+	}
+
+	if lastErr != nil {
+		return false, lastErr
+	}
+
+	return true, nil
+}
+
+func (p *Pool) Save(item cache.Item) (bool, error) {
 	panic("implement me")
 }
