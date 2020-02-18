@@ -13,7 +13,9 @@ WORKDIR /src
 
 RUN set -x \
     && apk add git \
-    && upx -V \
+    && upx -V
+
+RUN set -x \
     && go version \
     && go generate ./... \
     && export version=`git symbolic-ref -q --short HEAD || git describe --tags --exact-match`@`git rev-parse --short HEAD` \
@@ -40,4 +42,10 @@ COPY --from=builder /src/resources/data/public /opt/resources
 EXPOSE 8080
 
 ENTRYPOINT ["/bin/mikrotik-hosts-parser"]
-CMD ["serve", "--config", "/serve-config.yml", "--listen", "0.0.0.0", "--port", "8080", "--resources-dir", "/opt/resources"]
+CMD [ \
+    "serve", \
+    "--config", "/serve-config.yml", \
+    "--listen", "0.0.0.0", \
+    "--port", "8080", \
+    "--resources-dir", "/opt/resources" \
+]
