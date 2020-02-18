@@ -11,9 +11,9 @@ DC_RUN_ARGS = --rm --user "$(shell id -u):$(shell id -g)" app
 APP_NAME = $(notdir $(CURDIR))
 GO_RUN_ARGS ?=
 
-.PHONY : help gen build update fmt gotest test lint cover run shell image clean
+.PHONY : help gen build update fmt gotest test lint cover run 'shell' image clean
 .DEFAULT_GOAL : help
-.SILENT : test shell
+.SILENT : test 'shell'
 
 # This will output the help for each task. thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## Show this help
