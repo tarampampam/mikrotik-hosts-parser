@@ -63,7 +63,7 @@ func NewServer(settings *ServerSettings) *Server {
 	}
 }
 
-// Register server http handlers.
+// RegisterHandlers register server http handlers.
 func (s *Server) RegisterHandlers() {
 	s.Router.HandleFunc("/script/source", s.scriptSourceHandler).
 		Methods("GET").
