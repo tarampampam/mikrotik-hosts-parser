@@ -70,9 +70,9 @@ func (s *Server) RegisterHandlers() {
 
 	s.Router.PathPrefix("/").
 		Handler(&fileserver.FileServer{
-			Root:            http.Dir(s.Settings.PublicDir),
-			IndexFile:       "index.html",
-			Error404file:    "404.html",
+			Root:         http.Dir(s.Settings.PublicDir),
+			IndexFile:    "index.html",
+			Error404file: "404.html",
 		}).
 		Name("static")
 }
