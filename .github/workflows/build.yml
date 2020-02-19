@@ -23,9 +23,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Run Gofmt
         run: test -z "$(gofmt -l .)"
 
@@ -46,9 +43,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
-
-      - name: Run codegeneration
-        run: go generate ./...
 
       - name: Install goimports
         run: go get golang.org/x/tools/cmd/goimports
@@ -77,9 +71,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Run GolangCI-Lint # https://github.com/golangci/golangci-lint
         run: docker run --rm -t -v $(pwd):/app -w /app golangci/golangci-lint:latest-alpine golangci-lint run -v
 
@@ -96,9 +87,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
-
-      - name: Run codegeneration
-        run: go generate ./...
 
       - name: Run Unit tests
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
@@ -132,9 +120,6 @@ jobs:
 
       - name: Generate version value
         run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
-
-      - name: Run codegeneration
-        run: go generate ./...
 
       - name: Build application
         env:

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"mikrotik-hosts-parser/http/fileserver"
-	"mikrotik-hosts-parser/resources"
 	"mime"
 	"net/http"
 	"os"
@@ -72,9 +71,7 @@ func (s *Server) RegisterHandlers() {
 	s.Router.PathPrefix("/").
 		Handler(&fileserver.FileServer{
 			Root:            http.Dir(s.Settings.PublicDir),
-			Resources:       resources.Resources,
 			IndexFile:       "index.html",
-			ResourcesPrefix: "/data/public",
 			Error404file:    "404.html",
 		}).
 		Name("static")

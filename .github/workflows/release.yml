@@ -27,9 +27,6 @@ jobs:
       - name: Generate version value
         run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Build application
         env:
           GOOS: ${{ matrix.os }}

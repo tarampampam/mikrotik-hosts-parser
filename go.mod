@@ -22,6 +22,5 @@ replace (
 	github.com/tarampampam/mikrotik-hosts-parser/http/fileserver => ../http/fileserver
 	github.com/tarampampam/mikrotik-hosts-parser/mikrotik/dns => ../mikrotik/dns
 	github.com/tarampampam/mikrotik-hosts-parser/options => ../options
-	github.com/tarampampam/mikrotik-hosts-parser/resources => ../resources
 	github.com/tarampampam/mikrotik-hosts-parser/settings => ../settings
 )
