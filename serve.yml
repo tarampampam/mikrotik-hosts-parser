@@ -1,14 +1,20 @@
-# Allowed environment variables format: <https://github.com/a8m/envsubst#docs>
-
+# http server configuration
 listen:
+  # hostname or IP address for listening
   address: ${LISTEN_ADDR:-0.0.0.0}
+  # port number to listen
   port: ${LISTEN_PORT:-8080}
 
+# public resources settings
 resources:
+  # path to the directory with public assets
   dir: ${RESOURCES_DIR}
+  # index file name (content from this file will be used as directory index)
   index_name: index.html
+  # file name with 404 error page content
   error_404_name: 404.html
 
+# provided sources configuration (for usage in frontend using API request)
 sources:
   - uri: https://cdn.jsdelivr.net/gh/tarampampam/mikrotik-hosts-parser@master/.hosts/basic.txt
     name: Basic hosts list
@@ -49,15 +55,23 @@ sources:
     enabled: false
     count: 46000
 
+# caching settings
 cache:
+  # file-based cache
   files:
+    # path to the directory for cache files
     dir: ${TMPDIR:-/tmp}
+  # cached entries lifetime duration (in seconds)
   lifetime_sec: ${CACHE_LIFETIME_SEC:-10}
 
+# router script generation settings
 router_script:
+  # default requests redirection
   redirect:
     address: 127.0.0.1
+  # default excluding settings
   exclude:
+    # this hosts will be excluded by default
     hosts:
       - localhost
       - localhost.localdomain
@@ -70,6 +84,9 @@ router_script:
       - ip6-allnodes
       - ip6-allrouters
       - ip6-allhosts
+  # router script entries comment
   comment: ADBlock
+  # maximal external sources count
   max_sources: ${MAX_SOURCES_COUNT:-8}
-  max_source_size: ${MAX_SOURCES_SIZE:-2097152} # In bytes; 2048 Kb by default
+  # maximal external source size (in bytes; 2048 Kb by default)
+  max_source_size: ${MAX_SOURCES_SIZE:-2097152}

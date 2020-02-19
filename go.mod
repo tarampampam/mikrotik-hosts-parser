@@ -4,9 +4,9 @@ go 1.13
 
 require (
 	github.com/a8m/envsubst v1.1.0
-	github.com/gorilla/mux v1.7.3
+	github.com/gorilla/mux v1.7.4
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
-	gopkg.in/yaml.v2 v2.2.5
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 replace (

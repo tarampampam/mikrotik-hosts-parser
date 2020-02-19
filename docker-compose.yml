@@ -10,10 +10,18 @@ services:
     environment:
       HOME: /tmp
       GOPATH: /tmp
-    ports:
-      - 8080:8080/tcp
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
       - .:/src:cached
       - tmp-data:/tmp:cached
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080/tcp
+    volumes:
+      - ./serve.yml:/etc/serve.yml:ro
+      - ./public:/opt/public:ro

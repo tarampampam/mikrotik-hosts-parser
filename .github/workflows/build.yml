@@ -126,12 +126,6 @@ jobs:
           GOOS: ${{ matrix.os }}
         run: go build -ldflags="-s -w -X main.Version=${version}" -o ./build/mikrotik-hosts-parser .
 
-      - name: Pack binary
-        uses: docker://gact/upx:latest # https://github.com/marketplace/actions/upx-action
-        with:
-          file: "./build/mikrotik-hosts-parser"
-          upx_args: '-7'
-
       - name: Try to execute
         if: matrix.os == 'linux'
         run: ./build/mikrotik-hosts-parser version && ./build/mikrotik-hosts-parser -h
