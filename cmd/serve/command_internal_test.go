@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"mikrotik-hosts-parser/settings"
+	"mikrotik-hosts-parser/settings/serve"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -348,7 +348,7 @@ func TestCommand_getSettings(t *testing.T) { //nolint:gocyclo
 		name         string
 		giveCommand  *Command
 		giveFilePath func(t *testing.T) string
-		wantSettings *settings.Settings
+		wantSettings *serve.Settings
 		wantError    bool
 	}{
 		{
@@ -372,12 +372,12 @@ resources:
 
 				return tmpFile.Name()
 			},
-			wantSettings: &settings.Settings{
-				Listen: settings.Listen{
+			wantSettings: &serve.Settings{
+				Listen: serve.Listen{
 					Address: "1.2.3.4",
 					Port:    321,
 				},
-				Resources: settings.Resources{
+				Resources: serve.Resources{
 					DirPath: "/tmp",
 				},
 			},
@@ -411,12 +411,12 @@ resources:
 
 				return tmpFile.Name()
 			},
-			wantSettings: &settings.Settings{
-				Listen: settings.Listen{
+			wantSettings: &serve.Settings{
+				Listen: serve.Listen{
 					Address: "8.8.8.8",
 					Port:    666,
 				},
-				Resources: settings.Resources{
+				Resources: serve.Resources{
 					DirPath: "/tmp/foo/bar",
 				},
 			},
@@ -427,7 +427,7 @@ resources:
 			giveFilePath: func(t *testing.T) string {
 				return "foo bar"
 			},
-			wantSettings: &settings.Settings{},
+			wantSettings: &serve.Settings{},
 			wantError:    true,
 		},
 	}

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"mikrotik-hosts-parser/http"
-	"mikrotik-hosts-parser/settings"
+	serveSettings "mikrotik-hosts-parser/settings/serve"
 	"os"
 	"strconv"
 	"time"
@@ -88,8 +88,8 @@ func (resourcesDirPath) IsValidValue(value string) error {
 }
 
 // Get serving settings
-func (c *Command) getSettings(filepath string) (*settings.Settings, error) {
-	sets, err := settings.FromYamlFile(filepath, true)
+func (c *Command) getSettings(filepath string) (*serveSettings.Settings, error) {
+	sets, err := serveSettings.FromYamlFile(filepath, true)
 	if err != nil {
 		return nil, err
 	}
@@ -110,25 +110,20 @@ func (c *Command) getSettings(filepath string) (*settings.Settings, error) {
 
 // Execute the command.
 func (c *Command) Execute(_ []string) error {
-	servingSettings, err := c.getSettings(c.ConfigFile.String())
+	settings, err := c.getSettings(c.ConfigFile.String())
 	if err != nil {
 		return err
 	}
 
 	server := http.NewServer(&http.ServerSettings{
-		Host:             servingSettings.Listen.Address,
-		Port:             servingSettings.Listen.Port,
-		PublicDir:        servingSettings.Resources.DirPath,
-		IndexFile:        servingSettings.Resources.IndexName,
-		Error404File:     servingSettings.Resources.Error404Name,
 		WriteTimeout:     time.Second * 15,
 		ReadTimeout:      time.Second * 15,
 		KeepAliveEnabled: false,
-	})
+	}, settings)
 
 	server.RegisterHandlers()
 
-	_ = servingSettings.PrintInfo(os.Stdout)
+	_ = settings.PrintInfo(os.Stdout)
 
 	return server.Start()
 }

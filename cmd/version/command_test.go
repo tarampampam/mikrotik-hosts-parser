@@ -3,6 +3,7 @@ package version
 import (
 	"bytes"
 	"io"
+	ver "mikrotik-hosts-parser/version"
 	"os"
 	"strings"
 	"testing"
@@ -44,9 +45,9 @@ func TestCommand_Execute(t *testing.T) {
 			name:             "Without version set",
 			giveVersion:      "",
 			giveArgs:         []string{},
-			wantOutput:       nil,
-			wantErr:          true,
-			wantErrorMessage: "version value must be initialized outside current package BEFORE command execution",
+			wantOutput:       []string{"Version:", "\n"},
+			wantErr:          false,
+			wantErrorMessage: "",
 		},
 		{
 			name:             "With version set",
@@ -59,7 +60,7 @@ func TestCommand_Execute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Version = tt.giveVersion
+			ver.Version = tt.giveVersion
 			var err error
 			var cmd = Command{}
 

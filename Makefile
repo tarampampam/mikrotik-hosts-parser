@@ -3,7 +3,7 @@
 # Makefile readme (en): <https://www.gnu.org/software/make/manual/html_node/index.html#SEC_Contents>
 
 SHELL = /bin/sh
-LDFLAGS = "-s -w -X main.Version=$(shell git rev-parse HEAD)"
+LDFLAGS = "-s -w -X mikrotik-hosts-parser/version.Version=$(shell git rev-parse HEAD)"
 
 DOCKER_BIN = $(shell command -v docker 2> /dev/null)
 DC_BIN = $(shell command -v docker-compose 2> /dev/null)

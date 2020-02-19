@@ -31,7 +31,7 @@ jobs:
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
-        run: go build -ldflags="-s -w -X main.Version=${version}" -o ./../build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
+        run: go build -ldflags="-s -w -X mikrotik-hosts-parser/version.Version=${version}" -o ./../build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
 
       - name: Upload to release
         uses: actions/upload-release-asset@v1.0.1 # https://github.com/actions/upload-release-asset

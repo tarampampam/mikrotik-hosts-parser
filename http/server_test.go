@@ -2,6 +2,7 @@ package http
 
 import (
 	"log"
+	"mikrotik-hosts-parser/settings/serve"
 	"os"
 	"reflect"
 	"testing"
@@ -11,18 +12,15 @@ import (
 func TestNewServer(t *testing.T) {
 	t.Parallel()
 
+	t.Skip("Not implemented yet") // @todo: implement
+
 	settings := ServerSettings{
-		Host:             "1.2.3.4",
-		Port:             321,
-		PublicDir:        "/tmp/foo",
-		IndexFile:        "idx.html",
-		Error404File:     "err404.asp",
 		WriteTimeout:     10 * time.Second,
 		ReadTimeout:      13 * time.Second,
 		KeepAliveEnabled: false,
 	}
 
-	server := NewServer(&settings)
+	server := NewServer(&settings, &serve.Settings{})
 
 	if !reflect.DeepEqual(&settings, server.Settings) {
 		t.Errorf("Wrong settings set. Expected: %v, got: %v", settings, server.Settings)
