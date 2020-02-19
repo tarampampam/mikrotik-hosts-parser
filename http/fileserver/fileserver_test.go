@@ -2,7 +2,6 @@ package fileserver
 
 import (
 	"io/ioutil"
-	"mikrotik-hosts-parser/resources"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -28,10 +27,8 @@ func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
 		name                string
 		giveDirs            []string
 		giveFiles           map[string][]byte
-		giveResources       map[string][]byte
 		giveNotFoundHandler FileNotFoundHandler
 		giveIndexFile       string
-		giveResourcesPrefix string
 		giveError404file    string
 		giveRequestURI      string
 		giveRequestMethod   string
@@ -61,42 +58,6 @@ func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
 			wantResponseCode:  http.StatusOK,
 			wantResponseBody:  []byte("<html>test content</html>"),
 			wantContentType:   "text/html; charset=utf-8",
-		},
-		{
-			name: "Static TEXT file serving from resources",
-			giveResources: map[string][]byte{
-				"/test1.txt": []byte("test content"),
-			},
-			giveRequestURI:    "/test1.txt",
-			giveRequestMethod: "GET",
-			wantResponseCode:  http.StatusOK,
-			wantResponseBody:  []byte("test content"),
-			wantContentType:   "text/plain; charset=utf-8",
-		},
-		{
-			name: "Static HTML file serving from resources",
-			giveResources: map[string][]byte{
-				"/test1.html": []byte("<html>test content</html>"),
-			},
-			giveRequestURI:    "/test1.html",
-			giveRequestMethod: "GET",
-			wantResponseCode:  http.StatusOK,
-			wantResponseBody:  []byte("<html>test content</html>"),
-			wantContentType:   "text/html; charset=utf-8",
-		},
-		{
-			name: "File on local FS have priority ABOVE file from resource",
-			giveFiles: map[string][]byte{
-				"test1.txt": []byte("from file"),
-			},
-			giveResources: map[string][]byte{
-				"/test1.txt": []byte("from resource"),
-			},
-			giveRequestURI:    "/test1.txt",
-			giveRequestMethod: "GET",
-			wantResponseCode:  http.StatusOK,
-			wantResponseBody:  []byte("from file"),
-			wantContentType:   "text/plain; charset=utf-8",
 		},
 		{
 			name:              "Redirect from .../index.html to .../",
@@ -179,33 +140,6 @@ func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
 			wantContentType:   "text/html; charset=utf-8",
 		},
 		{
-			name: "Error 404 file serving from resources",
-			giveResources: map[string][]byte{
-				"/404.html": []byte("error 404 resource"),
-			},
-			giveRequestURI:    "/foo",
-			giveError404file:  "404.html",
-			giveRequestMethod: "GET",
-			wantResponseCode:  http.StatusNotFound,
-			wantResponseBody:  []byte("error 404 resource"),
-			wantContentType:   "text/html; charset=utf-8",
-		},
-		{
-			name: "Error 404 file on local FS have priority ABOVE file from resource",
-			giveFiles: map[string][]byte{
-				"404.html": []byte("from file"),
-			},
-			giveResources: map[string][]byte{
-				"/404.html": []byte("from resource"),
-			},
-			giveRequestURI:    "/foo",
-			giveError404file:  "404.html",
-			giveRequestMethod: "GET",
-			wantResponseCode:  http.StatusNotFound,
-			wantResponseBody:  []byte("from file"),
-			wantContentType:   "text/html; charset=utf-8",
-		},
-		{
 			name:              "Error 404 fallback",
 			giveRequestURI:    "/foo",
 			giveError404file:  "404.html",
@@ -254,19 +188,10 @@ func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
 				root = ""
 			}
 
-			box := resources.NewResourceBox()
-
-			// Create box
-			for name, content := range tt.giveResources {
-				box.Add(name, content)
-			}
-
 			fileServer := &FileServer{
 				Root:            root,
-				Resources:       box,
 				NotFoundHandler: tt.giveNotFoundHandler,
 				IndexFile:       tt.giveIndexFile,
-				ResourcesPrefix: tt.giveResourcesPrefix,
 				Error404file:    tt.giveError404file,
 			}
 

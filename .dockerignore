@@ -6,3 +6,4 @@ docker*.yml
 .editorconfig
 .idea
 .github
+/mikrotik-hosts-parser

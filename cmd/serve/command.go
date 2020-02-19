@@ -110,17 +110,17 @@ func (c *Command) getSettings(filepath string) (*settings.Settings, error) {
 
 // Execute the command.
 func (c *Command) Execute(_ []string) error {
-	sets, err := c.getSettings(c.ConfigFile.String())
+	servingSettings, err := c.getSettings(c.ConfigFile.String())
 	if err != nil {
 		return err
 	}
 
 	server := http.NewServer(&http.ServerSettings{
-		Host:             sets.Listen.Address,
-		Port:             sets.Listen.Port,
-		PublicDir:        sets.Resources.DirPath,
-		IndexFile:        sets.Resources.IndexName,
-		Error404File:     sets.Resources.Error404Name,
+		Host:             servingSettings.Listen.Address,
+		Port:             servingSettings.Listen.Port,
+		PublicDir:        servingSettings.Resources.DirPath,
+		IndexFile:        servingSettings.Resources.IndexName,
+		Error404File:     servingSettings.Resources.Error404Name,
 		WriteTimeout:     time.Second * 15,
 		ReadTimeout:      time.Second * 15,
 		KeepAliveEnabled: false,
@@ -128,7 +128,7 @@ func (c *Command) Execute(_ []string) error {
 
 	server.RegisterHandlers()
 
-	_ = sets.PrintInfo(os.Stdout)
+	_ = servingSettings.PrintInfo(os.Stdout)
 
 	return server.Start()
 }

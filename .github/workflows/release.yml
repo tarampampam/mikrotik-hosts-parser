@@ -27,20 +27,11 @@ jobs:
       - name: Generate version value
         run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Build application
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
         run: go build -ldflags="-s -w -X main.Version=${version}" -o ./../build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
-
-      - name: Pack binary
-        uses: docker://gact/upx:latest # https://github.com/marketplace/actions/upx-action
-        with:
-          file: "./build/mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
-          upx_args: '-7'
 
       - name: Upload to release
         uses: actions/upload-release-asset@v1.0.1 # https://github.com/actions/upload-release-asset

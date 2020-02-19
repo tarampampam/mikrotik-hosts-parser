@@ -23,9 +23,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Run Gofmt
         run: test -z "$(gofmt -l .)"
 
@@ -47,9 +44,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Install goimports
         run: go get golang.org/x/tools/cmd/goimports
 
@@ -67,18 +61,10 @@ jobs:
     name: Run linters
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13.x
-
       - name: Check out code
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
-
-      - name: Run codegeneration
-        run: go generate ./...
 
       - name: Run GolangCI-Lint # https://github.com/golangci/golangci-lint
         run: docker run --rm -t -v $(pwd):/app -w /app golangci/golangci-lint:latest-alpine golangci-lint run -v
@@ -97,9 +83,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Run Unit tests
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
@@ -110,6 +93,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.txt
           flags: unittests
+          fail_ci_if_error: false
 
   build:
     name: Build for ${{ matrix.os }} and execute
@@ -133,19 +117,10 @@ jobs:
       - name: Generate version value
         run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
 
-      - name: Run codegeneration
-        run: go generate ./...
-
       - name: Build application
         env:
           GOOS: ${{ matrix.os }}
         run: go build -ldflags="-s -w -X main.Version=${version}" -o ./build/mikrotik-hosts-parser .
-
-      - name: Pack binary
-        uses: docker://gact/upx:latest # https://github.com/marketplace/actions/upx-action
-        with:
-          file: "./build/mikrotik-hosts-parser"
-          upx_args: '-7'
 
       - name: Try to execute
         if: matrix.os == 'linux'

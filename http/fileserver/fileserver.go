@@ -1,10 +1,8 @@
 package fileserver
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"mikrotik-hosts-parser/resources"
 	"net/http"
 	"os"
 	"path"
@@ -18,10 +16,8 @@ type (
 
 	FileServer struct {
 		Root            http.Dir
-		Resources       resources.Box       // optionally, but strongly recommended
 		NotFoundHandler FileNotFoundHandler // optionally
 		IndexFile       string
-		ResourcesPrefix string
 		Error404file    string
 	}
 )
@@ -89,20 +85,6 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// requested file exists in resources
-	if fileServer.Resources != nil {
-		if content, ok := fileServer.Resources.Get(fileServer.ResourcesPrefix + upath); ok {
-			http.ServeContent(
-				w,
-				r,
-				filepath.Base(upath),
-				time.Now(), // @todo: set build time, not time.Now()
-				bytes.NewReader(content),
-			)
-			return
-		}
-	}
-
 	// If all tries for content serving above has been failed - file was not found (HTTP 404)
 	if fileServer.NotFoundHandler != nil {
 		// If "file not found" handler is set - call them
@@ -132,17 +114,6 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 				}
 				return
 			}
-		}
-	}
-
-	if fileServer.Resources != nil {
-		// if local file was not found - try to extract data from resources
-		if content, ok := fileServer.Resources.Get(fileServer.ResourcesPrefix + "/" + fileServer.Error404file); ok {
-			// write content into response
-			if _, writeErr := w.Write(content); writeErr != nil {
-				panic(writeErr)
-			}
-			return
 		}
 	}
 
