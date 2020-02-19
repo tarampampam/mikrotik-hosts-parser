@@ -61,11 +61,6 @@ jobs:
     name: Run linters
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13.x
-
       - name: Check out code
         uses: actions/checkout@v2
         with:
@@ -98,6 +93,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.txt
           flags: unittests
+          fail_ci_if_error: false
 
   build:
     name: Build for ${{ matrix.os }} and execute
