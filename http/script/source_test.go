@@ -1,7 +1,6 @@
 package script
 
 import (
-	"encoding/json"
 	"mikrotik-hosts-parser/settings/serve"
 	"net/http"
 	"net/http/httptest"
@@ -52,8 +51,9 @@ func TestRouterOsScriptSourceGenerationHandlerFunc(t *testing.T) {
 				Exclude: serve.Excludes{
 					Hosts: []string{"foo", "bar"},
 				},
-				MaxSources: 1,
-				Comment:    " [ blah ] ",
+				MaxSources:    1,
+				MaxSourceSize: 16,
+				Comment:       " [ blah ] ",
 			},
 		}
 	)
@@ -62,10 +62,5 @@ func TestRouterOsScriptSourceGenerationHandlerFunc(t *testing.T) {
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("Wrong response HTTP code. Want %d, got %d", http.StatusOK, rr.Code)
-	}
-
-	data := make(map[string]interface{})
-	if err := json.Unmarshal(rr.Body.Bytes(), &data); err != nil {
-		t.Fatal(err)
 	}
 }
