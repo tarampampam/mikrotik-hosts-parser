@@ -28,24 +28,20 @@ func (s *Server) registerAPIHandlers() {
 		PathPrefix("/api").
 		Subrouter()
 
-	apiRouter.Use(disableAPICachingMiddleware)
+	apiRouter.Use(DisableAPICachingMiddleware) // @todo: test middleware registration
 
 	apiRouter.
-		HandleFunc("/settings", func(w http.ResponseWriter, r *http.Request) {
-			api.GetSettingsHandler(s.ServeSettings, w, r) // additionally passes serving settings into handler
-		}).
+		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.ServeSettings)).
 		Methods("GET").
 		Name("api_get_settings")
 
 	apiRouter.
-		HandleFunc("/version", api.GetVersion).
+		HandleFunc("/version", api.GetVersionHandler).
 		Methods("GET").
 		Name("api_get_version")
 
 	apiRouter.
-		HandleFunc("/routes", func(w http.ResponseWriter, r *http.Request) {
-			api.GetRoutes(s.Router, w, r) // additionally passes router into handler
-		}).
+		HandleFunc("/routes", api.GetRoutesHandlerFunc(s.Router)).
 		Methods("GET").
 		Name("api_get_routes")
 }
@@ -54,10 +50,10 @@ func (s *Server) registerAPIHandlers() {
 func (s *Server) registerFileServerHandler() {
 	s.Router.
 		PathPrefix("/").
-		Handler(&fileserver.FileServer{
+		Handler(&fileserver.FileServer{Settings: fileserver.Settings{
 			Root:         http.Dir(s.ServeSettings.Resources.DirPath),
-			IndexFile:    "index.html",
-			Error404file: "404.html",
-		}).
+			IndexFile:    s.ServeSettings.Resources.IndexName,
+			Error404file: s.ServeSettings.Resources.Error404Name,
+		}}).
 		Name("static")
 }

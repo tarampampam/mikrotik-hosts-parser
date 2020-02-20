@@ -40,11 +40,13 @@ type (
 	}
 )
 
-// GetSettingsHandler writes json response with possible settings into response writer.
-func GetSettingsHandler(serveSettings *serve.Settings, w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
+// GetSettingsHandlerFunc returns handler function that writes json response with possible settings into response writer.
+func GetSettingsHandlerFunc(serveSettings *serve.Settings) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 
-	_ = json.NewEncoder(w).Encode(convertServeSettingsIntoResponse(serveSettings))
+		_ = json.NewEncoder(w).Encode(convertServeSettingsIntoResponse(serveSettings))
+	}
 }
 
 // convertServeSettingsIntoResponse converts serving settings into internal response format.

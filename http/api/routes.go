@@ -14,21 +14,21 @@ type (
 	route struct {
 		Path string `json:"path"`
 	}
-
-	routes map[string]route
 )
 
-// GetVersion writes json response with version data into response writer.
-func GetRoutes(router *mux.Router, w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
+// GetSettingsHandlerFunc returns handler function that writes json response with version data into response writer.
+func GetRoutesHandlerFunc(router *mux.Router) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 
-	response := routes{}
+		response := make(map[string]route)
 
-	for _, name := range routeNames {
-		if path, err := router.Get(name).GetPathTemplate(); err == nil {
-			response[name] = route{Path: path}
+		for _, name := range routeNames {
+			if path, err := router.Get(name).GetPathTemplate(); err == nil {
+				response[name] = route{Path: path}
+			}
 		}
-	}
 
-	_ = json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
+	}
 }

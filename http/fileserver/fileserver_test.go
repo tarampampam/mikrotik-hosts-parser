@@ -188,12 +188,12 @@ func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
 				root = ""
 			}
 
-			fileServer := &FileServer{
+			fileServer := &FileServer{Settings: Settings{
 				Root:            root,
 				NotFoundHandler: tt.giveNotFoundHandler,
 				IndexFile:       tt.giveIndexFile,
 				Error404file:    tt.giveError404file,
-			}
+			}}
 
 			var (
 				req, _ = http.NewRequest(tt.giveRequestMethod, tt.giveRequestURI, nil)

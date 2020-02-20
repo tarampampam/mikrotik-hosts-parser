@@ -14,24 +14,28 @@ import (
 type (
 	FileNotFoundHandler func(http.ResponseWriter, *http.Request)
 
-	FileServer struct {
+	Settings struct {
 		Root            http.Dir
 		NotFoundHandler FileNotFoundHandler // optionally
 		IndexFile       string
 		Error404file    string
+	}
+
+	FileServer struct {
+		Settings Settings
 	}
 )
 
 // Serve requests to the "public" files and directories.
 func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,funlen
 	// redirect .../index.html to .../
-	if strings.HasSuffix(r.URL.Path, "/"+fileServer.IndexFile) {
-		http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fileServer.IndexFile)], http.StatusMovedPermanently)
+	if strings.HasSuffix(r.URL.Path, "/"+fileServer.Settings.IndexFile) {
+		http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fileServer.Settings.IndexFile)], http.StatusMovedPermanently)
 		return
 	}
 
 	// if empty, set current directory
-	dir := string(fileServer.Root)
+	dir := string(fileServer.Settings.Root)
 	if dir == "" {
 		dir = "."
 	}
@@ -44,7 +48,7 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 	// add index file name if requested directory (or server root)
 	if upath[len(upath)-1] == '/' {
-		upath += fileServer.IndexFile
+		upath += fileServer.Settings.IndexFile
 	}
 	// make path clean
 	upath = path.Clean(upath)
@@ -53,7 +57,7 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	name := path.Join(dir, filepath.FromSlash(upath))
 
 	// if files server root directory is set - try to find file and serve them
-	if len(fileServer.Root) > 0 {
+	if len(fileServer.Settings.Root) > 0 {
 		// check for file exists
 		if f, err := os.Open(name); err == nil {
 			// file exists and opened
@@ -86,9 +90,9 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// If all tries for content serving above has been failed - file was not found (HTTP 404)
-	if fileServer.NotFoundHandler != nil {
+	if fileServer.Settings.NotFoundHandler != nil {
 		// If "file not found" handler is set - call them
-		fileServer.NotFoundHandler(w, r)
+		fileServer.Settings.NotFoundHandler(w, r)
 		return
 	}
 
@@ -97,8 +101,8 @@ func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNotFound)
 
 	// at first - we try to find local file with error content
-	if len(fileServer.Root) > 0 {
-		var errPage = string(fileServer.Root) + "/" + fileServer.Error404file
+	if len(fileServer.Settings.Root) > 0 {
+		var errPage = string(fileServer.Settings.Root) + "/" + fileServer.Settings.Error404file
 		if f, err := os.Open(errPage); err == nil {
 			// file exists and opened
 			defer func() {

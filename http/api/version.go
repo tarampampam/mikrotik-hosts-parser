@@ -12,8 +12,8 @@ type (
 	}
 )
 
-// GetVersion writes json response with version data into response writer.
-func GetVersion(w http.ResponseWriter, _ *http.Request) {
+// GetVersionHandler writes json response with version data into response writer.
+func GetVersionHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	_ = json.NewEncoder(w).Encode(version{
