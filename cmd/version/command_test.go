@@ -3,7 +3,6 @@ package version
 import (
 	"bytes"
 	"io"
-	ver "mikrotik-hosts-parser/version"
 	"os"
 	"strings"
 	"testing"
@@ -35,32 +34,21 @@ func TestCommand_Execute(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		giveVersion      string
 		giveArgs         []string
 		wantOutput       []string
 		wantErr          bool
 		wantErrorMessage string
 	}{
 		{
-			name:             "Without version set",
-			giveVersion:      "",
+			name:             "By default",
 			giveArgs:         []string{},
-			wantOutput:       []string{"Version:", "\n"},
-			wantErr:          false,
-			wantErrorMessage: "",
-		},
-		{
-			name:             "With version set",
-			giveVersion:      "6.6.6.RC1",
-			giveArgs:         []string{},
-			wantOutput:       []string{"Version:", "6.6.6.RC1", "\n"},
+			wantOutput:       []string{"Version:", "undefined@undefined", "\n"},
 			wantErr:          false,
 			wantErrorMessage: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ver.Version = tt.giveVersion
 			var err error
 			var cmd = Command{}
 

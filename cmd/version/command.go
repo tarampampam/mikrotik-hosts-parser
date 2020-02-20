@@ -9,7 +9,7 @@ type Command struct{}
 
 // Execute version command.
 func (*Command) Execute(_ []string) error {
-	fmt.Printf("Version: %s\n", ver.Version)
+	fmt.Printf("Version: %s\n", ver.Version())
 
 	return nil
 }

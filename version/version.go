@@ -1,4 +1,9 @@
 package version
 
-// Version value will be set during compilation
-var Version string = "undefined@undefined"
+// version value will be set during compilation
+var version string = "undefined@undefined"
+
+// Version returns version value.
+func Version() string {
+	return version
+}
