@@ -17,7 +17,7 @@
                     <button type="button"
                             class="btn btn-outline-info btn-sm border-primary ml-2"
                             v-on:click="addUserSource('', true)"
-                            v-if="this.sources.length <= this.maxSourcesCount">
+                            v-if="this.sources.length < this.maxSourcesCount">
                         <i class="fas fa-plus"></i> Добавить свой источник
                     </button>
                 </legend>
@@ -391,126 +391,86 @@
              */
 
             axios
-                .request({method: 'get', url: 'https://httpbin.org/json', timeout: 5000})
-                // .request({method: 'get', url: 'https://httpbin.org/delay/2', timeout: 5000})
-                .then(/** @param {AxiosResponse} response */ function (response) {
-                    // <debug> ONLY FOR TEST
-                    response.data = {
-                        settings: {
-                            sources: {
-                                provided: [
-                                    {
-                                        uri: "https://ya.ru/robots.txt",
-                                        name: "Foo name",
-                                        description: "Foo desc",
-                                        default: true,
-                                        count: 123,
-                                    },
-                                    {
-                                        uri: "https://ya.ru/robots.txt",
-                                        name: "Bar name",
-                                        description: "Bar desc",
-                                        default: false,
-                                        count: 321,
-                                    },
-                                ],
-                                max: 35,
-                            },
-                            redirect: {
-                                addr: "1.0.0.0"
-                            },
-                            records: {
-                                comment: "FooComment",
-                            },
-                            excludes: {
-                                hosts: [
-                                    'localhost',
-                                    'localhost.localdomain',
-                                    'broadcasthost',
-                                    'local',
-                                    'ip6-localhost',
-                                    'ip6-loopback',
-                                    'ip6-localnet',
-                                    'ip6-mcastprefix',
-                                    'ip6-allnodes',
-                                    'ip6-allrouters',
-                                    'ip6-allhosts',
-                                ]
-                            },
-                        },
-                        version: "3.0.0",
-                        routes: {
-                            script_generator: {
-                                path: "script/source"
-                            }
-                        },
-                    };
-                    // </debug> ONLY FOR TEST
+                .all([
+                    axios.request({method: 'get', url: '/api/version', timeout: 2000}),
+                    axios.request({method: 'get', url: '/api/routes', timeout: 2000}),
+                    axios.request({method: 'get', url: '/api/settings', timeout: 2000}),
+                ])
+                .then(axios.spread(
+                    /**
+                     * @param {AxiosResponse} versionResponse
+                     * @param {AxiosResponse} routesResponse
+                     * @param {AxiosResponse} settingsResponse
+                     */
+                    function (versionResponse, routesResponse, settingsResponse) {
+                        // Attach `hasOwnNestedProperty` function into each `*Response.data` object
+                        [versionResponse, routesResponse, settingsResponse].forEach(function (response) {
+                            // @link: <https://stackoverflow.com/a/33445095>
+                            response.data.hasOwnNestedProperty = /** @param {string} path */ function (path) {
+                                if (typeof path !== "string" || path.length <= 0) {
+                                    return false;
+                                }
 
-                    // @link: <https://stackoverflow.com/a/33445095>
-                    response.data.hasOwnNestedProperty = /** @param {string} path */ function (path) {
-                        if (typeof path !== "string" || path.length <= 0) {
-                            return false;
-                        }
+                                for (let i = 0, properties = path.split('.'), obj = this; i < properties.length; i++) {
+                                    let prop = properties[i];
 
-                        for (let i = 0, properties = path.split('.'), obj = this; i < properties.length; i++) {
-                            let prop = properties[i];
+                                    if (!obj || !obj.hasOwnProperty(prop)) {
+                                        return false;
+                                    } else {
+                                        obj = obj[prop];
+                                    }
+                                }
 
-                            if (!obj || !obj.hasOwnProperty(prop)) {
-                                return false;
-                            } else {
-                                obj = obj[prop];
-                            }
-                        }
-
-                        return true;
-                    };
-
-                    // Append sources
-                    if (response.data.hasOwnNestedProperty('settings.sources.provided')) {
-                        /**
-                         * @typedef {Object} RawSourceData
-                         * @property {string} uri
-                         * @property {string} name
-                         * @property {string} description
-                         * @property {boolean} default
-                         * @property {number} count
-                         */
-                        response.data.settings.sources.provided.forEach(/** @param {RawSourceData} s */ function (s) {
-                            self.sources.push(self.newSource(
-                                s.uri,
-                                s.name,
-                                s.count,
-                                s.description,
-                                s.default,
-                            ));
+                                return true;
+                            };
                         });
-                    }
 
-                    if (response.data.hasOwnNestedProperty('settings.sources.max')) {
-                        self.maxSourcesCount = parseInt(response.data.settings.sources.max, 10);
-                    }
+                        // Append sources
+                        if (settingsResponse.data.hasOwnNestedProperty('sources.provided')) {
+                            /**
+                             * @typedef {Object} RawSourceData
+                             * @property {string} uri
+                             * @property {string} name
+                             * @property {string} description
+                             * @property {boolean} default
+                             * @property {number} count
+                             */
+                            settingsResponse.data.sources.provided.forEach(/** @param {RawSourceData} s */ function (s) {
+                                self.sources.push(self.newSource(
+                                    s.uri,
+                                    s.name,
+                                    s.count,
+                                    s.description,
+                                    s.default,
+                                ));
+                            });
+                        }
 
-                    if (response.data.hasOwnNestedProperty('settings.redirect.addr')) {
-                        self.redirectIp = response.data.settings.redirect.addr;
-                    }
+                        if (settingsResponse.data.hasOwnNestedProperty('sources.max')) {
+                            self.maxSourcesCount = parseInt(settingsResponse.data.sources.max, 10);
+                        }
 
-                    if (response.data.hasOwnNestedProperty('settings.excludes.hosts')) {
-                        self.excludesList = response.data.settings.excludes.hosts;
-                    }
+                        if (settingsResponse.data.hasOwnNestedProperty('redirect.addr')) {
+                            self.redirectIp = settingsResponse.data.redirect.addr;
+                        }
 
-                    if (response.data.hasOwnNestedProperty('version')) {
-                        self.version = response.data.version;
-                    }
+                        if (settingsResponse.data.hasOwnNestedProperty('excludes.hosts')) {
+                            self.excludesList = settingsResponse.data.excludes.hosts;
+                        }
 
-                    if (response.data.hasOwnNestedProperty('routes.script_generator.path')) {
-                        self.scriptGeneratorPath = response.data.routes.script_generator.path;
-                    }
+                        if (settingsResponse.data.hasOwnNestedProperty('records.comment')) {
+                            self.entriesComment = settingsResponse.data.records.comment;
+                        }
 
-                    if (response.data.hasOwnNestedProperty('settings.records.comment')) {
-                        self.entriesComment = response.data.settings.records.comment;
+                        if (versionResponse.data.hasOwnNestedProperty('version')) {
+                            self.version = versionResponse.data.version;
+                        }
+
+                        if (routesResponse.data.hasOwnNestedProperty('script_generator.path')) {
+                            self.scriptGeneratorPath = routesResponse.data.script_generator.path;
+                        }
                     }
-                })
+                ))
                 .catch(/** @param {Error} error */ function (error) {
                     self.errored = true;
                     self.errorMessage = error.message;

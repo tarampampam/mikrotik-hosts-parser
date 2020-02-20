@@ -1,4 +1,4 @@
-package settings
+package serve
 
 import (
 	"fmt"
@@ -97,7 +97,7 @@ func FromYaml(in []byte, expandEnv bool) (*Settings, error) {
 // PrintInfo about most important settings values into writer.
 func (s *Settings) PrintInfo(out io.Writer) error {
 	w := tabwriter.NewWriter(out, 2, 8, 1, '\t', tabwriter.AlignRight)
-	defer w.Flush()
+	defer func(w *tabwriter.Writer) { _ = w.Flush() }(w)
 
 	lines := [][]interface{}{
 		{"Listen address", s.Listen.Address},

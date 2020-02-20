@@ -10,17 +10,16 @@ require (
 )
 
 replace (
-	github.com/tarampampam/mikrotik-hosts-parser/cache => ../cache
-	github.com/tarampampam/mikrotik-hosts-parser/cache/files => ../cache/files
-	github.com/tarampampam/mikrotik-hosts-parser/cache/files/file => ../cache/files/file
 	github.com/tarampampam/mikrotik-hosts-parser/cmd => ../cmd
 	github.com/tarampampam/mikrotik-hosts-parser/cmd/serve => ../cmd/serve
 	github.com/tarampampam/mikrotik-hosts-parser/cmd/version => ../cmd/version
 	github.com/tarampampam/mikrotik-hosts-parser/hostsfile => ../hostsfile
 	github.com/tarampampam/mikrotik-hosts-parser/hostsfile/parser => ../hostsfile/parser
 	github.com/tarampampam/mikrotik-hosts-parser/http => ../http
+	github.com/tarampampam/mikrotik-hosts-parser/http/api => ../http/api
 	github.com/tarampampam/mikrotik-hosts-parser/http/fileserver => ../http/fileserver
+	github.com/tarampampam/mikrotik-hosts-parser/http/script => ../http/script
 	github.com/tarampampam/mikrotik-hosts-parser/mikrotik/dns => ../mikrotik/dns
-	github.com/tarampampam/mikrotik-hosts-parser/options => ../options
-	github.com/tarampampam/mikrotik-hosts-parser/settings => ../settings
+	github.com/tarampampam/mikrotik-hosts-parser/settings/serve => ../settings/serve
+	github.com/tarampampam/mikrotik-hosts-parser/version => ../version
 )

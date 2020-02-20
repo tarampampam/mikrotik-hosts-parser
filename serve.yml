@@ -87,6 +87,6 @@ router_script:
   # router script entries comment
   comment: ADBlock
   # maximal external sources count
-  max_sources: ${MAX_SOURCES_COUNT:-8}
+  max_sources: ${MAX_SOURCES_COUNT:-10}
   # maximal external source size (in bytes; 2048 Kb by default)
   max_source_size: ${MAX_SOURCES_SIZE:-2097152}

@@ -21,7 +21,7 @@ COPY . /src
 
 RUN set -x \
     && export version=`git symbolic-ref -q --short HEAD || git describe --tags --exact-match`@`git rev-parse --short HEAD` \
-    && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.Version=${version}" . \
+    && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X mikrotik-hosts-parser/version.version=${version}" . \
     && ./mikrotik-hosts-parser version \
     && ./mikrotik-hosts-parser -h
 

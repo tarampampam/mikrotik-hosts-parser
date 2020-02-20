@@ -1,6 +1,7 @@
 # IDEs
 /nbproject
 /.idea
+/.vscode
 
 # Temp dirs & trash
 /temp
