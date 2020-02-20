@@ -46,7 +46,7 @@ func TestGetSettingsHandlerFunc(t *testing.T) {
 	}
 
 	data := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(rr.Body.String()), &data); err != nil {
+	if err := json.Unmarshal(rr.Body.Bytes(), &data); err != nil {
 		t.Fatal(err)
 	}
 
@@ -57,13 +57,12 @@ func TestGetSettingsHandlerFunc(t *testing.T) {
 		recordsComment  = data["records"].(map[string]interface{})["comment"].(string)
 		excludesHosts   = data["excludes"].(map[string]interface{})["hosts"].([]interface{})
 	)
-	//fmt.Println(sourcesProvided[1].(map[string]interface{})["count"])
 
 	if len(serveSettings.Sources) != len(sourcesProvided) {
 		t.Errorf("Wrong source records count. Want: %v, got: %v", len(serveSettings.Sources), len(sourcesProvided))
 	}
 
-	for i, _ := range serveSettings.Sources {
+	for i := range serveSettings.Sources {
 		if sourcesProvided[i].(map[string]interface{})["name"] != serveSettings.Sources[i].Name {
 			t.Errorf("Unexpected source name found in: %v", sourcesProvided[i])
 		}
@@ -93,7 +92,7 @@ func TestGetSettingsHandlerFunc(t *testing.T) {
 		t.Errorf("Unexpected records comment: got %v, want %v", recordsComment, serveSettings.RouterScript.Comment)
 	}
 
-	for i, _ := range serveSettings.RouterScript.Exclude.Hosts {
+	for i := range serveSettings.RouterScript.Exclude.Hosts {
 		if excludesHosts[i] != serveSettings.RouterScript.Exclude.Hosts[i] {
 			t.Errorf("Unexpected excluded host found: %v", excludesHosts[i])
 		}

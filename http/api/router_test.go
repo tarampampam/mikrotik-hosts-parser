@@ -2,10 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 func TestGetRoutesHandlerFunc(t *testing.T) {
@@ -32,7 +33,7 @@ func TestGetRoutesHandlerFunc(t *testing.T) {
 	}
 
 	data := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(rr.Body.String()), &data); err != nil {
+	if err := json.Unmarshal(rr.Body.Bytes(), &data); err != nil {
 		t.Fatal(err)
 	}
 

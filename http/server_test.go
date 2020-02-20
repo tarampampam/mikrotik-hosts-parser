@@ -43,11 +43,11 @@ func TestNewServer(t *testing.T) {
 		t.Errorf("Wrong HTTP server addr set. Want [%s], got [%s]", "1.2.3.4:321", server.Server.Addr)
 	}
 
-	if server.Server.WriteTimeout != 10 * time.Second {
+	if server.Server.WriteTimeout != 10*time.Second {
 		t.Error("Wrong server write timeout value is set")
 	}
 
-	if server.Server.ReadTimeout != 13 * time.Second {
+	if server.Server.ReadTimeout != 13*time.Second {
 		t.Error("Wrong server read timeout value is set")
 	}
 }
