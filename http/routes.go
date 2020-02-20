@@ -17,7 +17,7 @@ func (s *Server) RegisterHandlers() {
 // Register static route handlers.
 func (s *Server) registerStaticHandlers() {
 	s.Router.
-		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandler).
+		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandlerFunc(s.ServeSettings)).
 		Methods("GET").
 		Name("script_generator")
 }

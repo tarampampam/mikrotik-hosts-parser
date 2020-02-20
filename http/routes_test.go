@@ -41,7 +41,7 @@ func TestServer_RegisterHandlers(t *testing.T) {
 			name:    "script_generator",
 			route:   "/script/source",
 			methods: []string{"GET"},
-			handler: script.RouterOsScriptSourceGenerationHandler,
+			handler: script.RouterOsScriptSourceGenerationHandlerFunc(s.ServeSettings),
 		},
 		{
 			name:    "api_get_settings",
