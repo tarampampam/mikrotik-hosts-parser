@@ -71,7 +71,7 @@ router_script:
     address: 127.0.0.1
   # default excluding settings
   exclude:
-    # this hosts will be excluded by default
+    # this hosts will be excluded by default (will be set only in UI)
     hosts:
       - localhost
       - localhost.localdomain

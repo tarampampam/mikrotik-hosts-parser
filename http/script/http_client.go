@@ -9,22 +9,30 @@ import (
 	"time"
 )
 
-var httpClient = newHttpClient()
+type httpClient struct {
+	client *http.Client
+}
 
-func newHttpClient() *http.Client {
-	return &http.Client{
-		Timeout: time.Second * 10, // Set request timeout
-		CheckRedirect: func(_ *http.Request, via []*http.Request) error {
-			if len(via) >= 2 {
-				return errors.New("request: too many (2) redirects")
-			}
+var defaultHTTPClient = newHTTPClient()
 
-			return nil
+// newHTTPClient creates new http client for a working with external sources
+func newHTTPClient() *httpClient {
+	return &httpClient{
+		client: &http.Client{
+			Timeout: time.Second * 10, // Set request timeout
+			CheckRedirect: func(_ *http.Request, via []*http.Request) error {
+				if len(via) >= 2 {
+					return errors.New("request: too many (2) redirects")
+				}
+
+				return nil
+			},
 		},
 	}
 }
 
-func fetchSourceContent(uri string, maxLength int) (*http.Response, error) {
+// FetchSourceContent sends request to the external source and returns response object only if ALL is ok
+func (c *httpClient) FetchSourceContent(uri string, maxLength int) (*http.Response, error) {
 	// Create HTTP request
 	httpRequest, requestErr := http.NewRequest("GET", uri, nil)
 
@@ -34,7 +42,7 @@ func fetchSourceContent(uri string, maxLength int) (*http.Response, error) {
 	}
 
 	// Do request
-	response, responseErr := httpClient.Do(httpRequest)
+	response, responseErr := c.client.Do(httpRequest)
 
 	// Check response getting
 	if responseErr != nil {
@@ -45,7 +53,7 @@ func fetchSourceContent(uri string, maxLength int) (*http.Response, error) {
 	if contentType := response.Header.Get("Content-Type"); !strings.HasPrefix(contentType, "text/plain") {
 		_ = response.Body.Close()
 
-		return nil, fmt.Errorf("wrong 'Content-Type' header (%s)", contentType)
+		return nil, fmt.Errorf("wrong 'Content-Type' header '%s', required is '%s'", contentType, "text/plain*")
 	}
 
 	// `Content-Length` header validation (if last presents)

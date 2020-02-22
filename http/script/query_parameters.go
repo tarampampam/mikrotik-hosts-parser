@@ -2,6 +2,8 @@ package script
 
 import (
 	"errors"
+	"fmt"
+	"net"
 	"net/url"
 	"strconv"
 	"strings"
@@ -16,19 +18,27 @@ type queryParametersBag struct {
 	RedirectTo    string
 }
 
-// newQueryParametersBagUsingQueryValues makes query parameters bag using passed url values.
-func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersBag, error) {
-	bag := &queryParametersBag{}
+// newQueryParametersBag makes query parameters bag using passed url values.
+func newQueryParametersBag( //nolint:gocyclo
+	values url.Values,
+	defaultRedirectTo string,
+	maxSources int,
+) (*queryParametersBag, error) {
+	bag := &queryParametersBag{
+		// Defaults:
+		RedirectTo: defaultRedirectTo,
+		Format:     "routeros",
+	}
 
 	// Extract `sources_urls` values
 	if sourceUrls, ok := values["sources_urls"]; ok {
 		// Iterate query values slice
 		for _, value := range sourceUrls {
 			// Explode value with URLs list (separated using `,`) into single URLs
-			for _, sourceUrl := range strings.Split(value, ",") {
+			for _, sourceURL := range strings.Split(value, ",") {
 				// Make URL validation, and if all is ok - append it into query parameters bag
-				if _, err := url.ParseRequestURI(sourceUrl); err == nil {
-					bag.SourceUrls = append(bag.SourceUrls, sourceUrl)
+				if _, err := url.ParseRequestURI(sourceURL); err == nil {
+					bag.SourceUrls = append(bag.SourceUrls, sourceURL)
 				}
 			}
 		}
@@ -43,6 +53,11 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 
 	// remove duplicated sources
 	bag.SourceUrls = bag.uniqueStringsSlice(bag.SourceUrls)
+
+	// check for sources count
+	if len(bag.SourceUrls) > maxSources {
+		return nil, fmt.Errorf("too much sources (only %d is allowed)", maxSources)
+	}
 
 	// Extract `format` value
 	if value, ok := values["format"]; ok {
@@ -79,6 +94,10 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 	if value, ok := values["limit"]; ok {
 		if len(value) > 0 {
 			if value, err := strconv.Atoi(value[0]); err == nil {
+				if value <= 0 {
+					return nil, errors.New("wrong `limit` value (cannot be less then 1)")
+				}
+
 				bag.Limit = value
 			} else {
 				return nil, errors.New("wrong `limit` value (cannot be converted into integer)")
@@ -86,9 +105,13 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 		}
 	}
 
-	// Extract `redirect_to` value
+	// Extract and validate `redirect_to` value
 	if value, ok := values["redirect_to"]; ok {
 		if len(value) > 0 {
+			if net.ParseIP(value[0]) == nil {
+				return nil, errors.New("wrong `redirect_to` value (invalid IP address)")
+			}
+
 			bag.RedirectTo = value[0]
 		}
 	}
