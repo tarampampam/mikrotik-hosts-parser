@@ -1,7 +1,7 @@
 package script
 
 import (
-	"fmt"
+	"io"
 	"mikrotik-hosts-parser/hostsfile"
 	hostsParser "mikrotik-hosts-parser/hostsfile/parser"
 	"mikrotik-hosts-parser/mikrotik/dns"
@@ -14,9 +14,9 @@ import (
 )
 
 type sourceResponse struct {
-	URL      string
-	Response *http.Response
-	Error    error
+	URL     string
+	Content io.ReadCloser
+	Error   error
 }
 
 // RouterOsScriptSourceGenerationHandlerFunc generates RouterOS script source and writes it response.
@@ -38,11 +38,10 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 			return
 		}
 
-		comments := make([]string, 0) // strings slice for storing processing comments (e.g. info messages, errors)
+		comments := make([]string, 0) // strings slice for storing processing comments (e.g. info messages, errors, etc)
 
 		// append basic information
-		comments = append(
-			comments,
+		comments = append(comments,
 			"Script generated at "+time.Now().Format("2006-01-02 15:04:05"),
 			"Generator version: "+ver.Version(),
 			"",
@@ -56,11 +55,14 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 		// fetch sources async and write responses into channel
 		for _, sourceURL := range queryParameters.SourceUrls {
 			go func(sourceURL string, maxLength int) {
-				fmt.Println(sourceURL, maxLength)
+				var content io.ReadCloser
 				// do request
 				response, err := defaultHTTPClient.FetchSourceContent(sourceURL, maxLength) //nolint:bodyclose
+				if response != nil {
+					content = response.Body // content MUST BE CLOSED (later)!
+				}
 				// send request result into channel
-				sourceResponsesChannel <- sourceResponse{URL: sourceURL, Response: response, Error: err}
+				sourceResponsesChannel <- sourceResponse{URL: sourceURL, Content: content, Error: err}
 			}(sourceURL, serveSettings.RouterScript.MaxSourceSize)
 		}
 
@@ -71,20 +73,22 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 
 		// read source responses and pass it into hosts file parser
 		for i := 0; i < len(queryParameters.SourceUrls); i++ {
+			// read message from channel
 			resp := <-sourceResponsesChannel
 			// if response contains error - skip it
 			if resp.Error != nil {
+				if resp.Content != nil {
+					_ = resp.Content.Close()
+				}
 				comments = append(comments, "Source <"+resp.URL+"> error: "+resp.Error.Error())
 				continue
 			}
-
 			// parse response content
-			records, parseErr := parser.Parse(resp.Response.Body)
-			_ = resp.Response.Body.Close()
+			records, parseErr := parser.Parse(resp.Content)
+			_ = resp.Content.Close()
 			if parseErr != nil {
 				comments = append(comments, "Source <"+resp.URL+"> error: "+parseErr.Error())
 			}
-
 			// and append results into hosts records stack
 			hostsRecords = append(hostsRecords, records...)
 		}
@@ -129,7 +133,14 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 	}
 }
 
-func hostsRecordsToStaticEntries(in []*hostsfile.Record, excludes []string, limit int, redirectTo, comment string) dns.StaticEntries {
+// hostsRecordsToStaticEntries converts hosts records into static dns entries
+func hostsRecordsToStaticEntries(
+	in []*hostsfile.Record,
+	excludes []string,
+	limit int,
+	redirectTo,
+	comment string,
+) dns.StaticEntries {
 	var (
 		processedHosts = make(map[string]bool)
 		out            = dns.StaticEntries{}
