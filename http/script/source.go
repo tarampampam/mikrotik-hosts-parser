@@ -1,16 +1,22 @@
 package script
 
 import (
-	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
+	"mikrotik-hosts-parser/hostsfile"
+	hostsParser "mikrotik-hosts-parser/hostsfile/parser"
 	"mikrotik-hosts-parser/settings/serve"
 	"net/http"
-	"time"
 )
 
-var httpClient = newHttpClient()
+type sourceResponse struct {
+	URL      string
+	Response *http.Response
+	Error    error
+}
+
+type hostsRecords struct {
+	Records []*hostsfile.Record
+}
 
 // RouterOsScriptSourceGenerationHandlerFunc generates RouterOS script source and writes it response.
 func RouterOsScriptSourceGenerationHandlerFunc(serveSettings *serve.Settings) func(http.ResponseWriter, *http.Request) {
@@ -25,57 +31,71 @@ func RouterOsScriptSourceGenerationHandlerFunc(serveSettings *serve.Settings) fu
 			return
 		}
 
-		// stack with processing errors
-		processingErrors := make([]string, 0)
+		var (
+			processingErrors       = make([]string, 0) // stack with processing errors
+			sourcesLen             = len(queryParameters.SourceUrls)
+			sourceResponsesChannel = make(chan sourceResponse, sourcesLen) // channel for source responses
+		)
 
-		for _, sourceUrl := range queryParameters.sourceUrls {
-			if response, err := fetchSourceContent(sourceUrl); err == nil {
-				body, err := ioutil.ReadAll(io.LimitReader(response.Body, int64(serveSettings.RouterScript.MaxSourceSize)))
-
-				if err != nil {
-					processingErrors = append(processingErrors, sourceUrl + ": " + err.Error())
-
-					continue
-				}
-
-				fmt.Println(body)
-			} else {
-				processingErrors = append(processingErrors, sourceUrl + ": " + err.Error())
-			}
+		// fetch sources async and write responses into channel
+		for _, sourceUrl := range queryParameters.SourceUrls {
+			go func(sourceUrl string, maxLength int) {
+				fmt.Println(sourceUrl, maxLength)
+				// do request
+				response, err := fetchSourceContent(sourceUrl, maxLength)
+				// send request result into channel
+				sourceResponsesChannel <- sourceResponse{URL: sourceUrl, Response: response, Error: err}
+			}(sourceUrl, serveSettings.RouterScript.MaxSourceSize)
 		}
 
-		fmt.Println(processingErrors)
-	}
-}
+		var (
+			parser       = hostsParser.NewParser()
+			hostsRecords = make([]*hostsfile.Record, 0) // hosts records stack
+		)
 
-func newHttpClient() *http.Client {
-	return &http.Client{
-		Timeout: time.Second * 10, // Set request timeout
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 2 {
-				return errors.New("request: too many (2) redirects")
+		// read source responses and pass it into hosts file parser
+		for i := 0; i < sourcesLen; i++ {
+			resp := <-sourceResponsesChannel
+			// if response contains error - skip it
+			if resp.Error != nil {
+				processingErrors = append(processingErrors, resp.URL+": "+resp.Error.Error())
+				continue
 			}
-			return nil
-		},
+
+			// parse response content
+			records, parseErr := parser.Parse(resp.Response.Body)
+			_ = resp.Response.Body.Close()
+			if parseErr != nil {
+				processingErrors = append(processingErrors, resp.URL+": "+parseErr.Error())
+			}
+
+			// and append results into hosts records stack
+			hostsRecords = append(hostsRecords, records...)
+		}
+
+		// close responses channels after all
+		close(sourceResponsesChannel)
+
+		//var (
+		//	mikroticDnsEntries = make()
+		//)
+
+		// @todo: convert `[]*hostsfile.Record` into microtic static entries with duplicates removal
+
+		//time.Sleep(time.Second * 3)
+		fmt.Println(processingErrors)
+		//for _, record := range hostsRecords {
+		//	fmt.Println(record)
+		//}
 	}
 }
 
-func fetchSourceContent(uri string) (*http.Response, error) { // @todo: return `io.Reader` and use cache
-	// Create HTTP request
-	httpRequest, requestErr := http.NewRequest("GET", uri, nil)
-
-	// Check request creation
-	if requestErr != nil {
-		return nil, requestErr
-	}
-
-	// Do request
-	response, responseErr := httpClient.Do(httpRequest)
-
-	// Check response getting
-	if responseErr != nil {
-		return nil, responseErr
-	}
-
-	return response, nil
+func (records *hostsRecords) removeDuplicates() {
+	//keys := make(map[string]*hostsfile.Record)
+	//
+	//for _, record := range records.Records {
+	//	if _, ok := keys[record.Hosts]; !ok {
+	//
+	//	}
+	//}
 }

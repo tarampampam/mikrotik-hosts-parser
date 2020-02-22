@@ -41,6 +41,7 @@ cover: ## Run app tests with coverage report
 
 up: ## Create and start containers
 	$(DC_BIN) up --detach --build web
+	@printf "\n   \e[30;42m %s \033[0m\n\n" 'Navigate your browser to ⇒ http://127.0.0.1:8080';
 
 down: ## Stop and remove containers, networks, images, and volumes
 	$(DC_BIN) down -t 5

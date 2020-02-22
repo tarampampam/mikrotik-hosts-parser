@@ -6,6 +6,7 @@ require (
 	github.com/a8m/envsubst v1.1.0
 	github.com/gorilla/mux v1.7.4
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
+	github.com/tarampampam/go-filecache v1.0.0
 	gopkg.in/yaml.v2 v2.2.8
 )
 

@@ -8,12 +8,12 @@ import (
 )
 
 type queryParametersBag struct {
-	sourceUrls    []string
-	format        string
-	version       string
-	excludedHosts []string
-	limit         int
-	redirectTo    string
+	SourceUrls    []string
+	Format        string
+	Version       string
+	ExcludedHosts []string
+	Limit         int
+	RedirectTo    string
 }
 
 // newQueryParametersBagUsingQueryValues makes query parameters bag using passed url values.
@@ -28,7 +28,7 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 			for _, sourceUrl := range strings.Split(value, ",") {
 				// Make URL validation, and if all is ok - append it into query parameters bag
 				if _, err := url.ParseRequestURI(sourceUrl); err == nil {
-					bag.sourceUrls = append(bag.sourceUrls, sourceUrl)
+					bag.SourceUrls = append(bag.SourceUrls, sourceUrl)
 				}
 			}
 		}
@@ -37,21 +37,24 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 	}
 
 	// Validate sources list size
-	if len(bag.sourceUrls) < 1 {
+	if len(bag.SourceUrls) < 1 {
 		return nil, errors.New("empty sources list")
 	}
+
+	// remove duplicated sources
+	bag.SourceUrls = bag.uniqueStringsSlice(bag.SourceUrls)
 
 	// Extract `format` value
 	if value, ok := values["format"]; ok {
 		if len(value) > 0 {
-			bag.format = value[0]
+			bag.Format = value[0]
 		}
 	}
 
-	// Extract `format` value
+	// Extract `version` value
 	if value, ok := values["version"]; ok {
 		if len(value) > 0 {
-			bag.version = value[0]
+			bag.Version = value[0]
 		}
 	}
 
@@ -63,17 +66,20 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 			for _, excludedHost := range strings.Split(value, ",") {
 				// Make basic checking, and if all is ok - append it into query parameters bag
 				if excludedHost != "" {
-					bag.excludedHosts = append(bag.excludedHosts, excludedHost)
+					bag.ExcludedHosts = append(bag.ExcludedHosts, excludedHost)
 				}
 			}
 		}
+
+		// remove duplicated hosts
+		bag.ExcludedHosts = bag.uniqueStringsSlice(bag.ExcludedHosts)
 	}
 
 	// Extract `limit` value
 	if value, ok := values["limit"]; ok {
 		if len(value) > 0 {
 			if value, err := strconv.Atoi(value[0]); err == nil {
-				bag.limit = value
+				bag.Limit = value
 			} else {
 				return nil, errors.New("wrong `limit` value (cannot be converted into integer)")
 			}
@@ -83,9 +89,24 @@ func newQueryParametersBagUsingQueryValues(values url.Values) (*queryParametersB
 	// Extract `redirect_to` value
 	if value, ok := values["redirect_to"]; ok {
 		if len(value) > 0 {
-			bag.redirectTo = value[0]
+			bag.RedirectTo = value[0]
 		}
 	}
 
 	return bag, nil
+}
+
+// uniqueStringsSlice removes duplicated strings from strings slice
+func (queryParametersBag) uniqueStringsSlice(in []string) []string {
+	keys := make(map[string]bool)
+	out := make([]string, 0)
+
+	for _, entry := range in {
+		if _, ok := keys[entry]; !ok {
+			keys[entry] = true
+			out = append(out, entry)
+		}
+	}
+
+	return out
 }

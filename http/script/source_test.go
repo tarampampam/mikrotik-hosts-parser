@@ -10,14 +10,16 @@ import (
 func TestRouterOsScriptSourceGenerationHandlerFunc(t *testing.T) {
 	var (
 		req, _ = http.NewRequest("GET", "http://testing/script/source?"+
-			"format=routeros&"+
-			"version=v0.0.666@1a0339c&"+
+			"Format=routeros&"+
+			"Version=v0.0.666@1a0339c&"+
 			"redirect_to=127.0.0.1&"+
-			"limit=5000&"+
+			"Limit=5000&"+
 			"sources_urls=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Ftarampampam%2Fmikrotik-hosts-parser%40master%2F.hosts%2Fbasic.txt,"+
-			"https%3A%2F%2Fadaway.org%2Fhosts.txt,"+
-			"https%3A%2F%2Fwww.malwaredomainlist.com%2Fhostslist%2Fhosts.txt,"+
-			"https%3A%2F%2Fpgl.yoyo.org%2Fadservers%2Fserverlist.php%3Fhostformat%3Dhosts%26showintro%3D0%26mimetype%3Dplaintext"+
+			//"https%3A%2F%2Fadaway.org%2Fhosts.txt,"+
+			//"https%3A%2F%2Fadaway.org%2Fhosts.txt,"+
+			"https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt,"+
+			//"https%3A%2F%2Fwww.malwaredomainlist.com%2Fhostslist%2Fhosts.txt,"+
+			//"https%3A%2F%2Fpgl.yoyo.org%2Fadservers%2Fserverlist.php%3Fhostformat%3Dhosts%26showintro%3D0%26mimetype%3Dplaintext"+
 			"&excluded_hosts=localhost,"+
 			"localhost.localdomain,"+
 			"broadcasthost,"+
@@ -52,7 +54,7 @@ func TestRouterOsScriptSourceGenerationHandlerFunc(t *testing.T) {
 					Hosts: []string{"foo", "bar"},
 				},
 				MaxSources:    1,
-				MaxSourceSize: 16,
+				MaxSourceSize: 2097152,
 				Comment:       " [ blah ] ",
 			},
 		}
