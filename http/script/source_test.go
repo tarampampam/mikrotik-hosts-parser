@@ -70,7 +70,7 @@ func TestRouterOsScriptSourceGenerationHandlerFunc(t *testing.T) {
 
 	for _, substring := range []string{"/ip dns static"} {
 		if !strings.Contains(body, substring) {
-			t.Errorf("Expected substring '%s' was not fount in response", substring)
+			t.Errorf("Expected substring '%s' was not found in response (%s)", substring, body)
 		}
 	}
 }

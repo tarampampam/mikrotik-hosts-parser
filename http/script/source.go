@@ -11,19 +11,26 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tarampampam/go-filecache"
 )
 
 type sourceResponse struct {
-	URL     string
-	Content io.ReadCloser
-	Error   error
+	URL                  string
+	Content              io.ReadCloser
+	Error                error
+	CacheIsHit           bool
+	CacheExpiredAfterSec int
 }
 
 // RouterOsScriptSourceGenerationHandlerFunc generates RouterOS script source and writes it response.
-func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
+func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 	serveSettings *serve.Settings,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// initialize default cache pool
+		initDefaultCachePool(serveSettings.Cache.File.DirPath, false)
+
 		queryParameters, queryErr := newQueryParametersBag(
 			r.URL.Query(),
 			serveSettings.RouterScript.Redirect.Address,
@@ -48,22 +55,51 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 			"Sources list: <"+strings.Join(queryParameters.SourceUrls, ">, <")+">",
 			"Excluded hosts: '"+strings.Join(queryParameters.ExcludedHosts, "', '")+"'",
 			"Limit: "+strconv.Itoa(queryParameters.Limit),
+			"Cache lifetime: "+strconv.Itoa(serveSettings.Cache.LifetimeSec)+" seconds",
 		)
 
-		sourceResponsesChannel := make(chan sourceResponse) // channel for source responses
+		sourceResponsesChannel := make(chan *sourceResponse) // channel for source responses
 
 		// fetch sources async and write responses into channel
 		for _, sourceURL := range queryParameters.SourceUrls {
-			go func(sourceURL string, maxLength int) {
-				var content io.ReadCloser
-				// do request
-				response, err := defaultHTTPClient.FetchSourceContent(sourceURL, maxLength) //nolint:bodyclose
-				if response != nil {
-					content = response.Body // content MUST BE CLOSED (later)!
+			go func(sourceURL string, maxLength, cacheLifetimeSec int) {
+				var (
+					result    = &sourceResponse{URL: sourceURL}
+					cacheItem filecache.CacheItem
+				)
+				// if cache missed
+				if cached := defaultCachePool.GetItem(sourceURL); !cached.IsHit() {
+					// do request
+					response, fetchError := defaultHTTPClient.FetchSourceContent(sourceURL, maxLength)
+					result.Error = fetchError
+					if response != nil {
+						// and write response content into cache
+						cacheItem, _ = defaultCachePool.Put(
+							sourceURL,
+							response.Body,
+							time.Now().Add(time.Second*time.Duration(cacheLifetimeSec)),
+						)
+						_ = response.Body.Close()
+					}
+				} else {
+					result.CacheIsHit = true
 				}
-				// send request result into channel
-				sourceResponsesChannel <- sourceResponse{URL: sourceURL, Content: content, Error: err}
-			}(sourceURL, serveSettings.RouterScript.MaxSourceSize)
+				// extract cached item from cache pool (if was missed previously)
+				if cacheItem == nil {
+					cacheItem = defaultCachePool.GetItem(sourceURL)
+				}
+				// read from cache item using pipe
+				var pipeReader, pipeWriter = io.Pipe()
+				go func() {
+					defer func() { _ = pipeWriter.Close() }()
+					if err := cacheItem.Get(pipeWriter); err != nil {
+						result.Error = err
+					}
+				}()
+				result.Content = pipeReader
+				result.CacheExpiredAfterSec = int(cacheItem.ExpiresAt().Unix() - time.Now().Unix())
+				sourceResponsesChannel <- result
+			}(sourceURL, serveSettings.RouterScript.MaxSourceSize, serveSettings.Cache.LifetimeSec)
 		}
 
 		var (
@@ -75,6 +111,12 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 		for i := 0; i < len(queryParameters.SourceUrls); i++ {
 			// read message from channel
 			resp := <-sourceResponsesChannel
+			if resp.CacheIsHit {
+				comments = append(comments, "Cache HIT for <"+resp.URL+"> "+
+					"(expires after "+strconv.Itoa(resp.CacheExpiredAfterSec)+" sec.)")
+			} else {
+				comments = append(comments, "Cache miss for <"+resp.URL+">")
+			}
 			// if response contains error - skip it
 			if resp.Error != nil {
 				if resp.Content != nil {
@@ -95,6 +137,8 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen
 
 		// close responses channels after all
 		close(sourceResponsesChannel)
+
+		// @todo: add hostsRecords sorting
 
 		// convert hosts records into static mikrotik dns entries
 		staticEntries := hostsRecordsToStaticEntries(
