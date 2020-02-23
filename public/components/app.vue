@@ -155,7 +155,7 @@
                         :version="version"
                         :script-uri="getScriptGeneratorUri()"
                         :use-ssl="useSsl"
-                        :entriesComment="entriesComment"
+                        :entries-comment="entriesComment"
                     ></script-source>
                 </div>
             </fieldset>
@@ -168,7 +168,11 @@
             </div>
         </div>
 
-        <faq></faq>
+        <faq
+            :cache-lifetime-sec="cacheLifetimeSec"
+            :max-sources-count="maxSourcesCount"
+            :max-source-size-kb="maxSourceSizeBytes / 1024"
+        ></faq>
 
         <main-footer></main-footer>
     </div>
@@ -196,6 +200,7 @@
                 errored: false,
                 errorMessage: 'Something went wrong',
                 maxSourcesCount: 25,
+                maxSourceSizeBytes: 1024,
                 sources: [],
                 redirectIp: '0.0.0.0',
                 recordsLimit: 5000,
@@ -207,6 +212,7 @@
                 ],
                 version: 'UNKNOWN_VERSION',
                 format: 'routeros',
+                cacheLifetimeSec: NaN,
                 entriesComment: 'ADBlock',
                 scriptGeneratorPath: 'script/source',
                 useSsl: window.location.protocol === 'https:',
@@ -450,6 +456,10 @@
                             self.maxSourcesCount = parseInt(settingsResponse.data.sources.max, 10);
                         }
 
+                        if (settingsResponse.data.hasOwnNestedProperty('sources.max_source_size')) {
+                            self.maxSourceSizeBytes = parseInt(settingsResponse.data.sources.max_source_size, 10);
+                        }
+
                         if (settingsResponse.data.hasOwnNestedProperty('redirect.addr')) {
                             self.redirectIp = settingsResponse.data.redirect.addr;
                         }
@@ -460,6 +470,10 @@
 
                         if (settingsResponse.data.hasOwnNestedProperty('records.comment')) {
                             self.entriesComment = settingsResponse.data.records.comment;
+                        }
+
+                        if (settingsResponse.data.hasOwnNestedProperty('cache.lifetime_sec')) {
+                            self.cacheLifetimeSec = settingsResponse.data.cache.lifetime_sec;
                         }
 
                         if (versionResponse.data.hasOwnNestedProperty('version')) {

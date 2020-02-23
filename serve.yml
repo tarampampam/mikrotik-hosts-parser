@@ -62,7 +62,7 @@ cache:
     # path to the directory for cache files
     dir: ${TMPDIR:-/tmp}
   # cached entries lifetime duration (in seconds)
-  lifetime_sec: ${CACHE_LIFETIME_SEC:-10}
+  lifetime_sec: ${CACHE_LIFETIME_SEC:-20}
 
 # router script generation settings
 router_script:
@@ -71,7 +71,7 @@ router_script:
     address: 127.0.0.1
   # default excluding settings
   exclude:
-    # this hosts will be excluded by default
+    # this hosts will be excluded by default (will be set only in UI)
     hosts:
       - localhost
       - localhost.localdomain

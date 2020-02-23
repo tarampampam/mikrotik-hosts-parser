@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestGetSettingsHandlerFunc(t *testing.T) {
+func TestGetSettingsHandlerFunc(t *testing.T) { //nolint:gocyclo
 	var (
 		req, _        = http.NewRequest("GET", "http://testing", nil)
 		rr            = httptest.NewRecorder()
@@ -33,8 +33,12 @@ func TestGetSettingsHandlerFunc(t *testing.T) {
 				Exclude: serve.Excludes{
 					Hosts: []string{"foo", "bar"},
 				},
-				MaxSources: 1,
-				Comment:    " [ blah ] ",
+				MaxSources:    1,
+				Comment:       " [ blah ] ",
+				MaxSourceSize: 666,
+			},
+			Cache: serve.Cache{
+				LifetimeSec: 1234,
 			},
 		}
 	)
@@ -51,11 +55,13 @@ func TestGetSettingsHandlerFunc(t *testing.T) {
 	}
 
 	var (
-		sourcesProvided = data["sources"].(map[string]interface{})["provided"].([]interface{})
-		sourcesMax      = int(data["sources"].(map[string]interface{})["max"].(float64))
-		redirectAddr    = data["redirect"].(map[string]interface{})["addr"].(string)
-		recordsComment  = data["records"].(map[string]interface{})["comment"].(string)
-		excludesHosts   = data["excludes"].(map[string]interface{})["hosts"].([]interface{})
+		sourcesProvided  = data["sources"].(map[string]interface{})["provided"].([]interface{})
+		sourcesMax       = int(data["sources"].(map[string]interface{})["max"].(float64))
+		maxSourceSize    = int(data["sources"].(map[string]interface{})["max_source_size"].(float64))
+		redirectAddr     = data["redirect"].(map[string]interface{})["addr"].(string)
+		recordsComment   = data["records"].(map[string]interface{})["comment"].(string)
+		cacheLifetimeSec = int(data["cache"].(map[string]interface{})["lifetime_sec"].(float64))
+		excludesHosts    = data["excludes"].(map[string]interface{})["hosts"].([]interface{})
 	)
 
 	if len(serveSettings.Sources) != len(sourcesProvided) {
@@ -84,8 +90,16 @@ func TestGetSettingsHandlerFunc(t *testing.T) {
 		t.Errorf("Unexpected max sources: got %v, want %v", sourcesMax, serveSettings.RouterScript.MaxSources)
 	}
 
+	if maxSourceSize != serveSettings.RouterScript.MaxSourceSize {
+		t.Errorf("Unexpected max source size: got %v, want %v", maxSourceSize, serveSettings.RouterScript.MaxSourceSize)
+	}
+
 	if redirectAddr != serveSettings.RouterScript.Redirect.Address {
 		t.Errorf("Unexpected redirect address comment: got %v, want %v", redirectAddr, serveSettings.RouterScript.Redirect.Address)
+	}
+
+	if cacheLifetimeSec != serveSettings.Cache.LifetimeSec {
+		t.Errorf("Unexpected cache lifetime: got %v, want %v", cacheLifetimeSec, serveSettings.Cache.LifetimeSec)
 	}
 
 	if recordsComment != serveSettings.RouterScript.Comment {

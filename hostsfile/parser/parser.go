@@ -15,6 +15,11 @@ type Parser struct {
 	hostValidate *regexp.Regexp
 }
 
+// NewParser creates new parser
+func NewParser() *Parser {
+	return &Parser{}
+}
+
 // Parse input and return slice of pointers (hosts file entries).
 func (p *Parser) Parse(in io.Reader) ([]*hostsfile.Record, error) {
 	var (

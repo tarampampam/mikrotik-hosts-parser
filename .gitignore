@@ -7,5 +7,6 @@
 /temp
 /tmp
 .DS_Store
+*.cache
 /cover*.*
 /mikrotik-hosts-parser

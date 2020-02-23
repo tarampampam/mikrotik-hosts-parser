@@ -7,6 +7,8 @@ import (
 )
 
 func TestDisableAPICachingMiddleware(t *testing.T) {
+	var handled bool = false
+
 	// create a handler to use as "next" which will verify the request
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if w.Header().Get("Cache-Control") != "no-cache, no-store, must-revalidate" {
@@ -18,6 +20,8 @@ func TestDisableAPICachingMiddleware(t *testing.T) {
 		if w.Header().Get("Expires") != "0" {
 			t.Error("Wrong header `Expires` value found")
 		}
+
+		handled = true
 	})
 
 	middlewareHandler := DisableAPICachingMiddleware(nextHandler)
@@ -40,4 +44,8 @@ func TestDisableAPICachingMiddleware(t *testing.T) {
 	}
 
 	middlewareHandler.ServeHTTP(rr, req)
+
+	if handled != true {
+		t.Error("next handler was not executed")
+	}
 }
