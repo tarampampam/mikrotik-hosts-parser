@@ -37,7 +37,7 @@ func newQueryParametersBag( //nolint:gocyclo
 			// Explode value with URLs list (separated using `,`) into single URLs
 			for _, sourceURL := range strings.Split(value, ",") {
 				// Make URL validation, and if all is ok - append it into query parameters bag
-				if _, err := url.ParseRequestURI(sourceURL); err == nil {
+				if _, err := url.ParseRequestURI(sourceURL); err == nil && len(sourceURL) <= 256 {
 					bag.SourceUrls = append(bag.SourceUrls, sourceURL)
 				}
 			}
@@ -85,9 +85,12 @@ func newQueryParametersBag( //nolint:gocyclo
 				}
 			}
 		}
-
 		// remove duplicated hosts
 		bag.ExcludedHosts = bag.uniqueStringsSlice(bag.ExcludedHosts)
+		// Validate excluded hosts list size
+		if len(bag.ExcludedHosts) > 32 {
+			return nil, errors.New("too many excluded hosts (more then 32)")
+		}
 	}
 
 	// Extract `limit` value
@@ -97,7 +100,6 @@ func newQueryParametersBag( //nolint:gocyclo
 				if value <= 0 {
 					return nil, errors.New("wrong `limit` value (cannot be less then 1)")
 				}
-
 				bag.Limit = value
 			} else {
 				return nil, errors.New("wrong `limit` value (cannot be converted into integer)")
@@ -111,7 +113,6 @@ func newQueryParametersBag( //nolint:gocyclo
 			if net.ParseIP(value[0]) == nil {
 				return nil, errors.New("wrong `redirect_to` value (invalid IP address)")
 			}
-
 			bag.RedirectTo = value[0]
 		}
 	}

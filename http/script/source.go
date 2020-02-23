@@ -8,6 +8,7 @@ import (
 	"mikrotik-hosts-parser/settings/serve"
 	ver "mikrotik-hosts-parser/version"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -62,44 +63,12 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 
 		// fetch sources async and write responses into channel
 		for _, sourceURL := range queryParameters.SourceUrls {
-			go func(sourceURL string, maxLength, cacheLifetimeSec int) {
-				var (
-					result    = &sourceResponse{URL: sourceURL}
-					cacheItem filecache.CacheItem
-				)
-				// if cache missed
-				if cached := defaultCachePool.GetItem(sourceURL); !cached.IsHit() {
-					// do request
-					response, fetchError := defaultHTTPClient.FetchSourceContent(sourceURL, maxLength)
-					result.Error = fetchError
-					if response != nil {
-						// and write response content into cache
-						cacheItem, _ = defaultCachePool.Put(
-							sourceURL,
-							response.Body,
-							time.Now().Add(time.Second*time.Duration(cacheLifetimeSec)),
-						)
-						_ = response.Body.Close()
-					}
-				} else {
-					result.CacheIsHit = true
-				}
-				// extract cached item from cache pool (if was missed previously)
-				if cacheItem == nil {
-					cacheItem = defaultCachePool.GetItem(sourceURL)
-				}
-				// read from cache item using pipe
-				var pipeReader, pipeWriter = io.Pipe()
-				go func() {
-					defer func() { _ = pipeWriter.Close() }()
-					if err := cacheItem.Get(pipeWriter); err != nil {
-						result.Error = err
-					}
-				}()
-				result.Content = pipeReader
-				result.CacheExpiredAfterSec = int(cacheItem.ExpiresAt().Unix() - time.Now().Unix())
-				sourceResponsesChannel <- result
-			}(sourceURL, serveSettings.RouterScript.MaxSourceSize, serveSettings.Cache.LifetimeSec)
+			go writeSourceResponse(
+				sourceResponsesChannel,
+				sourceURL,
+				serveSettings.RouterScript.MaxSourceSize,
+				serveSettings.Cache.LifetimeSec,
+			)
 		}
 
 		var (
@@ -177,6 +146,48 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 	}
 }
 
+// writeSourceResponse writes source response into channel (content can be fetched from cache)
+func writeSourceResponse(channel chan *sourceResponse, sourceURL string, maxLength, cacheLifetimeSec int) {
+	var (
+		result    = &sourceResponse{URL: sourceURL}
+		cacheItem filecache.CacheItem
+	)
+	// if cache missed
+	if cached := defaultCachePool.GetItem(sourceURL); !cached.IsHit() {
+		// do request
+		response, fetchError := defaultHTTPClient.FetchSourceContent(sourceURL, maxLength)
+		result.Error = fetchError
+		if response != nil {
+			// and write response content into cache
+			cacheItem, _ = defaultCachePool.Put(
+				sourceURL,
+				response.Body,
+				time.Now().Add(time.Second*time.Duration(cacheLifetimeSec)),
+			)
+			_ = response.Body.Close()
+		}
+	} else {
+		result.CacheIsHit = true
+	}
+	// extract cached item from cache pool (if was missed previously)
+	if cacheItem == nil {
+		cacheItem = defaultCachePool.GetItem(sourceURL)
+	}
+	// read from cache item using pipe
+	var pipeReader, pipeWriter = io.Pipe()
+	go func() {
+		defer func() { _ = pipeWriter.Close() }()
+		if err := cacheItem.Get(pipeWriter); err != nil {
+			result.Error = err
+		}
+	}()
+	result.Content = pipeReader
+	if expiresAt := cacheItem.ExpiresAt(); expiresAt != nil {
+		result.CacheExpiredAfterSec = int(expiresAt.Unix() - time.Now().Unix())
+	}
+	channel <- result
+}
+
 // hostsRecordsToStaticEntries converts hosts records into static dns entries
 func hostsRecordsToStaticEntries(
 	in []*hostsfile.Record,
@@ -217,6 +228,11 @@ records:
 			}
 		}
 	}
+
+	// make sorting
+	sort.Slice(out[:], func(i, j int) bool {
+		return out[i].Name < out[j].Name
+	})
 
 	return out
 }

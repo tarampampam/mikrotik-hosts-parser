@@ -16,8 +16,9 @@ type (
 	}
 
 	sources struct {
-		Provided []providedSource `json:"provided"`
-		Max      int              `json:"max"`
+		Provided      []providedSource `json:"provided"`
+		Max           int              `json:"max"`
+		MaxSourceSize int              `json:"max_source_size"` // in bytes
 	}
 
 	redirect struct {
@@ -37,6 +38,11 @@ type (
 		Redirect redirect `json:"redirect"`
 		Records  records  `json:"records"`
 		Excludes excludes `json:"excludes"`
+		Cache    cache    `json:"cache"`
+	}
+
+	cache struct {
+		LifetimeSec int `json:"lifetime_sec"`
 	}
 )
 
@@ -54,13 +60,17 @@ func convertServeSettingsIntoResponse(settings *serve.Settings) *settingsRespons
 	// set basic properties
 	response := &settingsResponse{
 		Sources: sources{
-			Max: settings.RouterScript.MaxSources,
+			Max:           settings.RouterScript.MaxSources,
+			MaxSourceSize: settings.RouterScript.MaxSourceSize,
 		},
 		Redirect: redirect{
 			Addr: settings.RouterScript.Redirect.Address,
 		},
 		Records: records{
 			Comment: settings.RouterScript.Comment,
+		},
+		Cache: cache{
+			LifetimeSec: settings.Cache.LifetimeSec,
 		},
 		Excludes: excludes{},
 	}
