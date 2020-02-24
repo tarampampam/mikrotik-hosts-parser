@@ -28,7 +28,7 @@ func (s *Server) registerAPIHandlers() {
 		PathPrefix("/api").
 		Subrouter()
 
-	apiRouter.Use(DisableAPICachingMiddleware) // @todo: test middleware registration
+	apiRouter.Use(DisableAPICachingMiddleware)
 
 	apiRouter.
 		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.ServeSettings)).

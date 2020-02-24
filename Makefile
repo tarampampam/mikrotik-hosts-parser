@@ -34,6 +34,7 @@ gotest: ## Run app tests
 	$(DC_BIN) run $(DC_RUN_ARGS) go test -v -race -timeout 5s ./...
 
 test: lint gotest ## Run app tests and linters
+	@printf "\n   \e[30;42m %s \033[0m\n\n" 'All tests passed!';
 
 cover: ## Run app tests with coverage report
 	$(DC_BIN) run $(DC_RUN_ARGS) sh -c 'go test -race -covermode=atomic -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'

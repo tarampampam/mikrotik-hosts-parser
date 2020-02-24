@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mikrotik-hosts-parser/http"
 	serveSettings "mikrotik-hosts-parser/settings/serve"
+	"net"
 	"os"
 	"strconv"
 	"time"
@@ -51,8 +52,11 @@ func (s configFilePath) String() string {
 }
 
 // Validate address for listening on.
-func (listenAddress) IsValidValue(_ string) error {
-	return nil // @todo: write validation code. value can be IP (v4 and v6) addr or a hostname
+func (listenAddress) IsValidValue(ip string) error {
+	if net.ParseIP(ip) == nil {
+		return errors.New("wrong address for listening value (invalid IP address)")
+	}
+	return nil
 }
 
 // Validate config file path
