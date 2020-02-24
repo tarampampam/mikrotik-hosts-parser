@@ -2,7 +2,7 @@ name: release
 
 on:
   release: # Docs: <https://help.github.com/en/articles/events-that-trigger-workflows#release-event-release>
-    types: [prereleased, published]
+    types: [published]
 
 jobs:
   build:
@@ -63,4 +63,4 @@ jobs:
         run: docker build --build-arg "APP_VERSION=${version}" --tag "tarampampam/mikrotik-hosts-parser:${image_tag}" -f ./Dockerfile .
 
       - name: Push image
-        run: docker push "tarampampam/mikrotik-hosts-parser:${version/[vV]/}"
+        run: docker push "tarampampam/mikrotik-hosts-parser:${image_tag}"
