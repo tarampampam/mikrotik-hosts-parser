@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 1
 
       - name: Generate version value
-        run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
+        run: echo "::set-env name=version::${GITHUB_REF/refs\/tags\//}@`echo ${GITHUB_SHA} | cut -c1-8`"
 
       - name: Build application
         env:
