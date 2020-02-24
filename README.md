@@ -12,19 +12,48 @@
 [![Docker Build][badge_docker_build]][link_docker_hub]
 [![License][badge_license]][link_license]
 
-This application is HTTP server, that can generate script for RouterOS-based routers for blocking "AD" hosts.
+This application provides HTTP server, that can generate script for RouterOS-based routers for blocking "AD" hosts.
+
+More information can be [found here][link_habr_post].
 
 > Previous version (PHP) can be found in [`php-version` branch](https://github.com/tarampampam/mikrotik-hosts-parser/tree/php-version).
 
-## Usage example
+## Usage
 
-%is.in.progress%
+For local application starting using binary file, you must compile application _(after repository cloning)_ using `GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ./mikrotik-hosts-parser .` or `make build`, and then execute:
+
+```bash
+$ ./mikrotik-hosts-parser serve --config=./serve.yml --listen=0.0.0.0 --port=8080 --resources-dir=./public
+```
+
+This command will start HTTP server using configuration from `./serve.yml` on port `8080` and use directory `./public` for serving static files. Configuration file well-documented, so, feel free to change any settings on your choice!
+
+> Configuration file allows you to use environment variables with default values!
+
+After that you can navigate your browser to `http://127.0.0.1:8080/` and you will see something like that:
+
+![screenshot](https://hsto.org/webt/k-/2f/ju/k-2fju1fgkbrsujcv15f-msgx2w.png)
+
+Special endpoint `/script/source?sources_urls=...` generates RouterOS-based script using passed http-get parameters _(watch examples on index page)_.
 
 ## Using docker
 
-%is.in.progress%
+Just execute in your terminal:
 
-### Testing
+```bash
+$ docker run --rm -p 8080:8080 tarampampam/mikrotik-hosts-parser:X.X.X
+```
+
+Where `X.X.X` is image tag _(application version)_. All available tags can be [found here][link_docker_hub_tags].
+
+## Demo
+
+I can't guarantee that this links will available forever, but you can use this application on following links:
+
+- <https://stopad.hook.sh/>
+- <https://stopad.cgood.ru/>
+
+## Testing
 
 For application testing we use built-in golang testing feature and `docker-ce` + `docker-compose` as develop environment. So, just write into your terminal after repository cloning:
 
@@ -66,6 +95,7 @@ This is open-sourced software licensed under the [MIT License][link_license].
 [link_coverage]:https://codecov.io/gh/tarampampam/mikrotik-hosts-parser
 [link_build]:https://github.com/tarampampam/mikrotik-hosts-parser/actions
 [link_docker_hub]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/
+[link_docker_hub_tags]:https://hub.docker.com/r/tarampampam/mikrotik-hosts-parser/tags
 [link_license]:https://github.com/tarampampam/mikrotik-hosts-parser/blob/master/LICENSE
 [link_releases]:https://github.com/tarampampam/mikrotik-hosts-parser/releases
 [link_commits]:https://github.com/tarampampam/mikrotik-hosts-parser/commits
@@ -73,3 +103,5 @@ This is open-sourced software licensed under the [MIT License][link_license].
 [link_issues]:https://github.com/tarampampam/mikrotik-hosts-parser/issues
 [link_create_issue]:https://github.com/tarampampam/mikrotik-hosts-parser/issues/new/choose
 [link_pulls]:https://github.com/tarampampam/mikrotik-hosts-parser/pulls
+
+[link_habr_post]:https://habr.com/ru/post/264001/
