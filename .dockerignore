@@ -1,4 +1,5 @@
 .dockerignore
+.git
 Makefile
 docker*.yml
 *.log

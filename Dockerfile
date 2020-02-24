@@ -1,9 +1,13 @@
 # Image page: <https://hub.docker.com/_/golang>
 FROM golang:1.13-alpine as builder
 
+# can be passed with any prefix (like `v1.2.3@GITHASH`)
+# e.g.: `docker build --build-arg "APP_VERSION=v1.2.3@GITHASH" .`
+ARG APP_VERSION="undefined@docker"
+
 RUN set -x \
-    # Install git + SSL ca certificates (ca-certificates is required to call HTTPS endpoints)
-    && apk add --no-cache git ca-certificates \
+    # SSL ca certificates (ca-certificates is required to call HTTPS endpoints)
+    && apk add --no-cache ca-certificates \
     && update-ca-certificates
 
 WORKDIR /src
@@ -20,9 +24,7 @@ RUN set -x \
 COPY . /src
 
 RUN set -x \
-    # @todo: replace git-depencency with build arguments
-    && export version=`git symbolic-ref -q --short HEAD || git describe --tags --exact-match`@`git rev-parse --short HEAD` \
-    && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X mikrotik-hosts-parser/version.version=${version}" . \
+    && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X mikrotik-hosts-parser/version.version=${APP_VERSION}" . \
     && ./mikrotik-hosts-parser version \
     && ./mikrotik-hosts-parser -h
 

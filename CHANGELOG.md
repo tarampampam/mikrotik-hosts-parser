@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
+## v3.0.2
+
+### Changed
+
+- Docker image supports argument with application version value
+- Docker image builds using GitHub Actions (not hub.docker.com)
+
 ## v3.0.1
 
 ### Fixed

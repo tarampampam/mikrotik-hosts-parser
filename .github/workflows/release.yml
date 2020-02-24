@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 1
 
       - name: Generate version value
-        run: echo "::set-env name=version::${GITHUB_REF/refs\/tags\//}@`echo ${GITHUB_SHA} | cut -c1-8`"
+        run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
 
       - name: Build application
         env:
@@ -40,3 +40,27 @@ jobs:
         with:
           file: "./mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
           type: 'application/octet-stream'
+
+  docker-image:
+    name: Build docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Generate version value
+        run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
+
+      - name: Generate image tag value
+        run: echo "::set-env name=image_tag::${GITHUB_REF##*/[vV]}" # `/refs/tags/v1.2.3` -> `1.2.3`
+
+      - name: Make docker login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_LOGIN }}" --password-stdin &> /dev/null
+
+      - name: Build image
+        run: docker build --build-arg "APP_VERSION=${version}" --tag "tarampampam/mikrotik-hosts-parser:${image_tag}" -f ./Dockerfile .
+
+      - name: Push image
+        run: docker push "tarampampam/mikrotik-hosts-parser:${version/[vV]/}"
