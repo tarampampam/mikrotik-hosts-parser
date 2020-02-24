@@ -23,7 +23,11 @@ More information can be [found here][link_habr_post].
 For local application starting using binary file, you must compile application _(after repository cloning)_ using `GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ./mikrotik-hosts-parser .` or `make build`, and then execute:
 
 ```bash
-$ ./mikrotik-hosts-parser serve --config=./serve.yml --listen=0.0.0.0 --port=8080 --resources-dir=./public
+$ ./mikrotik-hosts-parser serve \
+    --config=./serve.yml \
+    --listen=0.0.0.0 \
+    --port=8080 \
+    --resources-dir=./public
 ```
 
 This command will start HTTP server using configuration from `./serve.yml` on port `8080` and use directory `./public` for serving static files. Configuration file well-documented, so, feel free to change any settings on your choice!
@@ -41,7 +45,9 @@ Special endpoint `/script/source?sources_urls=...` generates RouterOS-based scri
 Just execute in your terminal:
 
 ```bash
-$ docker run --rm -p 8080:8080 tarampampam/mikrotik-hosts-parser:X.X.X
+$ docker run --rm \
+    -p 8080:8080 \
+    tarampampam/mikrotik-hosts-parser:X.X.X
 ```
 
 Where `X.X.X` is image tag _(application version)_. All available tags can be [found here][link_docker_hub_tags].
