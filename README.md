@@ -36,7 +36,9 @@ This command will start HTTP server using configuration from `./serve.yml` on po
 
 After that you can navigate your browser to `http://127.0.0.1:8080/` and you will see something like that:
 
-![screenshot](https://hsto.org/webt/k-/2f/ju/k-2fju1fgkbrsujcv15f-msgx2w.png)
+<p align="center">
+  <img src="https://hsto.org/webt/k-/2f/ju/k-2fju1fgkbrsujcv15f-msgx2w.png" alt="screenshot" width="880" />
+</p>
 
 Special endpoint `/script/source?sources_urls=...` generates RouterOS-based script using passed http-get parameters _(watch examples on index page)_.
 
