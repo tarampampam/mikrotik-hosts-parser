@@ -75,5 +75,7 @@ func (c *httpClient) FetchSourceContent(uri string, maxLength int) (*http.Respon
 		}
 	}
 
+	// @todo: add read response body size checking
+
 	return response, nil
 }

@@ -62,7 +62,7 @@ cache:
     # path to the directory for cache files
     dir: ${TMPDIR:-/tmp}
   # cached entries lifetime duration (in seconds)
-  lifetime_sec: ${CACHE_LIFETIME_SEC:-20}
+  lifetime_sec: ${CACHE_LIFETIME_SEC:-1800}
 
 # router script generation settings
 router_script:

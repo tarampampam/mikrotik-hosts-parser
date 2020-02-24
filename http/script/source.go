@@ -107,8 +107,6 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 		// close responses channels after all
 		close(sourceResponsesChannel)
 
-		// @todo: add hostsRecords sorting
-
 		// convert hosts records into static mikrotik dns entries
 		staticEntries := hostsRecordsToStaticEntries(
 			hostsRecords,
@@ -139,6 +137,7 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 				RenderEmpty: false,
 			})
 
+			_, _ = w.Write([]byte("\n\n## Records count: " + strconv.Itoa(len(staticEntries))))
 			if renderErr != nil {
 				_, _ = w.Write([]byte("\n\n## Rendering error: " + renderErr.Error()))
 			}
@@ -177,9 +176,7 @@ func writeSourceResponse(channel chan *sourceResponse, sourceURL string, maxLeng
 	var pipeReader, pipeWriter = io.Pipe()
 	go func() {
 		defer func() { _ = pipeWriter.Close() }()
-		if err := cacheItem.Get(pipeWriter); err != nil {
-			result.Error = err
-		}
+		_ = cacheItem.Get(pipeWriter)
 	}()
 	result.Content = pipeReader
 	if expiresAt := cacheItem.ExpiresAt(); expiresAt != nil {
