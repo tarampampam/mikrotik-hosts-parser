@@ -47,10 +47,10 @@ Just execute in your terminal:
 ```bash
 $ docker run --rm \
     -p 8080:8080 \
-    tarampampam/mikrotik-hosts-parser:X.X.X
+    tarampampam/mikrotik-hosts-parser
 ```
 
-Where `X.X.X` is image tag _(application version)_. All available tags can be [found here][link_docker_hub_tags].
+You can use `latest` or `X.X.X` as image tag _(application version)_. All available docker image tags can be [found here][link_docker_hub_tags].
 
 ## Demo
 
