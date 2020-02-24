@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
-## UNRELEASED
+## v3.0.0
 
 ### Changed
 
-- Application re-wrote on GoLang
+- Application re-wrote on GoLang _(previous HTTP endpoint still working)_
+- Settings now defined in special configuration file
+- Performance improvements
 
 ## v2.3.1
 
