@@ -77,6 +77,8 @@
                                        class="form-control form-control-sm bg-transparent border-primary text-light"
                                        v-model="redirectIp"
                                        placeholder="127.0.0.1"
+                                       @change="validateRedirectIp"
+                                       @keyup="validateRedirectIp"
                                 />
                                 <label class="form-text text-muted" for="redirectIp">
                                     Укажите IP (v4 или v6) адрес, куда перенаправлять запросы
@@ -184,6 +186,7 @@
     /* global module */
     /* global axios */
     /* global hljs */
+    /* global ip */
 
     module.exports = {
         components: {
@@ -315,6 +318,29 @@
                     }
                 },
 
+            validateRedirectIp:
+                /**
+                 * @param {Event} event
+                 */
+                function (event) {
+                    let validated = false;
+                    const $el = event.target,
+                        validClass = 'is-valid',
+                        invalidClass = 'is-invalid';
+
+                    if (typeof $el.value === "string") {
+                        validated = $el.value.match(ip({exact: true})) !== null;
+                    }
+
+                    if (validated === true) {
+                        $el.classList.add(validClass);
+                        $el.classList.remove(invalidClass);
+                    } else {
+                        $el.classList.add(invalidClass);
+                        $el.classList.remove(validClass);
+                    }
+                },
+
             getScriptGeneratorUri:
                 /**
                  * Get script generator URI.
@@ -347,7 +373,7 @@
                             .replace(/[^0-9a-z:\.]/ig, ''),
                         recordsLimit = parseInt(this.recordsLimit, 10);
 
-                    parts['redirect_to'] = redirectIp.length >= 4 ? redirectIp : null;
+                    parts['redirect_to'] = redirectIp.match(ip({exact: true})) !== null ? redirectIp : null;
                     parts['limit'] = recordsLimit > 0 ? recordsLimit : null;
                     parts['sources_urls'] = this.sources
                         .map(/** @param {Source} source */ function (source) {

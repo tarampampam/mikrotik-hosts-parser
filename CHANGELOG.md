@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
+## UNRELEASED
+
+### Added
+
+- `redirect_to` parameter validation [#37]
+
+[#37]:https://github.com/tarampampam/mikrotik-hosts-parser/issues/37
+
 ## v3.0.2
 
 ### Changed
