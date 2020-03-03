@@ -75,8 +75,10 @@
                                 <input type="text"
                                        id="redirectIp"
                                        class="form-control form-control-sm bg-transparent border-primary text-light"
-                                       v-model="redirectIp"
+                                       v-model="redirectIp.value"
                                        placeholder="127.0.0.1"
+                                       @change="validateRedirectIp"
+                                       @keyup="validateRedirectIp"
                                 />
                                 <label class="form-text text-muted" for="redirectIp">
                                     Укажите IP (v4 или v6) адрес, куда перенаправлять запросы
@@ -202,7 +204,10 @@
                 maxSourcesCount: 25,
                 maxSourceSizeBytes: 1024,
                 sources: [],
-                redirectIp: '0.0.0.0',
+                redirectIp: {
+                    value: '0.0.0.0',
+                    is_valid: true
+                },
                 recordsLimit: 5000,
                 excludesList: [
                     'localhost',
@@ -315,6 +320,31 @@
                     }
                 },
 
+            validateRedirectIp:
+                /**
+                 * @param {Event} event
+                 */
+                function (event) {
+                    const $el = event.target,
+                        validClass = 'is-valid',
+                        invalidClass = 'is-invalid';
+
+                    this.redirectIp.value = $el.value
+                        .trim()
+                        .replace(/\s\s+/g, ' ')
+                        .replace(/[^0-9a-f:\.]/ig, '');
+
+                    this.redirectIp.is_valid = typeof this.redirectIp.value === "string" && this.validateIp(this.redirectIp.value);
+
+                    if (this.redirectIp.is_valid === true) {
+                        $el.classList.add(validClass);
+                        $el.classList.remove(invalidClass);
+                    } else {
+                        $el.classList.add(invalidClass);
+                        $el.classList.remove(validClass);
+                    }
+                },
+
             getScriptGeneratorUri:
                 /**
                  * Get script generator URI.
@@ -341,13 +371,9 @@
                             format: this.format,
                             version: this.version,
                         },
-                        redirectIp = this.redirectIp
-                            .trim()
-                            .replace(/\s\s+/g, ' ')
-                            .replace(/[^0-9a-z:\.]/ig, ''),
                         recordsLimit = parseInt(this.recordsLimit, 10);
 
-                    parts['redirect_to'] = redirectIp.length >= 4 ? redirectIp : null;
+                    parts['redirect_to'] = this.redirectIp.is_valid ? this.redirectIp.value : null;
                     parts['limit'] = recordsLimit > 0 ? recordsLimit : null;
                     parts['sources_urls'] = this.sources
                         .map(/** @param {Source} source */ function (source) {
@@ -380,6 +406,20 @@
                     }
 
                     return partsArray.join('&');
+                },
+
+            validateIp:
+                /**
+                 * Validates passed string against IP address regExp.
+                 *
+                 * @param {string} value
+                 * @return {boolean}
+                 */
+                function (value) {
+                    // @link https://www.regextester.com/104038
+                    const regExp = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))/;
+
+                    return regExp.test(value);
                 },
         },
 
@@ -461,7 +501,7 @@
                         }
 
                         if (settingsResponse.data.hasOwnNestedProperty('redirect.addr')) {
-                            self.redirectIp = settingsResponse.data.redirect.addr;
+                            self.redirectIp.value = settingsResponse.data.redirect.addr;
                         }
 
                         if (settingsResponse.data.hasOwnNestedProperty('excludes.hosts')) {
