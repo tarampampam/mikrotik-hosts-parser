@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
+## UNRELEASED
+
+### Added 
+
+- Logging all `HTTP` requests to `stdout`
+
 ## v3.0.2
 
 ### Changed
