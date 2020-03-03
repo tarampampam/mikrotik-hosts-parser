@@ -186,7 +186,6 @@
     /* global module */
     /* global axios */
     /* global hljs */
-    /* global ip */
 
     module.exports = {
         components: {
