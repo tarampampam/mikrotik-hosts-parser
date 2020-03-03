@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -39,7 +40,7 @@ func NewServer(settings *ServerSettings, serveSettings *serve.Settings) *Server 
 		errLog     = log.New(os.Stderr, "[error] ", log.LstdFlags)
 		httpServer = &http.Server{
 			Addr:         serveSettings.Listen.Address + ":" + strconv.Itoa(serveSettings.Listen.Port),
-			Handler:      &router,
+			Handler:      handlers.LoggingHandler(os.Stdout, &router),
 			ErrorLog:     errLog,
 			WriteTimeout: settings.WriteTimeout,
 			ReadTimeout:  settings.ReadTimeout,
