@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 
 ## UNRELEASED
 
-### Added
+### Added 
 
+- Log all `HTTP` requests to `stdout` [#39]
 - `redirect_to` parameter validation [#37]
 
 [#37]:https://github.com/tarampampam/mikrotik-hosts-parser/issues/37
+[#39]:https://github.com/tarampampam/mikrotik-hosts-parser/pull/39
 
 ## v3.0.2
 
