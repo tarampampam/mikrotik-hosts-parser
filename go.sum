@@ -1,5 +1,7 @@
 github.com/a8m/envsubst v1.1.0 h1:d+14SVq1lbI+JuxhEqYduWofZ0/qQHatwm3TBzvdzaE=
 github.com/a8m/envsubst v1.1.0/go.mod h1:91m2Q6AZE0w4WD/laQam2MtWq6FxJVm7UqcB30DeYxw=
+github.com/a8m/envsubst v1.2.0 h1:yvzAhJD2QKdo35Ut03wIfXQmg+ta3wC/1bskfZynz+Q=
+github.com/a8m/envsubst v1.2.0/go.mod h1:PpvLvNWa+Rvu/10qXmFbFiGICIU5hZvFJNPCCkUaObg=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/gorilla/handlers v1.4.2 h1:0QniY0USkHQ1RGCLfKxeNHK9bkDHGRYGNDFBCS+YARg=
 github.com/gorilla/handlers v1.4.2/go.mod h1:Qkdc/uu4tH4g6mTK6auzZ766c4CA0Ng8+o/OAirnOIQ=
