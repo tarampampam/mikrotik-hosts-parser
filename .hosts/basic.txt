@@ -10,7 +10,6 @@
 127.0.0.1 akamaiedge.net
 127.0.0.1 akamaitechnologies.com
 127.0.0.1 analytic-google.com
-127.0.0.1 apis.google.com
 127.0.0.1 clients1.google.com
 127.0.0.1 doubleclick.net
 127.0.0.1 dts.innovid.com
