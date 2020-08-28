@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/a8m/envsubst v1.2.0
-	github.com/gorilla/handlers v1.4.2
+	github.com/gorilla/handlers v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
 	github.com/kr/pretty v0.2.0 // indirect
