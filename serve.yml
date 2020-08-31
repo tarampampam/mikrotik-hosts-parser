@@ -49,7 +49,7 @@ sources:
     description: MVPS HOSTS file
     enabled: false
     count: 12000
-  - uri: https://hosts-file.net/ad_servers.txt
+  - uri: https://cdn.jsdelivr.net/gh/evankrob/hosts-filenetrehost@master/ad_servers.txt (abandoned)
     name: hpHosts
     description: Ad and Tracking servers only
     enabled: false
