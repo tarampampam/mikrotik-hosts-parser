@@ -49,9 +49,9 @@ sources:
     description: MVPS HOSTS file
     enabled: false
     count: 12000
-  - uri: https://cdn.jsdelivr.net/gh/evankrob/hosts-filenetrehost@master/ad_servers.txt (abandoned)
+  - uri: https://cdn.jsdelivr.net/gh/evankrob/hosts-filenetrehost@master/ad_servers.txt
     name: hpHosts
-    description: Ad and Tracking servers only
+    description: Ad and Tracking servers only (abandoned)
     enabled: false
     count: 46000
 
