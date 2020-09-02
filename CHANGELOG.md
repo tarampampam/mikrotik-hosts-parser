@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
-## UNRELEASED
+## v3.0.3
 
-### Added 
+### Fixed
+
+- Dead link in config file replaced with mirror
+
+### Added
 
 - Log all `HTTP` requests to `stdout` [#39]
 - `redirect_to` parameter validation [#37]
