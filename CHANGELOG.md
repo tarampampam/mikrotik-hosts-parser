@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 ### Changed
 
 - GitHub actions updated
+- Docker image based on `scratch` (instead `alpine` image)
 
 ## v3.0.3
 
