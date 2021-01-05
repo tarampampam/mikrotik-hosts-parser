@@ -6,61 +6,61 @@ FROM golang:1.13-alpine as builder
 ARG APP_VERSION="undefined@docker"
 
 RUN set -x \
+    && mkdir /src \
     # SSL ca certificates (ca-certificates is required to call HTTPS endpoints)
     && apk add --no-cache ca-certificates \
     && update-ca-certificates
 
 WORKDIR /src
 
-COPY ./go.mod /src
-COPY ./go.sum /src
+COPY ./go.mod ./go.sum ./
 
 # Burn modules cache
 RUN set -x \
-    && go version \
     && go mod download \
     && go mod verify
 
-COPY . /src
+COPY . .
+
+# arguments to pass on each go tool link invocation
+ENV LDFLAGS="-s -w -X mikrotik-hosts-parser/version.version=$APP_VERSION"
 
 RUN set -x \
-    && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X mikrotik-hosts-parser/version.version=${APP_VERSION}" . \
-    && ./mikrotik-hosts-parser version \
-    && ./mikrotik-hosts-parser -h
+    && go version \
+    && CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o /tmp/mikrotik-hosts-parser . \
+    && /tmp/mikrotik-hosts-parser version \
+    && /tmp/mikrotik-hosts-parser -h
 
-FROM alpine:latest
+# prepare rootfs for runtime
+RUN set -x \
+    && mkdir -p /tmp/rootfs/etc/ssl \
+    && mkdir -p /tmp/rootfs/bin \
+    && mkdir -p /tmp/rootfs/opt/mikrotik-hosts-parser \
+    && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
+    && cp -R /src/public /tmp/rootfs/opt/mikrotik-hosts-parser/public \
+    && cp /src/serve.yml /tmp/rootfs/etc/serve.yml \
+    && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
+    && mv /tmp/mikrotik-hosts-parser /tmp/rootfs/bin/mikrotik-hosts-parser
+
+# use empty filesystem
+FROM scratch
+
+ARG APP_VERSION="undefined@docker"
 
 LABEL \
-    org.label-schema.name="mikrotik-hosts-parser" \
-    org.label-schema.description="Docker image with mikrotik hosts parser" \
-    org.label-schema.url="https://github.com/tarampampam/mikrotik-hosts-parser" \
-    org.label-schema.vcs-url="https://github.com/tarampampam/mikrotik-hosts-parser" \
-    org.label-schema.vendor="Tarampampam" \
-    org.label-schema.license="MIT" \
-    org.label-schema.schema-version="1.0"
-
-RUN set -x \
-    # Unprivileged user creation <https://stackoverflow.com/a/55757473/12429735RUN>
-    && adduser \
-        --disabled-password \
-        --gecos "" \
-        --home "/nonexistent" \
-        --shell "/sbin/nologin" \
-        --no-create-home \
-        --uid "10001" \
-        "appuser"
+    org.opencontainers.image.title="mikrotik-hosts-parser" \
+    org.opencontainers.image.description="Docker image with mikrotik hosts parser" \
+    org.opencontainers.image.url="https://github.com/tarampampam/mikrotik-hosts-parser" \
+    org.opencontainers.image.source="https://github.com/tarampampam/mikrotik-hosts-parser" \
+    org.opencontainers.image.vendor="Tarampampam" \
+    org.opencontainers.image.version="$APP_VERSION" \
+    org.opencontainers.image.licenses="MIT"
 
 # Import from builder
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /src/mikrotik-hosts-parser /bin/mikrotik-hosts-parser
-COPY --from=builder /src/serve.yml /etc/serve.yml
-COPY --from=builder /src/public /opt/public
+COPY --from=builder /tmp/rootfs /
 
 # Use an unprivileged user
-USER appuser:appuser
-
-# Port exposing may be omitted
-EXPOSE 8080
+USER appuser
 
 ENTRYPOINT ["/bin/mikrotik-hosts-parser"]
 
@@ -69,5 +69,5 @@ CMD [ \
     "--config", "/etc/serve.yml", \
     "--listen", "0.0.0.0", \
     "--port", "8080", \
-    "--resources-dir", "/opt/public" \
+    "--resources-dir", "/opt/mikrotik-hosts-parser/public" \
 ]
