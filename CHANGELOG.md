@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
+## UNRELEASED
+
+### Changed
+
+- GitHub actions updated
+- Docker image based on `scratch` (instead `alpine` image)
+
 ## v3.0.3
 
 ### Fixed

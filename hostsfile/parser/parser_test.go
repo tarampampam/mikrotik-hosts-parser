@@ -24,8 +24,6 @@ func BenchmarkParser_ParseLargeFile(b *testing.B) {
 }
 
 func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		filepath      string
 		wantRecords   int
@@ -75,8 +73,6 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run("Using file "+tt.filepath, func(t *testing.T) {
-			t.Parallel()
-
 			file, err := os.Open(tt.filepath)
 			if err != nil {
 				panic(err)
@@ -112,8 +108,6 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 }
 
 func TestParser_validateHostname(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		hostname   string
 		wantResult bool
@@ -213,8 +207,6 @@ func TestParser_validateHostname(t *testing.T) {
 }
 
 func TestParser_parseRawLine(t *testing.T) { //nolint:funlen
-	t.Parallel()
-
 	var cases = []struct {
 		line       string
 		wantError  error
@@ -360,8 +352,6 @@ func TestParser_parseRawLine(t *testing.T) { //nolint:funlen
 }
 
 func TestParser_startsWithRune(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		giveString string
 		giveRune   rune

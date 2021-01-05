@@ -11,8 +11,6 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	t.Parallel()
-
 	settings := ServerSettings{
 		WriteTimeout:     10 * time.Second,
 		ReadTimeout:      13 * time.Second,
@@ -53,8 +51,6 @@ func TestNewServer(t *testing.T) {
 }
 
 func Test_registerCustomMimeTypes(t *testing.T) {
-	t.Parallel()
-
 	testSliceContainsString := func(t *testing.T, slice []string, expects string) {
 		t.Helper()
 

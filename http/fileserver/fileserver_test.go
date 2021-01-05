@@ -11,8 +11,6 @@ import (
 )
 
 func TestFileServer_ServeHTTP(t *testing.T) { //nolint:gocyclo,funlen
-	t.Parallel()
-
 	// Create directory in temporary
 	createTempDir := func() string {
 		t.Helper()

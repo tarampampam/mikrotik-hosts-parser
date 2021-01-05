@@ -7,8 +7,6 @@ import (
 )
 
 func TestRecord(t *testing.T) {
-	t.Parallel()
-
 	r := Record{
 		IP:    net.IPv4(127, 0, 0, 1),
 		Hosts: []string{"localhost"},

@@ -9,8 +9,6 @@ import (
 )
 
 func TestCommand_Execute(t *testing.T) {
-	t.Parallel()
-
 	captureOutput := func(f func()) string {
 		t.Helper()
 

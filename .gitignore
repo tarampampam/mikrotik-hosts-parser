@@ -8,5 +8,6 @@
 /tmp
 .DS_Store
 *.cache
+*.out
 /cover*.*
 /mikrotik-hosts-parser

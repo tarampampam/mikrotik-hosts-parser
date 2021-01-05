@@ -1,3 +1,5 @@
+# TODO <!> Update linter config: <https://github.com/tarampampam/tinifier/blob/master/.golangci.yml>
+
 linters-settings:
   govet:
     check-shadowing: true

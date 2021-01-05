@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest an idea for this package
-
+assignees: tarampampam
 ---
 
 ### Is your feature request related to a problem?

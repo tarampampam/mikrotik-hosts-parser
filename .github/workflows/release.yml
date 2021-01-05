@@ -7,56 +7,92 @@ on:
 jobs:
   build:
     name: Build for ${{ matrix.os }} (${{ matrix.arch }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        os: [linux, darwin]
-        arch: [amd64, 386]
+        os: [linux, windows, darwin]
+        arch: [amd64]
+        include:
+          - os: linux
+            arch: 386
+          - os: windows
+            arch: 386
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
         with:
           go-version: 1.13
 
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Generate version value
-        run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
+      - name: Generate builder values
+        id: values
+        run: |
+          echo "::set-output name=version::`echo ${GITHUB_REF##*/} | sed -e 's/^[vV ]*//'`"
+          echo "::set-output name=binary-name::mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}`[ ${{ matrix.os }} = 'windows' ] && echo '.exe'`"
+
+      - name: Install Go dependencies
+        run: go mod download
 
       - name: Build application
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
-        run: go build -ldflags="-s -w -X mikrotik-hosts-parser/version.version=${version}" -o ./mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }} .
+          CGO_ENABLED: 0
+          LDFLAGS: -s -w -X mikrotik-hosts-parser/version.version=${{ steps.values.outputs.version }}
+        run: go build -trimpath -ldflags "$LDFLAGS" -o "./${{ steps.values.outputs.binary-name }}" .
 
-      - name: Upload to release
-        uses: docker://gacts/upload-to-release:latest # https://github.com/actions-github/upload-to-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
         with:
-          file: "./mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}"
-          type: 'application/octet-stream'
+          name: ${{ steps.values.outputs.binary-name }}
+          path: ${{ steps.values.outputs.binary-name }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.values.outputs.binary-name }}
+          asset_name: ${{ steps.values.outputs.binary-name }}
+          tag: ${{ github.ref }}
 
   docker-image:
     name: Build docker image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Generate version value
-        run: echo "::set-env name=version::${GITHUB_REF##*/}@`echo ${GITHUB_SHA} | cut -c1-8`"
+      - name: Docker login in default registry
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_LOGIN }}" --password-stdin
 
-      - name: Generate image tag value
-        run: echo "::set-env name=image_tag::${GITHUB_REF##*/[vV]}" # `/refs/tags/v1.2.3` -> `1.2.3`
+      - name: Docker login in ghcr.io # Auth docs: <https://git.io/JLDaw>
+        run: echo "${{ secrets.GHCR_PASSWORD }}" | docker login ghcr.io -u tarampampam --password-stdin
 
-      - name: Make docker login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_LOGIN }}" --password-stdin &> /dev/null
+      - name: Generate builder values
+        id: values
+        run: echo "::set-output name=version::`echo ${GITHUB_REF##*/} | sed -e 's/^[vV ]*//'`"
 
       - name: Build image
-        run: docker build --build-arg "APP_VERSION=${version}" --tag "tarampampam/mikrotik-hosts-parser:${image_tag}" -f ./Dockerfile .
+        run: |
+          docker build \
+            --tag "tarampampam/mikrotik-hosts-parser:${{ steps.values.outputs.version }}" \
+            --tag "tarampampam/mikrotik-hosts-parser:latest" \
+            --tag "ghcr.io/tarampampam/mikrotik-hosts-parser:${{ steps.values.outputs.version }}" \
+            --tag "ghcr.io/tarampampam/mikrotik-hosts-parser:latest" \
+            --build-arg "APP_VERSION=${{ steps.values.outputs.version }}" \
+            .
 
-      - name: Push image
-        run: docker push "tarampampam/mikrotik-hosts-parser:${image_tag}"
+      - name: Push image into default registry
+        run: |
+          docker push "tarampampam/mikrotik-hosts-parser:${{ steps.values.outputs.version }}"
+          docker push "tarampampam/mikrotik-hosts-parser:latest"
+
+      - name: Push image into ghcr.io registry
+        run: |
+          docker push "ghcr.io/tarampampam/mikrotik-hosts-parser:${{ steps.values.outputs.version }}"
+          docker push "ghcr.io/tarampampam/mikrotik-hosts-parser:latest"

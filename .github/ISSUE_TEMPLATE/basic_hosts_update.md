@@ -1,6 +1,7 @@
 ---
 name: Basic hosts file update
 about: Some entries in basic hosts file (provided by this project) need to be updated
+assignees: tarampampam
 ---
 
 ## Update reason
@@ -19,7 +20,6 @@ about: Some entries in basic hosts file (provided by this project) need to be up
 > Remove:
 >
 > - `broken.domain.example.com`
-
 > ### Pull request with changes
 >
-> You can create pull request with any changes by [following this link](https://github.com/tarampampam/mikrotik-hosts-parser/edit/master/.hosts/basic.txt). After this action do not forget leave a link in PR description on this issue.
+> You can create pull request with any changes by [following this link](https://github.com/tarampampam/mikrotik-hosts-parser/edit/master/.hosts/basic.txt). After this action do not forget to attach a link in PR description on this issue.

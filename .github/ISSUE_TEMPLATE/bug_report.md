@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-
+assignees: tarampampam
 ---
 
 ## Describe the bug
@@ -24,8 +24,8 @@ about: Create a report to help us improve
 
 > Please, complete the following information:
 
- - GO version(s): [e.g. `1.10.1`]
- - Docker version(s): [e.g. `18.06.1-ce`]
+- GO version(s): [e.g. `1.10.1`]
+- Docker version(s): [e.g. `18.06.1-ce`]
 
 ## Additional context
 

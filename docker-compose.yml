@@ -25,3 +25,10 @@ services:
     volumes:
       - ./serve.yml:/etc/serve.yml:ro
       - ./public:/opt/public:ro
+
+  golint:
+    image: golangci/golangci-lint:v1.33-alpine # Image page: <https://hub.docker.com/r/golangci/golangci-lint>
+    volumes:
+      - .:/src:ro
+    working_dir: /src
+    command: /bin/true

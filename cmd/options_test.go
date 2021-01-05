@@ -6,8 +6,6 @@ import (
 )
 
 func TestOptions_Struct(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		element         func() reflect.StructField
 		wantCommand     string
