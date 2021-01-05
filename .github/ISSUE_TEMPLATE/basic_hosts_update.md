@@ -7,6 +7,7 @@ assignees: tarampampam
 ## Update reason
 
 > Tell us what happens?
+
 ### What domain names should be added/removed/changed?
 
 > Put domain names list here in following format:
