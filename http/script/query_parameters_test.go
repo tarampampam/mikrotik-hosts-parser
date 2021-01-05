@@ -9,8 +9,6 @@ import (
 )
 
 func Test_newQueryParametersBag(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		name                   string
 		giveURLValues          url.Values

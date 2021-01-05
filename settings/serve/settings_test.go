@@ -10,8 +10,6 @@ import (
 )
 
 func TestFromYaml(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		name          string
 		giveYaml      []byte
@@ -194,8 +192,6 @@ router_script:
 }
 
 func TestFromYamlFile(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		name          string
 		giveYaml      []byte
@@ -265,8 +261,6 @@ listen:
 }
 
 func TestSettings_PrintInfo(t *testing.T) {
-	t.Parallel()
-
 	var cases = []struct {
 		name           string
 		giveSettings   *Settings

@@ -12,8 +12,6 @@ import (
 )
 
 func TestCommand_Structures(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		element         func() reflect.StructField
 		wantShort       string
@@ -131,8 +129,6 @@ func TestCommand_Structures(t *testing.T) {
 }
 
 func TestStringableStruct_String(t *testing.T) {
-	t.Parallel()
-
 	if listenAddress("foo").String() != "foo" {
 		t.Error("Wrong convertation into string")
 	}
@@ -147,8 +143,6 @@ func TestStringableStruct_String(t *testing.T) {
 }
 
 func TestConfigFilePath_IsValidValue(t *testing.T) {
-	t.Parallel()
-
 	// create temp dir (and delete if after test)
 	tmpDir, dirErr := ioutil.TempDir("", "test-")
 	if dirErr != nil {
@@ -210,8 +204,6 @@ func TestConfigFilePath_IsValidValue(t *testing.T) {
 }
 
 func TestListenPort_IsValidValue(t *testing.T) {
-	t.Parallel()
-
 	var defaultErrorMessage = "wrong port number (must be in interval 1..65535)"
 
 	tests := []struct {
@@ -262,8 +254,6 @@ func TestListenPort_IsValidValue(t *testing.T) {
 }
 
 func TestResourcesDirPath_IsValidValue(t *testing.T) {
-	t.Parallel()
-
 	// create temp dir (and delete if after test)
 	tmpDir, dirErr := ioutil.TempDir("", "test-")
 	if dirErr != nil {
@@ -325,8 +315,6 @@ func TestResourcesDirPath_IsValidValue(t *testing.T) {
 }
 
 func TestCommand_getSettings(t *testing.T) { //nolint:gocyclo
-	t.Parallel()
-
 	// Create temporary file inside just created temporary directory.
 	createTempFile := func(t *testing.T) (*os.File, string) {
 		t.Helper()

@@ -7,8 +7,6 @@ import (
 )
 
 func TestStaticEntry(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		element      func() reflect.StructField
 		wantComment  string

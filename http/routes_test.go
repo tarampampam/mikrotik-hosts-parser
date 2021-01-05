@@ -11,8 +11,6 @@ import (
 )
 
 func TestServer_RegisterHandlers(t *testing.T) {
-	t.Parallel()
-
 	compareHandlers := func(h1, h2 interface{}) bool {
 		t.Helper()
 		return reflect.ValueOf(h1).Pointer() == reflect.ValueOf(h2).Pointer()

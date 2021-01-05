@@ -1,9 +1,0 @@
-* text=auto
-
-/.github      export-ignore
-/tests        export-ignore
-/[Dd]ocker*   export-ignore
-/.*           export-ignore
-/Makefile     export-ignore
-*_test.go     export-ignore
-/.tests       export-ignore
