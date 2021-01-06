@@ -1,0 +1,10 @@
+.editorconfig
+.git
+.github
+.idea
+.vscode
+temp
+tmp
+LICENSE
+Makefile
+mikrotik-hosts-parser
