@@ -3,12 +3,13 @@ package http
 import (
 	"context"
 	"log"
-	"mikrotik-hosts-parser/settings/serve"
 	"mime"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"

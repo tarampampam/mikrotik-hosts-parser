@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"mikrotik-hosts-parser/cmd/serve"
-	"mikrotik-hosts-parser/cmd/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/cmd/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/cmd/version"
 )
 
 type Options struct {

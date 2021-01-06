@@ -2,16 +2,17 @@ package script
 
 import (
 	"io"
-	"mikrotik-hosts-parser/hostsfile"
-	hostsParser "mikrotik-hosts-parser/hostsfile/parser"
-	"mikrotik-hosts-parser/mikrotik/dns"
-	"mikrotik-hosts-parser/settings/serve"
-	ver "mikrotik-hosts-parser/version"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/hostsfile"
+	hostsParser "github.com/tarampampam/mikrotik-hosts-parser/hostsfile/parser"
+	"github.com/tarampampam/mikrotik-hosts-parser/mikrotik/dns"
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
 
 	"github.com/tarampampam/go-filecache"
 )

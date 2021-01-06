@@ -3,12 +3,13 @@ package serve
 import (
 	"errors"
 	"fmt"
-	"mikrotik-hosts-parser/http"
-	serveSettings "mikrotik-hosts-parser/settings/serve"
 	"net"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/http"
+	serveSettings "github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 type (

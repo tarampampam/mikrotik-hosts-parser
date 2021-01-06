@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"mikrotik-hosts-parser/settings/serve"
 	"net/http"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 type (

@@ -2,7 +2,8 @@ package version
 
 import (
 	"fmt"
-	ver "mikrotik-hosts-parser/version"
+
+	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
 )
 
 type Command struct{}

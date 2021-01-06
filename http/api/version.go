@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	ver "mikrotik-hosts-parser/version"
 	"net/http"
+
+	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
 )
 
 type (

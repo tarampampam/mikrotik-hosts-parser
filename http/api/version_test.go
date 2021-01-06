@@ -2,10 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	ver "mikrotik-hosts-parser/version"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
 )
 
 func TestGetVersionHandler(t *testing.T) {

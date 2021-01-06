@@ -1,13 +1,14 @@
 package http
 
 import (
-	"mikrotik-hosts-parser/http/api"
-	"mikrotik-hosts-parser/http/fileserver"
-	"mikrotik-hosts-parser/http/script"
-	"mikrotik-hosts-parser/settings/serve"
 	"net/http"
 	"reflect"
 	"testing"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/http/api"
+	"github.com/tarampampam/mikrotik-hosts-parser/http/fileserver"
+	"github.com/tarampampam/mikrotik-hosts-parser/http/script"
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 func TestServer_RegisterHandlers(t *testing.T) {

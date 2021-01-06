@@ -1,4 +1,4 @@
-module mikrotik-hosts-parser
+module github.com/tarampampam/mikrotik-hosts-parser
 
 go 1.15
 

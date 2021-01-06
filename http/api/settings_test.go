@@ -2,10 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"mikrotik-hosts-parser/settings/serve"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 func TestGetSettingsHandlerFunc(t *testing.T) { //nolint:gocyclo

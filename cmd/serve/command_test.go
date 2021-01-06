@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"mikrotik-hosts-parser/settings/serve"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 func TestCommand_Structures(t *testing.T) {

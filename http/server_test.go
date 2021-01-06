@@ -2,12 +2,13 @@ package http
 
 import (
 	"log"
-	"mikrotik-hosts-parser/settings/serve"
 	"mime"
 	"os"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 func TestNewServer(t *testing.T) {

@@ -3,12 +3,13 @@ package script
 import (
 	"bytes"
 	"io/ioutil"
-	"mikrotik-hosts-parser/settings/serve"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
 )
 
 type roundTripFunc func(req *http.Request) *http.Response

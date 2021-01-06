@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"mikrotik-hosts-parser/hostsfile"
 	"net"
 	"regexp"
 	"strings"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/hostsfile"
 )
 
 // Hosts file parser

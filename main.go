@@ -1,8 +1,9 @@
 package main
 
 import (
-	"mikrotik-hosts-parser/cmd"
 	"os"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/cmd"
 
 	"github.com/jessevdk/go-flags"
 )
