@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 
 - GitHub actions updated
 - Docker image based on `scratch` (instead `alpine` image)
+- Go version updated from `1.13` up to `1.15`
+- Directory `public` renamed to `web`
+- App packages refactored
 
 ## v3.0.3
 

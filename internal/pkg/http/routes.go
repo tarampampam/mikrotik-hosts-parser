@@ -3,9 +3,9 @@ package http
 import (
 	"net/http"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/http/api"
-	"github.com/tarampampam/mikrotik-hosts-parser/http/fileserver"
-	"github.com/tarampampam/mikrotik-hosts-parser/http/script"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
 )
 
 // RegisterHandlers register server http handlers.

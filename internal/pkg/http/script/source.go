@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/hostsfile"
-	hostsParser "github.com/tarampampam/mikrotik-hosts-parser/hostsfile/parser"
-	"github.com/tarampampam/mikrotik-hosts-parser/mikrotik/dns"
-	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
-	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
+	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
+	hostsParser "github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile/parser"
+	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik/dns"
 
 	"github.com/tarampampam/go-filecache"
 )

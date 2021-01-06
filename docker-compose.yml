@@ -24,7 +24,7 @@ services:
       - 8080:8080/tcp
     volumes:
       - ./serve.yml:/etc/serve.yml:ro
-      - ./public:/opt/public:ro
+      - ./web:/opt/web:ro
 
   golint:
     image: golangci/golangci-lint:v1.33-alpine # Image page: <https://hub.docker.com/r/golangci/golangci-lint>

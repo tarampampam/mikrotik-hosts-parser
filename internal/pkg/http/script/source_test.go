@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 type roundTripFunc func(req *http.Request) *http.Response
