@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/hostsfile"
+	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
 )
 
 // Hosts file parser

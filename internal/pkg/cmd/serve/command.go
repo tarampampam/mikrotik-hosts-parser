@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/http"
-	serveSettings "github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http"
+	serveSettings "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 type (

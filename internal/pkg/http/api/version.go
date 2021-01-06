@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
+	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
 type (

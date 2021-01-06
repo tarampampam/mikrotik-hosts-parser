@@ -5,10 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/http/api"
-	"github.com/tarampampam/mikrotik-hosts-parser/http/fileserver"
-	"github.com/tarampampam/mikrotik-hosts-parser/http/script"
-	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 func TestServer_RegisterHandlers(t *testing.T) {

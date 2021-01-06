@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/cmd"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cmd"
 
 	"github.com/jessevdk/go-flags"
 )

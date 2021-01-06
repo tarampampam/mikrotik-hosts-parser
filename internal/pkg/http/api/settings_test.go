@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 func TestGetSettingsHandlerFunc(t *testing.T) { //nolint:gocyclo

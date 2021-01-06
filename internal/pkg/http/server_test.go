@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 func TestNewServer(t *testing.T) {

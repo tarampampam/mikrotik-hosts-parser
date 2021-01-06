@@ -3,7 +3,7 @@ package version
 import (
 	"fmt"
 
-	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
+	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
 type Command struct{}

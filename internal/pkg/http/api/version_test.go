@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	ver "github.com/tarampampam/mikrotik-hosts-parser/version"
+	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
 func TestGetVersionHandler(t *testing.T) {

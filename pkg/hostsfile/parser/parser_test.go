@@ -9,7 +9,7 @@ import (
 )
 
 func BenchmarkParser_ParseLargeFile(b *testing.B) {
-	file, err := os.Open(".tests/hosts/ad_servers.txt")
+	file, err := os.Open("../../../test/testdata/hosts/ad_servers.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -30,42 +30,42 @@ func TestHostsSourceParser_ParseHostsFileUsingTestData(t *testing.T) {
 		wantHostNames int
 	}{
 		{
-			filepath:      "../../.tests/hosts/ad_servers.txt",
+			filepath:      "../../../test/testdata/hosts/ad_servers.txt",
 			wantRecords:   45739,
 			wantHostNames: 45739,
 		},
 		{
-			filepath:      "../../.tests/hosts/block_shit.txt",
+			filepath:      "../../../test/testdata/hosts/block_shit.txt",
 			wantRecords:   109,
 			wantHostNames: 109,
 		},
 		{
-			filepath:      "../../.tests/hosts/hosts_adaway.txt",
+			filepath:      "../../../test/testdata/hosts/hosts_adaway.txt",
 			wantRecords:   411,
 			wantHostNames: 411,
 		},
 		{
-			filepath:      "../../.tests/hosts/hosts_malwaredomain.txt",
+			filepath:      "../../../test/testdata/hosts/hosts_malwaredomain.txt",
 			wantRecords:   1106,
 			wantHostNames: 1106,
 		},
 		{
-			filepath:      "../../.tests/hosts/hosts_someonewhocares.txt", // broken entry `127.0.0.1 secret.ɢoogle.com`
+			filepath:      "../../../test/testdata/hosts/hosts_someonewhocares.txt", // broken entry `127.0.0.1 secret.ɢoogle.com`
 			wantRecords:   14308,
 			wantHostNames: 14309, // ::1 [ip6-localhost ip6-loopback]
 		},
 		{
-			filepath:      "../../.tests/hosts/hosts_winhelp2002.txt",
+			filepath:      "../../../test/testdata/hosts/hosts_winhelp2002.txt",
 			wantRecords:   11829,
 			wantHostNames: 11829,
 		},
 		{
-			filepath:      "../../.tests/hosts/serverlist.txt",
+			filepath:      "../../../test/testdata/hosts/serverlist.txt",
 			wantRecords:   3064,
 			wantHostNames: 3064,
 		},
 		{
-			filepath:      "../../.tests/hosts/spy.txt",
+			filepath:      "../../../test/testdata/hosts/spy.txt",
 			wantRecords:   367,
 			wantHostNames: 367,
 		},

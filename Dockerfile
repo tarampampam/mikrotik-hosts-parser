@@ -23,11 +23,11 @@ RUN set -x \
 COPY . .
 
 # arguments to pass on each go tool link invocation
-ENV LDFLAGS="-s -w -X github.com/tarampampam/mikrotik-hosts-parser/version.version=$APP_VERSION"
+ENV LDFLAGS="-s -w -X github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version.version=$APP_VERSION"
 
 RUN set -x \
     && go version \
-    && CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o /tmp/mikrotik-hosts-parser . \
+    && CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o /tmp/mikrotik-hosts-parser ./cmd/mikrotik-hosts-parser/ \
     && /tmp/mikrotik-hosts-parser version \
     && /tmp/mikrotik-hosts-parser -h
 

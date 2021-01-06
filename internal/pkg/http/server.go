@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
