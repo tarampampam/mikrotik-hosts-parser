@@ -26,10 +26,10 @@ $ ./mikrotik-hosts-parser serve \
     --config ./serve.yml \
     --listen 0.0.0.0 \
     --port 8080 \
-    --resources-dir ./public
+    --resources-dir ./web
 ```
 
-This command will start HTTP server using configuration from `./serve.yml` on port `8080` and use directory `./public` for serving static files. Configuration file well-documented, so, feel free to change any settings on your choice!
+This command will start HTTP server using configuration from `./serve.yml` on port `8080` and use directory `./web` for serving static files. Configuration file well-documented, so, feel free to change any settings on your choice!
 
 > Configuration file allows you to use environment variables with default values!
 
