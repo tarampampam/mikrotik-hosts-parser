@@ -11,7 +11,6 @@ import (
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
-	hostsParser "github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile/parser"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik/dns"
 
 	"github.com/tarampampam/go-filecache"
@@ -72,10 +71,7 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 			)
 		}
 
-		var (
-			parser       = hostsParser.NewParser()
-			hostsRecords = make([]*hostsfile.Record, 0) // hosts records stack
-		)
+		hostsRecords := make([]hostsfile.Record, 0) // hosts records stack
 
 		// read source responses and pass it into hosts file parser
 		for i := 0; i < len(queryParameters.SourceUrls); i++ {
@@ -96,7 +92,7 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 				continue
 			}
 			// parse response content
-			records, parseErr := parser.Parse(resp.Content)
+			records, parseErr := hostsfile.Parse(resp.Content)
 			_ = resp.Content.Close()
 			if parseErr != nil {
 				comments = append(comments, "Source <"+resp.URL+"> error: "+parseErr.Error())
@@ -188,7 +184,7 @@ func writeSourceResponse(channel chan *sourceResponse, sourceURL string, maxLeng
 
 // hostsRecordsToStaticEntries converts hosts records into static dns entries
 func hostsRecordsToStaticEntries(
-	in []*hostsfile.Record,
+	in []hostsfile.Record,
 	excludes []string,
 	limit int,
 	redirectTo,

@@ -1,10 +1,8 @@
 package hostsfile
 
-import (
-	"net"
-)
+import "net"
 
-// Hosts file record
+// Hosts file record.
 type Record struct {
 	IP    net.IP
 	Hosts []string
