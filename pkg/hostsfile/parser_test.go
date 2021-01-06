@@ -131,7 +131,7 @@ the end
 	assert.ElementsMatch(t, []string{"dns.google"}, records[0].Hosts)
 	assert.ElementsMatch(t, []string{"bar.com"}, records[1].Hosts)
 	assert.ElementsMatch(t, []string{"___id___.c.mystat-in.net"}, records[2].Hosts)
-	assert.ElementsMatch(t, []string{"a.cn", "b.cn"}, records[3].Hosts)
+	assert.ElementsMatch(t, []string{"a.cn", "b.cn", "a.cn"}, records[3].Hosts)
 	assert.ElementsMatch(t, []string{"localfoo"}, records[4].Hosts)
 	assert.ElementsMatch(t, []string{"cloudflare"}, records[5].Hosts)
 	assert.ElementsMatch(t, []string{"example.com"}, records[6].Hosts)

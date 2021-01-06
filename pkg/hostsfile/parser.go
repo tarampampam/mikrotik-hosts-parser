@@ -58,8 +58,7 @@ func parseRawLine(line string) (*Record, error) {
 		return nil, errors.New("wrong IP address")
 	}
 
-	// map is required for easy duplicates "removal"
-	hostsMap := make(map[string]struct{}, len(words)-1)
+	hosts := make([]string, 0, len(words)-1)
 
 	for i := 1; i < len(words); i++ {
 		if strings.HasPrefix(words[i], "#") {
@@ -67,18 +66,12 @@ func parseRawLine(line string) (*Record, error) {
 		}
 
 		if hostnameValidationRegex.MatchString(words[i]) {
-			hostsMap[words[i]] = struct{}{}
+			hosts = append(hosts, words[i])
 		}
 	}
 
-	if len(hostsMap) == 0 {
+	if len(hosts) == 0 {
 		return nil, errors.New("hosts was not found")
-	}
-
-	// convert map into slice of strings
-	hosts := make([]string, 0, len(hostsMap))
-	for host := range hostsMap {
-		hosts = append(hosts, host)
 	}
 
 	return &Record{IP: ip, Hosts: hosts}, nil
