@@ -6,9 +6,7 @@ import (
 	"testing"
 
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
-
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
 )
 
@@ -16,17 +14,6 @@ func TestServer_RegisterHandlers(t *testing.T) {
 	compareHandlers := func(h1, h2 interface{}) bool {
 		t.Helper()
 		return reflect.ValueOf(h1).Pointer() == reflect.ValueOf(h2).Pointer()
-	}
-
-	// @link: <https://stackoverflow.com/a/35791105/2252921>
-	getType := func(myvar interface{}) string {
-		t.Helper()
-
-		if t := reflect.TypeOf(myvar); t.Kind() == reflect.Ptr {
-			return "*" + t.Elem().Name()
-		}
-
-		return t.Name()
 	}
 
 	var s = NewServer(&ServerSettings{}, &config.Config{})
@@ -45,7 +32,7 @@ func TestServer_RegisterHandlers(t *testing.T) {
 		},
 		{
 			name:    "api_get_settings",
-			route:   "/api/config",
+			route:   "/api/settings",
 			methods: []string{"GET"},
 			handler: api.GetSettingsHandlerFunc(s.ServeSettings),
 		},
@@ -88,23 +75,5 @@ func TestServer_RegisterHandlers(t *testing.T) {
 
 	if prefix, _ := staticRoute.GetPathTemplate(); prefix != "/" {
 		t.Errorf("Wrong prefix for static files handler. Got: %s", prefix)
-	}
-
-	staticHandler := staticRoute.GetHandler()
-
-	if handlerType := getType(staticHandler); handlerType != "*FileServer" {
-		t.Errorf("Wrong handler (%s) for static route", handlerType)
-	}
-
-	if staticHandler.(*fileserver.FileServer).Settings.Root != http.Dir(s.ServeSettings.Resources.DirPath) {
-		t.Error("Wrong resources root path is set for file server")
-	}
-
-	if staticHandler.(*fileserver.FileServer).Settings.IndexFile != s.ServeSettings.Resources.IndexName {
-		t.Error("Wrong resources index file name is set for file server")
-	}
-
-	if staticHandler.(*fileserver.FileServer).Settings.Error404file != s.ServeSettings.Resources.Error404Name {
-		t.Error("Wrong resources 404 error file name is set for file server")
 	}
 }

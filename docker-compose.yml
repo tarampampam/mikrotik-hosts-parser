@@ -1,30 +1,29 @@
-version: '3.2'
+version: '3.4'
 
 volumes:
   tmp-data:
 
+x-app: &app-service # application service template
+  image: golang:1.15-buster # Image page: <https://hub.docker.com/_/golang>
+  working_dir: /src
+  environment:
+    HOME: /tmp
+    GOPATH: /tmp
+  volumes:
+    - /etc/passwd:/etc/passwd:ro
+    - /etc/group:/etc/group:ro
+    - .:/src:rw
+    - tmp-data:/tmp:rw
+
 services:
   app:
-    image: golang:1.15-buster # Image page: <https://hub.docker.com/_/golang>
-    working_dir: /src
-    environment:
-      HOME: /tmp
-      GOPATH: /tmp
-    volumes:
-      - /etc/passwd:/etc/passwd:ro
-      - /etc/group:/etc/group:ro
-      - .:/src:cached
-      - tmp-data:/tmp:cached
+    <<: *app-service
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    <<: *app-service
     ports:
-      - 8080:8080/tcp
-    volumes:
-      - ./configs/config.yml:/etc/config.yml:ro
-      - ./web:/opt/web:ro
+      - '8080:8080/tcp' # Open <http://127.0.0.1:8080>
+    command: go run ./cmd/mikrotik-hosts-parser serve --config ./configs/config.yml --resources-dir ./web
 
   golint:
     image: golangci/golangci-lint:v1.33-alpine # Image page: <https://hub.docker.com/r/golangci/golangci-lint>

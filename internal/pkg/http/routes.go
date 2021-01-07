@@ -1,8 +1,6 @@
 package http
 
 import (
-	"net/http"
-
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
@@ -32,7 +30,7 @@ func (s *Server) registerAPIHandlers() {
 	apiRouter.Use(DisableAPICachingMiddleware)
 
 	apiRouter.
-		HandleFunc("/config", api.GetSettingsHandlerFunc(s.ServeSettings)).
+		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.ServeSettings)).
 		Methods("GET").
 		Name("api_get_settings")
 
@@ -49,12 +47,14 @@ func (s *Server) registerAPIHandlers() {
 
 // Register file server handler.
 func (s *Server) registerFileServerHandler() {
+	fs, _ := fileserver.NewFileServer(fileserver.Settings{ // FIXME handle an error
+		FilesRoot:     s.ServeSettings.Resources.DirPath,
+		IndexFileName: s.ServeSettings.Resources.IndexName,
+		ErrorFileName: s.ServeSettings.Resources.Error404Name,
+	})
+
 	s.Router.
 		PathPrefix("/").
-		Handler(&fileserver.FileServer{Settings: fileserver.Settings{
-			Root:         http.Dir(s.ServeSettings.Resources.DirPath),
-			IndexFile:    s.ServeSettings.Resources.IndexName,
-			Error404file: s.ServeSettings.Resources.Error404Name,
-		}}).
+		Handler(fs).
 		Name("static")
 }

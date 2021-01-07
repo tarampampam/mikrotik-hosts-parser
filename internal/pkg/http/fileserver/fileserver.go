@@ -2,127 +2,164 @@ package fileserver
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
-type (
-	FileNotFoundHandler func(http.ResponseWriter, *http.Request)
-
-	Settings struct {
-		Root            http.Dir
-		NotFoundHandler FileNotFoundHandler // optionally
-		IndexFile       string
-		Error404file    string
-	}
-
-	FileServer struct {
-		Settings Settings
-	}
+const (
+	defaultFallbackErrorContent = "<html><body><h1>Error {{ code }}</h1><h2>{{ message }}</h2></body></html>"
+	defaultIndexFileName        = "index.html"
 )
 
-// Serve requests to the "public" files and directories.
-func (fileServer *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:gocyclo,funlen
-	// redirect .../index.html to .../
-	if strings.HasSuffix(r.URL.Path, "/"+fileServer.Settings.IndexFile) {
-		http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fileServer.Settings.IndexFile)], http.StatusMovedPermanently)
-		return
-	}
+// ErrorHandlerFunc is used as handler for errors processing. If func return `true` - next handler will be NOT executed.
+type ErrorHandlerFunc func(w http.ResponseWriter, r *http.Request, fs *FileServer, errorCode int) (doNotContinue bool)
 
-	// if empty, set current directory
-	dir := string(fileServer.Settings.Root)
-	if dir == "" {
-		dir = "."
-	}
+// FileServer is a main file server structure (implements `http.Handler` interface).
+type FileServer struct {
+	// Server settings (some of them can be changed in runtime).
+	Settings Settings
 
-	// add prefix and clean
-	upath := r.URL.Path
-	if !strings.HasPrefix(upath, "/") {
-		upath = "/" + upath
-		r.URL.Path = upath
-	}
-	// add index file name if requested directory (or server root)
-	if upath[len(upath)-1] == '/' {
-		upath += fileServer.Settings.IndexFile
-	}
-	// make path clean
-	upath = path.Clean(upath)
+	// If all error handlers fails - this content will be used as fallback for error page generating.
+	FallbackErrorContent string
 
-	// path to file
-	name := path.Join(dir, filepath.FromSlash(upath))
+	// Error handlers stack.
+	ErrorHandlers []ErrorHandlerFunc
 
-	// if files server root directory is set - try to find file and serve them
-	if len(fileServer.Settings.Root) > 0 {
-		// check for file exists
-		if f, err := os.Open(name); err == nil {
-			// file exists and opened
-			defer func() {
-				if err := f.Close(); err != nil {
-					panic(err)
-				}
-			}()
-			// file (or directory) exists
-			if stat, statErr := os.Stat(name); statErr == nil && stat.Mode().IsRegular() {
-				// requested file is file (not directory)
-				var modTime time.Time
-				// Try to extract file modified time
-				if info, err := f.Stat(); err == nil {
-					modTime = info.ModTime()
-				} else {
-					modTime = time.Now() // fallback
-				}
-				// serve fie content
-				http.ServeContent(
-					w,
-					r,
-					filepath.Base(upath),
-					modTime,
-					f,
-				)
-				return
-			}
+	// Allowed HTTP methods map (is used in performance reasons).
+	allowedHTTPMethodsMap map[string]struct{} // fillable in runtime
+}
+
+// Settings describes file server options.
+type Settings struct {
+	// Directory path, where files for serving is located.
+	FilesRoot string
+
+	// File name (relative path to the file) that will be used as an index (like <https://bit.ly/356QeFm>).
+	IndexFileName string
+
+	// File name (relative path to the file) that will be used as error page template.
+	ErrorFileName string
+
+	// Respond "index file" request with redirection to the root (`example.com/index.html` -> `example.com/`).
+	RedirectIndexFileToRoot bool
+
+	// Allowed HTTP methods (eg.: `http.MethodGet`).
+	AllowedHTTPMethods []string
+}
+
+// NewFileServer creates new file server with default settings. Feel free to change default behavior.
+func NewFileServer(s Settings) (*FileServer, error) { //nolint:gocritic
+	if info, err := os.Stat(s.FilesRoot); err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf(`directory "%s" does not exists`, s.FilesRoot)
 		}
+
+		return nil, err
+	} else if !info.IsDir() {
+		return nil, fmt.Errorf(`"%s" is not directory`, s.FilesRoot)
 	}
 
-	// If all tries for content serving above has been failed - file was not found (HTTP 404)
-	if fileServer.Settings.NotFoundHandler != nil {
-		// If "file not found" handler is set - call them
-		fileServer.Settings.NotFoundHandler(w, r)
-		return
+	if s.IndexFileName == "" {
+		s.IndexFileName = defaultIndexFileName
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(http.StatusNotFound)
+	if len(s.AllowedHTTPMethods) == 0 {
+		s.AllowedHTTPMethods = append(s.AllowedHTTPMethods, http.MethodGet)
+	}
 
-	// at first - we try to find local file with error content
-	if len(fileServer.Settings.Root) > 0 {
-		var errPage = string(fileServer.Settings.Root) + "/" + fileServer.Settings.Error404file
-		if f, err := os.Open(errPage); err == nil {
-			// file exists and opened
-			defer func() {
-				if err := f.Close(); err != nil {
-					panic(err)
-				}
-			}()
-			// file (or directory) exists
-			if stat, statErr := os.Stat(errPage); statErr == nil && stat.Mode().IsRegular() {
-				// requested file is file (not directory)
-				if _, writeErr := io.Copy(w, f); writeErr != nil {
-					panic(writeErr)
-				}
+	fs := &FileServer{
+		Settings:             s,
+		FallbackErrorContent: defaultFallbackErrorContent,
+	}
+
+	fs.ErrorHandlers = []ErrorHandlerFunc{
+		JSONErrorHandler(),
+		StaticHTMLPageErrorHandler(),
+	}
+
+	return fs, nil
+}
+
+func (fs *FileServer) handleError(w http.ResponseWriter, r *http.Request, errorCode int) {
+	if fs.ErrorHandlers != nil && len(fs.ErrorHandlers) > 0 {
+		for _, handler := range fs.ErrorHandlers {
+			if handler(w, r, fs, errorCode) {
 				return
 			}
 		}
 	}
 
 	// fallback
-	if _, err := fmt.Fprint(w, "<html><body><h1>ERROR 404</h1><h2>Requested file was not found</h2></body></html>"); err != nil {
-		panic(err)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(errorCode)
+
+	_, _ = w.Write([]byte(ErrorPageTemplate(fs.FallbackErrorContent).Build(errorCode)))
+}
+
+func (fs *FileServer) methodIsAllowed(method string) bool {
+	if fs.allowedHTTPMethodsMap == nil {
+		// burn allowed methods map for fast checking
+		fs.allowedHTTPMethodsMap = make(map[string]struct{})
+
+		for _, v := range fs.Settings.AllowedHTTPMethods {
+			fs.allowedHTTPMethodsMap[v] = struct{}{}
+		}
 	}
+
+	_, found := fs.allowedHTTPMethodsMap[method]
+
+	return found
+}
+
+// ServeHTTP responds to an HTTP request.
+func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !fs.methodIsAllowed(r.Method) {
+		fs.handleError(w, r, http.StatusMethodNotAllowed)
+
+		return
+	}
+
+	if fs.Settings.RedirectIndexFileToRoot && len(fs.Settings.IndexFileName) > 0 {
+		// redirect .../index.html to .../
+		if strings.HasSuffix(r.URL.Path, "/"+fs.Settings.IndexFileName) {
+			http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fs.Settings.IndexFileName)], http.StatusMovedPermanently)
+
+			return
+		}
+	}
+
+	urlPath := r.URL.Path
+
+	// add leading `/` (if required)
+	if urlPath == "" || !strings.HasPrefix(urlPath, "/") {
+		urlPath = "/" + r.URL.Path
+	}
+
+	// if directory requested (or server root) - add index file name
+	if len(fs.Settings.IndexFileName) > 0 && urlPath[len(urlPath)-1] == '/' {
+		urlPath += fs.Settings.IndexFileName
+	}
+
+	// prepare target file path
+	filePath := path.Join(fs.Settings.FilesRoot, filepath.FromSlash(path.Clean(urlPath)))
+
+	// check for file existence
+	if stat, err := os.Stat(filePath); err == nil && stat.Mode().IsRegular() {
+		if file, err := os.Open(filePath); err == nil {
+			defer func() { _ = file.Close() }()
+
+			http.ServeContent(w, r, filepath.Base(filePath), stat.ModTime(), file)
+
+			return
+		}
+
+		fs.handleError(w, r, http.StatusInternalServerError)
+
+		return
+	}
+
+	fs.handleError(w, r, http.StatusNotFound)
 }
