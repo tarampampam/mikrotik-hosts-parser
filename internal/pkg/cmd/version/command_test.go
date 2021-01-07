@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -40,7 +41,7 @@ func TestCommand_Execute(t *testing.T) {
 		{
 			name:             "By default",
 			giveArgs:         []string{},
-			wantOutput:       []string{"Version:", "undefined@undefined", "\n"},
+			wantOutput:       []string{"Version:", "0.0.0@undefined", runtime.Version(), "\n"},
 			wantErr:          false,
 			wantErrorMessage: "",
 		},

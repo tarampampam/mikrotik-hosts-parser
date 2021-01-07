@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 func TestServer_RegisterHandlers(t *testing.T) {
@@ -28,7 +29,7 @@ func TestServer_RegisterHandlers(t *testing.T) {
 		return t.Name()
 	}
 
-	var s = NewServer(&ServerSettings{}, &serve.Settings{})
+	var s = NewServer(&ServerSettings{}, &config.ServingConfig{})
 
 	var cases = []struct {
 		name    string
@@ -44,7 +45,7 @@ func TestServer_RegisterHandlers(t *testing.T) {
 		},
 		{
 			name:    "api_get_settings",
-			route:   "/api/settings",
+			route:   "/api/config",
 			methods: []string{"GET"},
 			handler: api.GetSettingsHandlerFunc(s.ServeSettings),
 		},

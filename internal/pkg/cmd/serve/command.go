@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http"
-	serveSettings "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 type (
@@ -24,7 +25,7 @@ type (
 	}
 
 	resourcesOptions struct {
-		ResourcesDir resourcesDirPath `short:"r" long:"resources-dir" env:"RESOURCES_DIR" description:"Resources directory path"`
+		ResourcesDir resourcesDirPath `short:"r" long:"resources-dir" env:"RESOURCES_DIR" description:"resources directory path"`
 	}
 )
 
@@ -32,7 +33,7 @@ type (
 	Command struct {
 		ConfigFile configFilePath `short:"c" long:"config" env:"CONFIG_PATH" required:"true" description:"Config file path"`
 
-		ResourcesOptions resourcesOptions `group:"Resources"`
+		ResourcesOptions resourcesOptions `group:"resources"`
 		ServingOptions   listenOptions    `group:"Listening"`
 	}
 )
@@ -92,19 +93,19 @@ func (resourcesDirPath) IsValidValue(value string) error {
 	return nil
 }
 
-// Get serving settings
-func (c *Command) getSettings(filepath string) (*serveSettings.Settings, error) {
-	sets, err := serveSettings.FromYamlFile(filepath, true)
+// Get serving config
+func (c *Command) getSettings(filepath string) (*config.ServingConfig, error) {
+	sets, err := config.ServingConfigFromYamlFile(filepath, true)
 	if err != nil {
 		return nil, err
 	}
 
-	// override settings using passed command options
+	// override config using passed command options
 	if len(c.ServingOptions.Address) > 0 {
 		sets.Listen.Address = c.ServingOptions.Address.String()
 	}
 	if c.ServingOptions.Port != 0 {
-		sets.Listen.Port = int(c.ServingOptions.Port)
+		sets.Listen.Port = uint16(c.ServingOptions.Port)
 	}
 	if len(c.ResourcesOptions.ResourcesDir) > 0 {
 		sets.Resources.DirPath = c.ResourcesOptions.ResourcesDir.String()
@@ -127,8 +128,6 @@ func (c *Command) Execute(_ []string) error {
 	}, settings)
 
 	server.RegisterHandlers()
-
-	_ = settings.PrintInfo(os.Stdout)
 
 	return server.Start()
 }

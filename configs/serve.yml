@@ -5,7 +5,7 @@ listen:
   # port number to listen
   port: ${LISTEN_PORT:-8080}
 
-# public resources settings
+# public resources config
 resources:
   # path to the directory with public assets
   dir: ${RESOURCES_DIR}
@@ -55,7 +55,7 @@ sources:
     enabled: false
     count: 46000
 
-# caching settings
+# caching config
 cache:
   # file-based cache
   files:
@@ -64,12 +64,12 @@ cache:
   # cached entries lifetime duration (in seconds)
   lifetime_sec: ${CACHE_LIFETIME_SEC:-1800}
 
-# router script generation settings
+# router script generation config
 router_script:
   # default requests redirection
   redirect:
     address: 127.0.0.1
-  # default excluding settings
+  # default excluding config
   exclude:
     # this hosts will be excluded by default (will be set only in UI)
     hosts:

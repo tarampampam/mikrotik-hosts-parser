@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 )
 
 type (
@@ -47,8 +47,8 @@ type (
 	}
 )
 
-// GetSettingsHandlerFunc returns handler function that writes json response with possible settings into response writer.
-func GetSettingsHandlerFunc(serveSettings *serve.Settings) func(http.ResponseWriter, *http.Request) {
+// GetSettingsHandlerFunc returns handler function that writes json response with possible config into response writer.
+func GetSettingsHandlerFunc(serveSettings *config.ServingConfig) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
@@ -56,13 +56,13 @@ func GetSettingsHandlerFunc(serveSettings *serve.Settings) func(http.ResponseWri
 	}
 }
 
-// convertServeSettingsIntoResponse converts serving settings into internal response format.
-func convertServeSettingsIntoResponse(settings *serve.Settings) *settingsResponse {
+// convertServeSettingsIntoResponse converts serving config into internal response format.
+func convertServeSettingsIntoResponse(settings *config.ServingConfig) *settingsResponse {
 	// set basic properties
 	response := &settingsResponse{
 		Sources: sources{
-			Max:           settings.RouterScript.MaxSources,
-			MaxSourceSize: settings.RouterScript.MaxSourceSize,
+			Max:           int(settings.RouterScript.MaxSourcesCount),
+			MaxSourceSize: int(settings.RouterScript.MaxSourceSizeBytes),
 		},
 		Redirect: redirect{
 			Addr: settings.RouterScript.Redirect.Address,
@@ -71,7 +71,7 @@ func convertServeSettingsIntoResponse(settings *serve.Settings) *settingsRespons
 			Comment: settings.RouterScript.Comment,
 		},
 		Cache: cache{
-			LifetimeSec: settings.Cache.LifetimeSec,
+			LifetimeSec: int(settings.Cache.LifetimeSec),
 		},
 		Excludes: excludes{},
 	}
@@ -86,7 +86,7 @@ func convertServeSettingsIntoResponse(settings *serve.Settings) *settingsRespons
 			Name:        source.Name,
 			Description: source.Description,
 			ByDefault:   source.EnabledByDefault,
-			Count:       source.RecordsCount,
+			Count:       int(source.RecordsCount),
 		})
 	}
 

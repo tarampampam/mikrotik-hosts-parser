@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+
 	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik"
@@ -26,7 +27,7 @@ type sourceResponse struct {
 
 // RouterOsScriptSourceGenerationHandlerFunc generates RouterOS script source and writes it response.
 func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
-	serveSettings *serve.Settings,
+	serveSettings *config.ServingConfig,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// initialize default cache pool
@@ -35,7 +36,7 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 		queryParameters, queryErr := newQueryParametersBag(
 			r.URL.Query(),
 			serveSettings.RouterScript.Redirect.Address,
-			serveSettings.RouterScript.MaxSources,
+			int(serveSettings.RouterScript.MaxSourcesCount),
 		)
 
 		// Validate query parameters parsing
@@ -56,7 +57,7 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 			"Sources list: <"+strings.Join(queryParameters.SourceUrls, ">, <")+">",
 			"Excluded hosts: '"+strings.Join(queryParameters.ExcludedHosts, "', '")+"'",
 			"Limit: "+strconv.Itoa(queryParameters.Limit),
-			"Cache lifetime: "+strconv.Itoa(serveSettings.Cache.LifetimeSec)+" seconds",
+			"cache lifetime: "+strconv.Itoa(int(serveSettings.Cache.LifetimeSec))+" seconds",
 		)
 
 		sourceResponsesChannel := make(chan *sourceResponse) // channel for source responses
@@ -66,8 +67,8 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 			go writeSourceResponse(
 				sourceResponsesChannel,
 				sourceURL,
-				serveSettings.RouterScript.MaxSourceSize,
-				serveSettings.Cache.LifetimeSec,
+				int(serveSettings.RouterScript.MaxSourceSizeBytes),
+				int(serveSettings.Cache.LifetimeSec),
 			)
 		}
 
@@ -78,24 +79,24 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 			// read message from channel
 			resp := <-sourceResponsesChannel
 			if resp.CacheIsHit {
-				comments = append(comments, "Cache HIT for <"+resp.URL+"> "+
+				comments = append(comments, "cache HIT for <"+resp.URL+"> "+
 					"(expires after "+strconv.Itoa(resp.CacheExpiredAfterSec)+" sec.)")
 			} else {
-				comments = append(comments, "Cache miss for <"+resp.URL+">")
+				comments = append(comments, "cache miss for <"+resp.URL+">")
 			}
 			// if response contains error - skip it
 			if resp.Error != nil {
 				if resp.Content != nil {
 					_ = resp.Content.Close()
 				}
-				comments = append(comments, "Source <"+resp.URL+"> error: "+resp.Error.Error())
+				comments = append(comments, "source <"+resp.URL+"> error: "+resp.Error.Error())
 				continue
 			}
 			// parse response content
 			records, parseErr := hostsfile.Parse(resp.Content)
 			_ = resp.Content.Close()
 			if parseErr != nil {
-				comments = append(comments, "Source <"+resp.URL+"> error: "+parseErr.Error())
+				comments = append(comments, "source <"+resp.URL+"> error: "+parseErr.Error())
 			}
 			// and append results into hosts records stack
 			hostsRecords = append(hostsRecords, records...)

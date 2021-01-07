@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -24,7 +24,7 @@ type (
 
 	Server struct {
 		Settings      *ServerSettings
-		ServeSettings *serve.Settings
+		ServeSettings *config.ServingConfig
 		Server        *http.Server
 		Router        *mux.Router
 		stdLog        *log.Logger
@@ -34,13 +34,13 @@ type (
 )
 
 // NewServer creates new server instance.
-func NewServer(settings *ServerSettings, serveSettings *serve.Settings) *Server {
+func NewServer(settings *ServerSettings, serveSettings *config.ServingConfig) *Server {
 	var (
 		router     = *mux.NewRouter()
 		stdLog     = log.New(os.Stdout, "", log.Ldate|log.Lmicroseconds)
 		errLog     = log.New(os.Stderr, "[error] ", log.LstdFlags)
 		httpServer = &http.Server{
-			Addr:         serveSettings.Listen.Address + ":" + strconv.Itoa(serveSettings.Listen.Port),
+			Addr:         serveSettings.Listen.Address + ":" + strconv.Itoa(int(serveSettings.Listen.Port)),
 			Handler:      handlers.LoggingHandler(os.Stdout, &router),
 			ErrorLog:     errLog,
 			WriteTimeout: settings.WriteTimeout,

@@ -32,7 +32,7 @@ func (s *Server) registerAPIHandlers() {
 	apiRouter.Use(DisableAPICachingMiddleware)
 
 	apiRouter.
-		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.ServeSettings)).
+		HandleFunc("/config", api.GetSettingsHandlerFunc(s.ServeSettings)).
 		Methods("GET").
 		Name("api_get_settings")
 

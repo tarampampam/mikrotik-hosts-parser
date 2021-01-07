@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
-
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 )
 
 func TestCommand_Structures(t *testing.T) {
@@ -51,7 +49,7 @@ func TestCommand_Structures(t *testing.T) {
 			wantShort:       "r",
 			wantLong:        "resources-dir",
 			wantEnv:         "RESOURCES_DIR",
-			wantDescription: "Resources directory path",
+			wantDescription: "resources directory path",
 		},
 
 		{
@@ -70,7 +68,7 @@ func TestCommand_Structures(t *testing.T) {
 				field, _ := reflect.TypeOf(Command{}).FieldByName("ResourcesOptions")
 				return field
 			},
-			wantGroup: "Resources",
+			wantGroup: "resources",
 		},
 		{
 			element: func() reflect.StructField {
@@ -310,143 +308,6 @@ func TestResourcesDirPath_IsValidValue(t *testing.T) {
 				} else if res.Error() != tt.wantError.Error() {
 					t.Errorf("Wrong error returned. Want: %v, got: %v", tt.wantError, res)
 				}
-			}
-		})
-	}
-}
-
-func TestCommand_getSettings(t *testing.T) { //nolint:gocyclo
-	// Create temporary file inside just created temporary directory.
-	createTempFile := func(t *testing.T) (*os.File, string) {
-		t.Helper()
-
-		tmpDir, err := ioutil.TempDir("", "test-")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		tmpFile, fileErr := os.Create(filepath.Join(tmpDir, "test-file"))
-		if fileErr != nil {
-			t.Fatal(fileErr)
-		}
-
-		return tmpFile, tmpDir
-	}
-
-	tests := []struct {
-		name         string
-		giveCommand  *Command
-		giveFilePath func(t *testing.T) string
-		wantSettings *serve.Settings
-		wantError    bool
-	}{
-		{
-			name:        "Without overriding settings from config file",
-			giveCommand: &Command{},
-			giveFilePath: func(t *testing.T) string {
-				tmpFile, _ := createTempFile(t)
-				defer func() {
-					if err := tmpFile.Close(); err != nil {
-						t.Fatal(err)
-					}
-				}()
-
-				_, _ = tmpFile.Write([]byte(`
-listen:
-  address: '1.2.3.4'
-  port: 321
-resources:
-  dir: /tmp
-`))
-
-				return tmpFile.Name()
-			},
-			wantSettings: &serve.Settings{
-				Listen: serve.Listen{
-					Address: "1.2.3.4",
-					Port:    321,
-				},
-				Resources: serve.Resources{
-					DirPath: "/tmp",
-				},
-			},
-		},
-		{
-			name: "With settings overriding",
-			giveCommand: &Command{
-				ServingOptions: listenOptions{
-					Address: "8.8.8.8",
-					Port:    666,
-				},
-				ResourcesOptions: resourcesOptions{
-					ResourcesDir: "/tmp/foo/bar",
-				},
-			},
-			giveFilePath: func(t *testing.T) string {
-				tmpFile, _ := createTempFile(t)
-				defer func() {
-					if err := tmpFile.Close(); err != nil {
-						t.Fatal(err)
-					}
-				}()
-
-				_, _ = tmpFile.Write([]byte(`
-listen:
-  address: '1.2.3.4'
-  port: 321
-resources:
-  dir: /tmp
-`))
-
-				return tmpFile.Name()
-			},
-			wantSettings: &serve.Settings{
-				Listen: serve.Listen{
-					Address: "8.8.8.8",
-					Port:    666,
-				},
-				Resources: serve.Resources{
-					DirPath: "/tmp/foo/bar",
-				},
-			},
-		},
-		{
-			name:        "With missing config file path",
-			giveCommand: &Command{},
-			giveFilePath: func(t *testing.T) string {
-				return "foo bar"
-			},
-			wantSettings: &serve.Settings{},
-			wantError:    true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			filePath := tt.giveFilePath(t)
-			defer func(tmpFile string) {
-				if info, err := os.Stat(tmpFile); err != nil || !info.Mode().IsRegular() {
-					return
-				}
-				dirPath, err := filepath.Abs(filepath.Dir(tmpFile))
-				if err != nil {
-					t.Fatal(err)
-				}
-				if err := os.RemoveAll(dirPath); err != nil {
-					t.Fatal(err)
-				}
-			}(filePath)
-
-			gotSettings, err := tt.giveCommand.getSettings(filePath)
-
-			if err != nil && !tt.wantError {
-				t.Errorf("Unexpected error [%v] returned", err)
-			} else if tt.wantError && err == nil {
-				t.Error("Expects error, but nothing returned")
-			}
-
-			if !tt.wantError && !reflect.DeepEqual(gotSettings, tt.wantSettings) {
-				t.Errorf("Unexpected settings returned. Want: %v, got: %v", tt.wantSettings, gotSettings)
 			}
 		})
 	}
