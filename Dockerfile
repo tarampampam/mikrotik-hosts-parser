@@ -36,10 +36,12 @@ RUN set -x \
     && mkdir -p /tmp/rootfs/etc/ssl \
     && mkdir -p /tmp/rootfs/bin \
     && mkdir -p /tmp/rootfs/opt/mikrotik-hosts-parser \
+    && mkdir -p /tmp/rootfs/tmp \
     && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
     && cp -R /src/web /tmp/rootfs/opt/mikrotik-hosts-parser/web \
     && cp /src/serve.yml /tmp/rootfs/etc/serve.yml \
     && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
+    && chmod -R 777 /tmp/rootfs/tmp \
     && mv /tmp/mikrotik-hosts-parser /tmp/rootfs/bin/mikrotik-hosts-parser
 
 # use empty filesystem

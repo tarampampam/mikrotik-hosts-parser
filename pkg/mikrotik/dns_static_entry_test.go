@@ -19,24 +19,7 @@ func BenchmarkDNSStaticEntry_Format(b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		_ = s.Format("foo", "bar")
-	}
-}
-
-func BenchmarkDNSStaticEntry_FormatWithEscaping(b *testing.B) {
-	b.ReportAllocs()
-
-	s := DNSStaticEntry{
-		Address:  "0.0.0.0",
-		Comment:  "Any\\ text",
-		Disabled: true,
-		Name:     "www.example\\.com",
-		Regexp:   ".*\\.example\\.com",
-		TTL:      "1\\d",
-	}
-
-	for n := 0; n < b.N; n++ {
-		_ = s.Format("foo", "bar")
+		_, _ = s.Format("foo", "bar")
 	}
 }
 
@@ -47,6 +30,7 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 		givePrefix  string
 		givePostfix string
 		wantString  string
+		wantError   error
 	}{
 		{
 			name: "regular usage",
@@ -60,31 +44,69 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 			},
 			givePrefix:  "foo",
 			givePostfix: "bar",
-			wantString:  `foo address=0.0.0.0 comment="Any text" disabled=yes name="www.example.com" regexp=".*\.example\.com" ttl="1d" bar`, //nolint:lll
+			wantString:  `foo address=0.0.0.0 comment="Any text" disabled=yes name="www.example.com" regexp=".*\.example\.com" ttl="1d" bar`,
 		},
 		{
 			name: "minimal usage",
 			giveEntry: DNSStaticEntry{
-				Address:  "0.0.0.0",
+				Address: "0.0.0.0",
+				Name:    "foo.com",
 			},
-			wantString:  `address=0.0.0.0 disabled=no`,
+			wantString: `address=0.0.0.0 disabled=no name="foo.com"`,
 		},
 		{
-			name: "with escaping",
+			name: "without escaping",
+			giveEntry: DNSStaticEntry{
+				Address: "127.0.0.1",
+				Comment: "Any\\ text",
+				Name:    "www.example\\.com",
+				Regexp:  `.*\.example\.com`,
+				TTL:     "1\\d",
+			},
+			wantString: `address=127.0.0.1 comment="Any\ text" disabled=no name="www.example\.com" regexp=".*\.example\.com" ttl="1\d"`,
+		},
+		{
+			name:       "empty",
+			giveEntry:  DNSStaticEntry{},
+			wantString: "",
+			wantError:  ErrEmptyFields,
+		},
+		{
+			name: "without address",
+			giveEntry: DNSStaticEntry{
+				Comment:  "Any text",
+				Disabled: true,
+				Name:     "www.example.com",
+				Regexp:   `.*\.example\.com`,
+				TTL:      "1d",
+			},
+			wantString: "",
+			wantError:  ErrEmptyFields,
+		},
+		{
+			name: "without hostname and regexp",
 			giveEntry: DNSStaticEntry{
 				Address:  "127.0.0.1",
-				Comment:  "Any\\ text",
-				Name:     "www.example\\.com",
-				Regexp:   `.*\.example\.com`,
-				TTL:      "1\\d",
+				Comment:  "Any text",
+				Disabled: true,
+				TTL:      "1d",
 			},
-			wantString:  `address=127.0.0.1 comment="Any text" disabled=no name="www.example.com" regexp=".*\.example\.com" ttl="1d"`, //nolint:lll
+			wantString: "",
+			wantError:  ErrEmptyFields,
 		},
 	}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.wantString, string(tt.giveEntry.Format(tt.givePrefix, tt.givePostfix)))
+			res, err := tt.giveEntry.Format(tt.givePrefix, tt.givePostfix)
+
+			if tt.wantError == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantError.Error())
+			}
+
+			assert.Equal(t, tt.wantString, string(res))
 		})
 	}
 }

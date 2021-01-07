@@ -11,7 +11,7 @@ import (
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
 	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
-	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik/dns"
+	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik"
 
 	"github.com/tarampampam/go-filecache"
 )
@@ -127,11 +127,8 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 		// render result script source
 		if len(staticEntries) > 0 {
 			_, _ = w.Write([]byte("\n/ip dns static\n"))
-			_, renderErr := staticEntries.Render(w, &dns.RenderOptions{
-				RenderEntryOptions: dns.RenderEntryOptions{
-					Prefix: "add",
-				},
-				RenderEmpty: false,
+			_, renderErr := staticEntries.Render(w, mikrotik.RenderingOptions{
+				Prefix: "add",
 			})
 
 			_, _ = w.Write([]byte("\n\n## Records count: " + strconv.Itoa(len(staticEntries))))
@@ -189,10 +186,10 @@ func hostsRecordsToStaticEntries(
 	limit int,
 	redirectTo,
 	comment string,
-) dns.StaticEntries {
+) mikrotik.DNSStaticEntries {
 	var (
 		processedHosts = make(map[string]bool)
-		out            = dns.StaticEntries{}
+		out            = mikrotik.DNSStaticEntries{}
 	)
 
 	// put hosts for excluding into processed hosts map for skipping in future
@@ -214,7 +211,7 @@ records:
 				// set "was processed" flag in hosts map
 				processedHosts[host] = true
 				// add new static entry into result
-				out = append(out, dns.StaticEntry{
+				out = append(out, mikrotik.DNSStaticEntry{
 					Address: redirectTo,
 					Comment: comment,
 					Name:    host,
