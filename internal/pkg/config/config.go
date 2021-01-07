@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type ServingConfig struct {
+type Config struct {
 	Listen       listen       `yaml:"listen"`
 	Resources    resources    `yaml:"resources"`
 	Sources      []source     `yaml:"sources"`
@@ -61,7 +61,7 @@ type (
 	}
 )
 
-func (cfg *ServingConfig) FromYaml(in []byte, expandEnv bool) error {
+func (cfg *Config) FromYaml(in []byte, expandEnv bool) error {
 	if expandEnv {
 		parsed, err := envsubst.Bytes(in)
 		if err != nil {
@@ -78,9 +78,9 @@ func (cfg *ServingConfig) FromYaml(in []byte, expandEnv bool) error {
 	return nil
 }
 
-// ServingConfigFromYaml creates new config instance using YAML-structured content.
-func ServingConfigFromYaml(in []byte, expandEnv bool) (*ServingConfig, error) {
-	config := &ServingConfig{}
+// FromYaml creates new config instance using YAML-structured content.
+func FromYaml(in []byte, expandEnv bool) (*Config, error) {
+	config := &Config{}
 
 	if err := config.FromYaml(in, expandEnv); err != nil {
 		return nil, err
@@ -89,12 +89,12 @@ func ServingConfigFromYaml(in []byte, expandEnv bool) (*ServingConfig, error) {
 	return config, nil
 }
 
-// ServingConfigFromYamlFile creates new config instance using YAML file.
-func ServingConfigFromYamlFile(filename string, expandEnv bool) (*ServingConfig, error) {
+// FromYamlFile creates new config instance using YAML file.
+func FromYamlFile(filename string, expandEnv bool) (*Config, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return ServingConfigFromYaml(bytes, expandEnv)
+	return FromYaml(bytes, expandEnv)
 }

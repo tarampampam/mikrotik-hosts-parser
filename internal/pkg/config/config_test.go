@@ -8,15 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServingConfigFromYaml(t *testing.T) {
+func TestFromYaml(t *testing.T) {
 	var cases = []struct {
 		name          string
 		giveYaml      []byte
 		giveExpandEnv bool
 		giveEnv       map[string]string
 		wantErr       bool
-		checkResultFn func(*testing.T, *ServingConfig)
-		wantConfig    *ServingConfig
+		checkResultFn func(*testing.T, *Config)
+		wantConfig    *Config
 	}{
 
 		{
@@ -65,7 +65,7 @@ router_script:
  max_source_size: 4
 `),
 			wantErr: false,
-			checkResultFn: func(t *testing.T, config *ServingConfig) {
+			checkResultFn: func(t *testing.T, config *Config) {
 				assert.Equal(t, "1.2.3.4", config.Listen.Address)
 				assert.Equal(t, uint16(321), config.Listen.Port)
 
@@ -109,7 +109,7 @@ listen:
  port: ${__TEST_LISTEN_PORT}
 `),
 			wantErr: false,
-			checkResultFn: func(t *testing.T, config *ServingConfig) {
+			checkResultFn: func(t *testing.T, config *Config) {
 				assert.Equal(t, "1.2.3.4", config.Listen.Address)
 				assert.Equal(t, uint16(567), config.Listen.Port)
 			},
@@ -122,7 +122,7 @@ listen:
  address: ${__TEST_LISTEN_ADDR}
 `),
 			wantErr: false,
-			checkResultFn: func(t *testing.T, config *ServingConfig) {
+			checkResultFn: func(t *testing.T, config *Config) {
 				assert.Equal(t, "${__TEST_LISTEN_ADDR}", config.Listen.Address)
 			},
 		},
@@ -135,7 +135,7 @@ listen:
  port: ${__TEST_LISTEN_PORT:-666}
 `),
 			wantErr: false,
-			checkResultFn: func(t *testing.T, config *ServingConfig) {
+			checkResultFn: func(t *testing.T, config *Config) {
 				assert.Equal(t, "2.3.4.5", config.Listen.Address)
 				assert.Equal(t, uint16(666), config.Listen.Port)
 			},
@@ -155,7 +155,7 @@ listen:
 				}
 			}
 
-			conf, err := ServingConfigFromYaml(tt.giveYaml, tt.giveExpandEnv)
+			conf, err := FromYaml(tt.giveYaml, tt.giveExpandEnv)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -173,13 +173,13 @@ listen:
 	}
 }
 
-func TestServingConfigFromYamlFile(t *testing.T) {
+func TestFromYamlFile(t *testing.T) {
 	var cases = []struct {
 		name          string
 		giveYaml      []byte
 		giveExpandEnv bool
 		wantError     bool
-		checkResultFn func(*testing.T, *ServingConfig)
+		checkResultFn func(*testing.T, *Config)
 	}{
 		{
 			name:          "Using correct yaml",
@@ -189,7 +189,7 @@ listen:
  address: '1.2.3.4'
  port: 321
 `),
-			checkResultFn: func(t *testing.T, config *ServingConfig) {
+			checkResultFn: func(t *testing.T, config *Config) {
 				assert.Equal(t, "1.2.3.4", config.Listen.Address)
 				assert.Equal(t, uint16(321), config.Listen.Port)
 			},
@@ -213,7 +213,7 @@ listen:
 
 			defer func() { assert.NoError(t, os.Remove(file.Name())) }() // cleanup
 
-			conf, loadingErr := ServingConfigFromYamlFile(file.Name(), tt.giveExpandEnv)
+			conf, loadingErr := FromYamlFile(file.Name(), tt.giveExpandEnv)
 
 			if tt.wantError {
 				assert.Error(t, loadingErr)

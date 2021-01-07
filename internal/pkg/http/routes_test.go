@@ -29,7 +29,7 @@ func TestServer_RegisterHandlers(t *testing.T) {
 		return t.Name()
 	}
 
-	var s = NewServer(&ServerSettings{}, &config.ServingConfig{})
+	var s = NewServer(&ServerSettings{}, &config.Config{})
 
 	var cases = []struct {
 		name    string

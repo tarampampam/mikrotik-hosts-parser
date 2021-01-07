@@ -24,7 +24,7 @@ type (
 
 	Server struct {
 		Settings      *ServerSettings
-		ServeSettings *config.ServingConfig
+		ServeSettings *config.Config
 		Server        *http.Server
 		Router        *mux.Router
 		stdLog        *log.Logger
@@ -34,7 +34,7 @@ type (
 )
 
 // NewServer creates new server instance.
-func NewServer(settings *ServerSettings, serveSettings *config.ServingConfig) *Server {
+func NewServer(settings *ServerSettings, serveSettings *config.Config) *Server {
 	var (
 		router     = *mux.NewRouter()
 		stdLog     = log.New(os.Stdout, "", log.Ldate|log.Lmicroseconds)

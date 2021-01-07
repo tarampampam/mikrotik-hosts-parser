@@ -39,7 +39,7 @@ RUN set -x \
     && mkdir -p --mode=777 /tmp/rootfs/tmp \
     && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
     && cp -R /src/web /tmp/rootfs/opt/mikrotik-hosts-parser/web \
-    && cp /src/configs/serve.yml /tmp/rootfs/etc/serve.yml \
+    && cp /src/configs/config.yml /tmp/rootfs/etc/config.yml \
     && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
     && mv /tmp/mikrotik-hosts-parser /tmp/rootfs/bin/mikrotik-hosts-parser
 
@@ -67,7 +67,7 @@ ENTRYPOINT ["/bin/mikrotik-hosts-parser"]
 
 CMD [ \
     "serve", \
-    "--config", "/etc/serve.yml", \
+    "--config", "/etc/config.yml", \
     "--listen", "0.0.0.0", \
     "--port", "8080", \
     "--resources-dir", "/opt/mikrotik-hosts-parser/web" \

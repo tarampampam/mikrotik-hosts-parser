@@ -15,7 +15,7 @@ func TestNewServer(t *testing.T) {
 		KeepAliveEnabled: false,
 	}
 
-	server := NewServer(&settings, &settings2.ServingConfig{
+	server := NewServer(&settings, &settings2.Config{
 		Listen: settings2.listen{Address: "1.2.3.4", Port: 321},
 	})
 
@@ -75,7 +75,7 @@ func Test_registerCustomMimeTypes(t *testing.T) {
 	types, _ := mime.ExtensionsByType("text/html; charset=utf-8")
 	testSliceNotContainsString(t, types, ".vue")
 
-	if err := NewServer(&ServerSettings{}, &settings2.ServingConfig{}).registerCustomMimeTypes(); err != nil {
+	if err := NewServer(&ServerSettings{}, &settings2.Config{}).registerCustomMimeTypes(); err != nil {
 		t.Error(err)
 	}
 

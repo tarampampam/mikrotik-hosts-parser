@@ -23,7 +23,7 @@ services:
     ports:
       - 8080:8080/tcp
     volumes:
-      - ./configs/serve.yml:/etc/serve.yml:ro
+      - ./configs/config.yml:/etc/config.yml:ro
       - ./web:/opt/web:ro
 
   golint:

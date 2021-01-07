@@ -48,7 +48,7 @@ type (
 )
 
 // GetSettingsHandlerFunc returns handler function that writes json response with possible config into response writer.
-func GetSettingsHandlerFunc(serveSettings *config.ServingConfig) func(http.ResponseWriter, *http.Request) {
+func GetSettingsHandlerFunc(serveSettings *config.Config) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
@@ -57,7 +57,7 @@ func GetSettingsHandlerFunc(serveSettings *config.ServingConfig) func(http.Respo
 }
 
 // convertServeSettingsIntoResponse converts serving config into internal response format.
-func convertServeSettingsIntoResponse(settings *config.ServingConfig) *settingsResponse {
+func convertServeSettingsIntoResponse(settings *config.Config) *settingsResponse {
 	// set basic properties
 	response := &settingsResponse{
 		Sources: sources{

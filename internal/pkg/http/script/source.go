@@ -27,7 +27,7 @@ type sourceResponse struct {
 
 // RouterOsScriptSourceGenerationHandlerFunc generates RouterOS script source and writes it response.
 func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
-	serveSettings *config.ServingConfig,
+	serveSettings *config.Config,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// initialize default cache pool

@@ -94,8 +94,8 @@ func (resourcesDirPath) IsValidValue(value string) error {
 }
 
 // Get serving config
-func (c *Command) getSettings(filepath string) (*config.ServingConfig, error) {
-	sets, err := config.ServingConfigFromYamlFile(filepath, true)
+func (c *Command) getSettings(filepath string) (*config.Config, error) {
+	sets, err := config.FromYamlFile(filepath, true)
 	if err != nil {
 		return nil, err
 	}
