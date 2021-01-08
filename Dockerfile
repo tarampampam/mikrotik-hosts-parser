@@ -67,8 +67,8 @@ ENTRYPOINT ["/bin/mikrotik-hosts-parser"]
 
 CMD [ \
     "serve", \
+    "--log-json", \
     "--config", "/etc/config.yml", \
-    "--listen", "0.0.0.0", \
     "--port", "8080", \
     "--resources-dir", "/opt/mikrotik-hosts-parser/web" \
 ]

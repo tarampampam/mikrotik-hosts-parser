@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -27,8 +26,6 @@ type (
 		ServeSettings *config.Config
 		Server        *http.Server
 		Router        *mux.Router
-		stdLog        *log.Logger
-		errLog        *log.Logger
 		startTime     time.Time
 	}
 )
@@ -37,12 +34,10 @@ type (
 func NewServer(settings *ServerSettings, serveSettings *config.Config) *Server {
 	var (
 		router     = *mux.NewRouter()
-		stdLog     = log.New(os.Stdout, "", log.Ldate|log.Lmicroseconds)
-		errLog     = log.New(os.Stderr, "[error] ", log.LstdFlags)
 		httpServer = &http.Server{
-			Addr:         serveSettings.Listen.Address + ":" + strconv.Itoa(int(serveSettings.Listen.Port)),
-			Handler:      handlers.LoggingHandler(os.Stdout, &router),
-			ErrorLog:     errLog,
+			Addr:    serveSettings.Listen.Address + ":" + strconv.Itoa(int(serveSettings.Listen.Port)),
+			Handler: handlers.LoggingHandler(os.Stdout, &router),
+			//ErrorLog:     errLog, // TODO zap.NewStdLog
 			WriteTimeout: settings.WriteTimeout,
 			ReadTimeout:  settings.ReadTimeout,
 		}
@@ -55,8 +50,6 @@ func NewServer(settings *ServerSettings, serveSettings *config.Config) *Server {
 		ServeSettings: serveSettings,
 		Server:        httpServer,
 		Router:        &router,
-		stdLog:        stdLog,
-		errLog:        errLog,
 	}
 }
 
@@ -66,7 +59,6 @@ func (s *Server) Start() error {
 	if err := s.registerCustomMimeTypes(); err != nil {
 		panic(err)
 	}
-	s.stdLog.Println("Starting Server on " + s.Server.Addr)
 
 	return s.Server.ListenAndServe()
 }
@@ -76,9 +68,5 @@ func (*Server) registerCustomMimeTypes() error {
 	return mime.AddExtensionType(".vue", "text/html; charset=utf-8")
 }
 
-// Stop proxy Server.
-func (s *Server) Stop() error {
-	s.stdLog.Println("Stopping Server")
-
-	return s.Server.Shutdown(context.Background())
-}
+// Stop the Server.
+func (s *Server) Stop(ctx context.Context) error { return s.Server.Shutdown(ctx) }

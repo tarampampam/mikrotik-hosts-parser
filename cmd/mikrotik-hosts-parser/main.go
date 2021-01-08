@@ -1,19 +1,17 @@
+// Main CLI application entrypoint.
 package main
 
 import (
 	"os"
+	"path/filepath"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cmd"
-
-	"github.com/jessevdk/go-flags"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli"
 )
 
 func main() {
-	// parse the arguments
-	if _, err := flags.NewParser(&cmd.Options{}, flags.Default).Parse(); err != nil {
-		// make error type checking
-		if e, ok := err.(*flags.Error); (ok && e.Type != flags.ErrHelp) || !ok {
-			os.Exit(1)
-		}
+	cmd, errorHandler := cli.NewCommand(filepath.Base(os.Args[0]))
+
+	if err := cmd.Execute(); err != nil {
+		errorHandler(err)
 	}
 }
