@@ -25,15 +25,6 @@ func TestFromYaml(t *testing.T) {
 			giveYaml: []byte(`
 # Some comment
 
-listen:
- address: '1.2.3.4'
- port: 321
-
-resources:
- dir: /tmp
- index_name: idx.html
- error_404_name: err404.asp
-
 sources:
  - uri: http://goo.gl/hosts.txt
    name: Foo name
@@ -66,13 +57,6 @@ router_script:
 `),
 			wantErr: false,
 			checkResultFn: func(t *testing.T, config *Config) {
-				assert.Equal(t, "1.2.3.4", config.Listen.Address)
-				assert.Equal(t, uint16(321), config.Listen.Port)
-
-				assert.Equal(t, "/tmp", config.Resources.DirPath)
-				assert.Equal(t, "idx.html", config.Resources.IndexName)
-				assert.Equal(t, "err404.asp", config.Resources.Error404Name)
-
 				assert.Equal(t, "http://goo.gl/hosts.txt", config.Sources[0].URI)
 				assert.Equal(t, "Foo name", config.Sources[0].Name)
 				assert.Equal(t, "Foo desc", config.Sources[0].Description)
@@ -102,42 +86,45 @@ router_script:
 		{
 			name:          "ENV variables expanded",
 			giveExpandEnv: true,
-			giveEnv:       map[string]string{"__TEST_LISTEN_ADDR": "1.2.3.4", "__TEST_LISTEN_PORT": "567"},
+			giveEnv:       map[string]string{"__TEST_ADDR": "1.2.3.4", "__TEST_COMMENT": "foo"},
 			giveYaml: []byte(`
-listen:
- address: ${__TEST_LISTEN_ADDR}
- port: ${__TEST_LISTEN_PORT}
+router_script:
+ redirect:
+   address: ${__TEST_ADDR}
+ comment: ${__TEST_COMMENT}
 `),
 			wantErr: false,
 			checkResultFn: func(t *testing.T, config *Config) {
-				assert.Equal(t, "1.2.3.4", config.Listen.Address)
-				assert.Equal(t, uint16(567), config.Listen.Port)
+				assert.Equal(t, "1.2.3.4", config.RouterScript.Redirect.Address)
+				assert.Equal(t, "foo", config.RouterScript.Comment)
 			},
 		},
 		{
 			name:          "ENV variables NOT expanded",
 			giveExpandEnv: false,
 			giveYaml: []byte(`
-listen:
- address: ${__TEST_LISTEN_ADDR}
+router_script:
+ redirect:
+   address: ${__TEST_ADDR}
 `),
 			wantErr: false,
 			checkResultFn: func(t *testing.T, config *Config) {
-				assert.Equal(t, "${__TEST_LISTEN_ADDR}", config.Listen.Address)
+				assert.Equal(t, "${__TEST_ADDR}", config.RouterScript.Redirect.Address)
 			},
 		},
 		{
 			name:          "ENV variables defaults",
 			giveExpandEnv: true,
 			giveYaml: []byte(`
-listen:
- address: ${__TEST_LISTEN_ADDR:-2.3.4.5}
- port: ${__TEST_LISTEN_PORT:-666}
+router_script:
+ redirect:
+   address: ${__TEST_ADDR:-2.3.4.5}
+ comment: ${__TEST_COMMENT:-foo}
 `),
 			wantErr: false,
 			checkResultFn: func(t *testing.T, config *Config) {
-				assert.Equal(t, "2.3.4.5", config.Listen.Address)
-				assert.Equal(t, uint16(666), config.Listen.Port)
+				assert.Equal(t, "2.3.4.5", config.RouterScript.Redirect.Address)
+				assert.Equal(t, "foo", config.RouterScript.Comment)
 			},
 		},
 		{
@@ -185,13 +172,14 @@ func TestFromYamlFile(t *testing.T) {
 			name:          "Using correct yaml",
 			giveExpandEnv: true,
 			giveYaml: []byte(`
-listen:
- address: '1.2.3.4'
- port: 321
+router_script:
+ redirect:
+   address: 0.1.1.0
+ comment: "foo"
 `),
 			checkResultFn: func(t *testing.T, config *Config) {
-				assert.Equal(t, "1.2.3.4", config.Listen.Address)
-				assert.Equal(t, uint16(321), config.Listen.Port)
+				assert.Equal(t, "0.1.1.0", config.RouterScript.Redirect.Address)
+				assert.Equal(t, "foo", config.RouterScript.Comment)
 			},
 		},
 		{

@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/a8m/envsubst v1.2.0
-	github.com/gorilla/handlers v1.5.1
+	github.com/felixge/httpsnoop v1.0.1
 	github.com/gorilla/mux v1.8.0
 	github.com/kami-zh/go-capturer v0.0.0-20171211120116-e492ea43421d
 	github.com/kr/pretty v0.2.0 // indirect

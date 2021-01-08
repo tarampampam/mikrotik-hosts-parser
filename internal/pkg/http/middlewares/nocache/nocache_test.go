@@ -1,4 +1,4 @@
-package http
+package nocache
 
 import (
 	"net/http"
@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestDisableAPICachingMiddleware(t *testing.T) {
-	var handled bool = false
+func TestMiddleware(t *testing.T) {
+	var handled = false
 
 	// create a handler to use as "next" which will verify the request
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func TestDisableAPICachingMiddleware(t *testing.T) {
 		handled = true
 	})
 
-	middlewareHandler := DisableAPICachingMiddleware(nextHandler)
+	middlewareHandler := Middleware(nextHandler)
 
 	var (
 		req, _ = http.NewRequest("GET", "http://testing", nil)

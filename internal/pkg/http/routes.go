@@ -3,34 +3,27 @@ package http
 import (
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/nocache"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
 )
 
-// RegisterHandlers register server http handlers.
-func (s *Server) RegisterHandlers() {
-	s.registerStaticHandlers()
-	s.registerAPIHandlers()
-	s.registerFileServerHandler()
-}
-
-// Register static route handlers.
-func (s *Server) registerStaticHandlers() {
-	s.Router.
-		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandlerFunc(s.ServeSettings)).
+func (s *Server) registerScriptGeneratorHandlers() {
+	s.router.
+		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandlerFunc(s.cfg)).
 		Methods("GET").
 		Name("script_generator")
 }
 
 // Register API handlers.
 func (s *Server) registerAPIHandlers() {
-	apiRouter := s.Router.
+	apiRouter := s.router.
 		PathPrefix("/api").
 		Subrouter()
 
-	apiRouter.Use(DisableAPICachingMiddleware)
+	apiRouter.Use(nocache.Middleware)
 
 	apiRouter.
-		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.ServeSettings)).
+		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.cfg)).
 		Methods("GET").
 		Name("api_get_settings")
 
@@ -40,21 +33,27 @@ func (s *Server) registerAPIHandlers() {
 		Name("api_get_version")
 
 	apiRouter.
-		HandleFunc("/routes", api.GetRoutesHandlerFunc(s.Router)).
+		HandleFunc("/routes", api.GetRoutesHandlerFunc(s.router)).
 		Methods("GET").
 		Name("api_get_routes")
 }
 
 // Register file server handler.
-func (s *Server) registerFileServerHandler() {
-	fs, _ := fileserver.NewFileServer(fileserver.Settings{ // FIXME handle an error
-		FilesRoot:     s.ServeSettings.Resources.DirPath,
-		IndexFileName: s.ServeSettings.Resources.IndexName,
-		ErrorFileName: s.ServeSettings.Resources.Error404Name,
+func (s *Server) registerFileServerHandler() error {
+	fs, err := fileserver.NewFileServer(fileserver.Settings{
+		FilesRoot:               s.resourcesDir,
+		IndexFileName:           "index.html",
+		ErrorFileName:           "__error__.html",
+		RedirectIndexFileToRoot: true,
 	})
+	if err != nil {
+		return err
+	}
 
-	s.Router.
+	s.router.
 		PathPrefix("/").
 		Handler(fs).
 		Name("static")
+
+	return nil
 }

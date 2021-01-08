@@ -1,10 +1,12 @@
 package http
 
 import (
+	"context"
 	"mime"
 	"testing"
 
-	settings2 "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+	"go.uber.org/zap"
 )
 
 /*
@@ -35,15 +37,15 @@ func TestNewServer(t *testing.T) {
 		t.Error("Wrong 'errLog' flags set")
 	}
 
-	if server.Server.Addr != "1.2.3.4:321" {
-		t.Errorf("Wrong HTTP server addr set. Want [%s], got [%s]", "1.2.3.4:321", server.Server.Addr)
+	if server.srv.Addr != "1.2.3.4:321" {
+		t.Errorf("Wrong HTTP server addr set. Want [%s], got [%s]", "1.2.3.4:321", server.srv.Addr)
 	}
 
-	if server.Server.WriteTimeout != 10*time.Second {
+	if server.srv.WriteTimeout != 10*time.Second {
 		t.Error("Wrong server write timeout value is set")
 	}
 
-	if server.Server.ReadTimeout != 13*time.Second {
+	if server.srv.ReadTimeout != 13*time.Second {
 		t.Error("Wrong server read timeout value is set")
 	}
 }
@@ -75,7 +77,9 @@ func Test_registerCustomMimeTypes(t *testing.T) {
 	types, _ := mime.ExtensionsByType("text/html; charset=utf-8")
 	testSliceNotContainsString(t, types, ".vue")
 
-	if err := NewServer(&ServerSettings{}, &settings2.Config{}).registerCustomMimeTypes(); err != nil {
+	srv := NewServer(context.Background(), zap.NewNop(), "", ".", &config.Config{})
+
+	if err := srv.RegisterCustomMimeTypes(); err != nil {
 		t.Error(err)
 	}
 

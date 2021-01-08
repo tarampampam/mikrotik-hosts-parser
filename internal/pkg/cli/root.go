@@ -10,19 +10,19 @@ import (
 )
 
 // NewCommand creates root command.
-func NewCommand(appName string) (*cobra.Command, func(error)) {
+func NewCommand(appName string) (cmd *cobra.Command, execErrHandler func(error)) {
 	var (
 		verbose bool
 		debug   bool
-		logJson bool
+		logJSON bool
 	)
 
 	log, _ := zap.NewProduction() // important: logger should be used only inside (sub)command Run* actions
 
-	cmd := &cobra.Command{
+	cmd = &cobra.Command{
 		Use: appName,
 		PersistentPreRun: func(*cobra.Command, []string) {
-			*log = *createLogger(verbose, debug, logJson) // override "default" logger with customized
+			*log = *createLogger(verbose, debug, logJSON) // override "default" logger with customized
 		},
 		PersistentPostRun: func(*cobra.Command, []string) {
 			// error ignoring reasons:
@@ -36,7 +36,7 @@ func NewCommand(appName string) (*cobra.Command, func(error)) {
 
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	cmd.PersistentFlags().BoolVarP(&debug, "debug", "", false, "debug output")
-	cmd.PersistentFlags().BoolVarP(&logJson, "log-json", "", false, "logs in JSON format")
+	cmd.PersistentFlags().BoolVarP(&logJSON, "log-json", "", false, "logs in JSON format")
 
 	cmd.AddCommand(
 		version.NewCommand(),
@@ -45,17 +45,17 @@ func NewCommand(appName string) (*cobra.Command, func(error)) {
 
 	cmd.FlagErrorFunc()
 
-	execErrHandler := func(err error) {
+	execErrHandler = func(err error) {
 		log.Fatal(err.Error()) // `os.Exit(1)` here
 	}
 
 	return cmd, execErrHandler
 }
 
-func createLogger(verbose, debug, logJson bool) *zap.Logger {
+func createLogger(verbose, debug, logJSON bool) *zap.Logger {
 	var config zap.Config
 
-	if logJson {
+	if logJSON {
 		config = zap.NewProductionConfig()
 	} else {
 		config = zap.NewDevelopmentConfig()

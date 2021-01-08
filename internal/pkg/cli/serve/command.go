@@ -3,7 +3,6 @@ package serve
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -49,7 +48,7 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 				if p, err := strconv.ParseUint(envPort, 10, 16); err == nil {
 					port = uint16(p)
 				} else {
-					return errors.New("wrong TCP port environment variable value (cannot be parsed)")
+					return fmt.Errorf("wrong TCP port environment variable [%s] value (cannot be parsed)", envPort)
 				}
 			}
 
@@ -104,7 +103,7 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 	)
 	cmd.Flags().StringVarP(
 		&resourcesDir,
-		"resources",
+		"resources-dir",
 		"r",
 		filepath.Join(wd, "web"),
 		fmt.Sprintf("path to the directory with public assets [$%s]", envNameResourcesDir),
@@ -143,16 +142,18 @@ func execute(
 		oss.Stop() // stop system signals listening
 	}()
 
-	server := appHttp.NewServer(&appHttp.ServerSettings{
-		WriteTimeout:     time.Second * 15,
-		ReadTimeout:      time.Second * 15,
-		KeepAliveEnabled: false,
-	}, cfg)
+	server := appHttp.NewServer(ctx, log, fmt.Sprintf("%s:%d", listen, port), resourcesDir, cfg)
 
-	server.RegisterHandlers()
+	server.RegisterGlobalMiddlewares()
+	if err := server.RegisterHandlers(); err != nil {
+		return err
+	}
+	if err := server.RegisterCustomMimeTypes(); err != nil {
+		return err
+	}
 
 	go func() {
-		log.Info("HTTP server starting",
+		log.Info("Server starting",
 			zap.String("addr", listen),
 			zap.Uint16("port", port),
 			zap.String("resources", resourcesDir),
@@ -165,20 +166,16 @@ func execute(
 
 	<-ctx.Done()
 
-	log.Debug("HTTP server stopping")
+	log.Debug("Server stopping")
 
 	ctxShutdown, ctxCancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer func() { ctxCancelShutdown() }()
+	defer ctxCancelShutdown()
 
 	if err := server.Stop(ctxShutdown); err != nil {
 		return err
 	}
 
-	log.Info("HTTP server stopped")
-
-	if true {
-		return errors.New("foo")
-	}
+	log.Info("Server stopped")
 
 	return nil
 }

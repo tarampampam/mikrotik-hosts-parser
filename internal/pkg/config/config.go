@@ -8,25 +8,12 @@ import (
 )
 
 type Config struct {
-	Listen       listen       `yaml:"listen"`
-	Resources    resources    `yaml:"resources"`
 	Sources      []source     `yaml:"sources"`
 	Cache        cache        `yaml:"cache"`
 	RouterScript routerScript `yaml:"router_script"`
 }
 
 type (
-	listen struct {
-		Address string `yaml:"address"`
-		Port    uint16 `yaml:"port"`
-	}
-
-	resources struct {
-		DirPath      string `yaml:"dir"`
-		IndexName    string `yaml:"index_name"`
-		Error404Name string `yaml:"error_404_name"`
-	}
-
 	source struct {
 		URI              string `yaml:"uri"`
 		Name             string `yaml:"name"`

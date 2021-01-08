@@ -27,9 +27,6 @@ type FileServer struct {
 
 	// Error handlers stack.
 	ErrorHandlers []ErrorHandlerFunc
-
-	// Allowed HTTP methods map (is used in performance reasons).
-	allowedHTTPMethodsMap map[string]struct{} // fillable in runtime
 }
 
 // Settings describes file server options.
@@ -45,9 +42,6 @@ type Settings struct {
 
 	// Respond "index file" request with redirection to the root (`example.com/index.html` -> `example.com/`).
 	RedirectIndexFileToRoot bool
-
-	// Allowed HTTP methods (eg.: `http.MethodGet`).
-	AllowedHTTPMethods []string
 }
 
 // NewFileServer creates new file server with default settings. Feel free to change default behavior.
@@ -64,10 +58,6 @@ func NewFileServer(s Settings) (*FileServer, error) { //nolint:gocritic
 
 	if s.IndexFileName == "" {
 		s.IndexFileName = defaultIndexFileName
-	}
-
-	if len(s.AllowedHTTPMethods) == 0 {
-		s.AllowedHTTPMethods = append(s.AllowedHTTPMethods, http.MethodGet)
 	}
 
 	fs := &FileServer{
@@ -99,24 +89,9 @@ func (fs *FileServer) handleError(w http.ResponseWriter, r *http.Request, errorC
 	_, _ = w.Write([]byte(ErrorPageTemplate(fs.FallbackErrorContent).Build(errorCode)))
 }
 
-func (fs *FileServer) methodIsAllowed(method string) bool {
-	if fs.allowedHTTPMethodsMap == nil {
-		// burn allowed methods map for fast checking
-		fs.allowedHTTPMethodsMap = make(map[string]struct{})
-
-		for _, v := range fs.Settings.AllowedHTTPMethods {
-			fs.allowedHTTPMethodsMap[v] = struct{}{}
-		}
-	}
-
-	_, found := fs.allowedHTTPMethodsMap[method]
-
-	return found
-}
-
 // ServeHTTP responds to an HTTP request.
 func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !fs.methodIsAllowed(r.Method) {
+	if r.Method != http.MethodGet {
 		fs.handleError(w, r, http.StatusMethodNotAllowed)
 
 		return

@@ -4,69 +4,75 @@ import (
 	"context"
 	"mime"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
-
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/logreq"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/panic"
+	"go.uber.org/zap"
 )
 
 type (
-	ServerSettings struct {
-		WriteTimeout     time.Duration
-		ReadTimeout      time.Duration
-		KeepAliveEnabled bool
-	}
-
 	Server struct {
-		Settings      *ServerSettings
-		ServeSettings *config.Config
-		Server        *http.Server
-		Router        *mux.Router
-		startTime     time.Time
+		ctx          context.Context
+		log          *zap.Logger
+		resourcesDir string
+		cfg          *config.Config
+		srv          *http.Server
+		router       *mux.Router
 	}
 )
 
 // NewServer creates new server instance.
-func NewServer(settings *ServerSettings, serveSettings *config.Config) *Server {
+func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string, cfg *config.Config) Server {
 	var (
 		router     = *mux.NewRouter()
 		httpServer = &http.Server{
-			Addr:    serveSettings.Listen.Address + ":" + strconv.Itoa(int(serveSettings.Listen.Port)),
-			Handler: handlers.LoggingHandler(os.Stdout, &router),
+			Addr:    listen,
+			Handler: &router,
 			//ErrorLog:     errLog, // TODO zap.NewStdLog
-			WriteTimeout: settings.WriteTimeout,
-			ReadTimeout:  settings.ReadTimeout,
+			WriteTimeout: time.Second * 15,
+			ReadTimeout:  time.Second * 15,
 		}
 	)
 
-	httpServer.SetKeepAlivesEnabled(settings.KeepAliveEnabled)
-
-	return &Server{
-		Settings:      settings,
-		ServeSettings: serveSettings,
-		Server:        httpServer,
-		Router:        &router,
+	return Server{
+		ctx:          ctx,
+		log:          log,
+		resourcesDir: resourcesDir,
+		cfg:          cfg,
+		srv:          httpServer,
+		router:       &router,
 	}
 }
 
-// Start proxy Server.
-func (s *Server) Start() error {
-	s.startTime = time.Now()
-	if err := s.registerCustomMimeTypes(); err != nil {
-		panic(err)
-	}
+// Start server.
+func (s *Server) Start() error { return s.srv.ListenAndServe() }
 
-	return s.Server.ListenAndServe()
+func (s *Server) RegisterGlobalMiddlewares() {
+	s.router.Use(
+		logreq.NewMiddleware(s.log),
+		panic.NewMiddleware(s.log),
+	)
 }
 
-// Register custom mime types.
-func (*Server) registerCustomMimeTypes() error {
+// RegisterHandlers register server http handlers.
+func (s *Server) RegisterHandlers() error {
+	s.registerScriptGeneratorHandlers()
+	s.registerAPIHandlers()
+
+	if err := s.registerFileServerHandler(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RegisterCustomMimeTypes registers custom mime types.
+func (*Server) RegisterCustomMimeTypes() error {
 	return mime.AddExtensionType(".vue", "text/html; charset=utf-8")
 }
 
-// Stop the Server.
-func (s *Server) Stop(ctx context.Context) error { return s.Server.Shutdown(ctx) }
+// Stop server.
+func (s *Server) Stop(ctx context.Context) error { return s.srv.Shutdown(ctx) }

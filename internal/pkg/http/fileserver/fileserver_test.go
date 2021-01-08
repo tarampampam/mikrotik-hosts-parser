@@ -96,29 +96,6 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "disallowed HTTP method is used",
-			giveSettings: Settings{
-				AllowedHTTPMethods: []string{http.MethodPost},
-			},
-			giveRequestMethod:      http.MethodGet,
-			giveRequestURI:         "/",
-			wantResponseHTTPCode:   http.StatusMethodNotAllowed,
-			wantResponseSubstrings: []string{"Method Not Allowed"},
-		},
-		{
-			name: "disallowed HTTP method for existing file is used",
-			giveSettings: Settings{
-				AllowedHTTPMethods: []string{http.MethodPost, http.MethodDelete},
-			},
-			giveRequestMethod: http.MethodGet,
-			giveRequestURI:    "/test",
-			giveFiles: map[string][]byte{
-				"test": []byte("test content"),
-			},
-			wantResponseHTTPCode:   http.StatusMethodNotAllowed,
-			wantResponseSubstrings: []string{"Method Not Allowed"},
-		},
-		{
 			name:                 "directory above (./../) requested",
 			giveRequestURI:       "/../../../../etc/passwd",
 			wantResponseHTTPCode: http.StatusNotFound,
@@ -266,10 +243,6 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 			fs, fsErr := NewFileServer(tt.giveSettings)
 
 			assert.NoError(t, fsErr)
-
-			if tt.giveRequestMethod == "" { // setup default HTTP request method
-				tt.giveRequestMethod = fs.Settings.AllowedHTTPMethods[0]
-			}
 
 			var (
 				req, _ = http.NewRequest(tt.giveRequestMethod, tt.giveRequestURI, nil)
