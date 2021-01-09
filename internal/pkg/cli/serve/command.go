@@ -145,7 +145,9 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 		return err
 	}
 
-	go func() {
+	var startingErrCh = make(chan error)
+
+	go func(errCh chan<- error) {
 		log.Info("Server starting",
 			zap.String("addr", listen),
 			zap.Uint16("port", port),
@@ -157,11 +159,17 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 		}
 
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("Server cannot be started", zap.Error(err))
+			errCh <- err
 		}
-	}()
+	}(startingErrCh)
 
-	<-ctx.Done()
+	select {
+	case <-ctx.Done(): // wait for context cancellation
+	case err := <-startingErrCh: // or server starting error
+		close(startingErrCh)
+		log.Error(err.Error())
+		cancel()
+	}
 
 	log.Debug("Server stopping")
 

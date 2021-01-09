@@ -4,6 +4,7 @@ import (
 	"github.com/kami-zh/go-capturer"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
@@ -67,6 +68,19 @@ func TestSuccessfulFlagsPreparing(t *testing.T) {
 
 	assert.Empty(t, output)
 	assert.True(t, executed)
+}
+
+func TestSuccessfulCommandRunning(t *testing.T) {
+	log, _ := logger.New(true, true, false)
+
+	cmd := NewCommand(log)
+	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
+
+	//output := capturer.CaptureOutput(func() {
+		assert.NoError(t, cmd.Execute())
+	//})
+
+	//t.Log(output)
 }
 
 func TestListenFlagWrongArgument(t *testing.T) {

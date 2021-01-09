@@ -16,6 +16,7 @@ func NewCommand(appName string) *cobra.Command {
 		logJSON bool
 	)
 
+	// create "default" logger (will be overwritten later with customized)
 	log, err := logger.New(false, false, false)
 	if err != nil {
 		panic(err)
