@@ -1,13 +1,18 @@
 package serve
 
 import (
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/kami-zh/go-capturer"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -157,7 +162,7 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 
 func TestResourcesDirFlagWrongArgument(t *testing.T) {
 	cmd := NewCommand(zap.NewNop())
-	cmd.SetArgs([]string{"-r", "/foo/bar/baz", "-c", configFilePath})
+	cmd.SetArgs([]string{"-r", "/tmp/nonexistent/bar/baz", "-c", configFilePath})
 
 	var executed bool
 	cmd.RunE = func(*cobra.Command, []string) error {
@@ -170,7 +175,7 @@ func TestResourcesDirFlagWrongArgument(t *testing.T) {
 	})
 
 	assert.Contains(t, output, "wrong resources directory")
-	assert.Contains(t, output, "/foo/bar/baz")
+	assert.Contains(t, output, "/tmp/nonexistent/bar/baz")
 	assert.False(t, executed)
 }
 
@@ -178,7 +183,7 @@ func TestResourcesDirFlagWrongEnvValue(t *testing.T) {
 	cmd := NewCommand(zap.NewNop())
 	cmd.SetArgs([]string{"-c", configFilePath, "-r", "."}) // `-r` flag must be ignored
 
-	assert.NoError(t, os.Setenv("RESOURCES_DIR", "/foo/bar/baz"))
+	assert.NoError(t, os.Setenv("RESOURCES_DIR", "/tmp/nonexistent/bar/baz"))
 	defer func() { assert.NoError(t, os.Unsetenv("RESOURCES_DIR")) }()
 
 	var executed bool
@@ -192,13 +197,13 @@ func TestResourcesDirFlagWrongEnvValue(t *testing.T) {
 	})
 
 	assert.Contains(t, output, "wrong resources directory")
-	assert.Contains(t, output, "/foo/bar/baz")
+	assert.Contains(t, output, "/tmp/nonexistent/bar/baz")
 	assert.False(t, executed)
 }
 
 func TestConfigFlagWrongArgument(t *testing.T) {
 	cmd := NewCommand(zap.NewNop())
-	cmd.SetArgs([]string{"-r", "", "-c", "/foo/bar.baz"})
+	cmd.SetArgs([]string{"-r", "", "-c", "/tmp/nonexistent/bar.baz"})
 
 	var executed bool
 	cmd.RunE = func(*cobra.Command, []string) error {
@@ -211,7 +216,7 @@ func TestConfigFlagWrongArgument(t *testing.T) {
 	})
 
 	assert.Contains(t, output, "config file")
-	assert.Contains(t, output, "/foo/bar.baz")
+	assert.Contains(t, output, "/tmp/nonexistent/bar.baz")
 	assert.Contains(t, output, "not found")
 	assert.False(t, executed)
 }
@@ -220,7 +225,7 @@ func TestConfigFlagWrongEnvValue(t *testing.T) {
 	cmd := NewCommand(zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath}) // `-c` flag must be ignored
 
-	assert.NoError(t, os.Setenv("CONFIG_PATH", "/foo/bar.baz"))
+	assert.NoError(t, os.Setenv("CONFIG_PATH", "/tmp/nonexistent/bar.baz"))
 	defer func() { assert.NoError(t, os.Unsetenv("CONFIG_PATH")) }()
 
 	var executed bool
@@ -234,7 +239,131 @@ func TestConfigFlagWrongEnvValue(t *testing.T) {
 	})
 
 	assert.Contains(t, output, "config file")
-	assert.Contains(t, output, "/foo/bar.baz")
+	assert.Contains(t, output, "/tmp/nonexistent/bar.baz")
 	assert.Contains(t, output, "not found")
 	assert.False(t, executed)
+}
+
+func getRandomTCPPort(t *testing.T) (int, error) {
+	t.Helper()
+
+	// zero port means randomly (os) chosen port
+	l, err := net.Listen("tcp", ":0") //nolint:gosec
+	if err != nil {
+		return 0, err
+	}
+
+	port := l.Addr().(*net.TCPAddr).Port
+
+	if closingErr := l.Close(); closingErr != nil {
+		return 0, closingErr
+	}
+
+	return port, nil
+}
+
+func checkTCPPortIsBusy(t *testing.T, port int) bool {
+	t.Helper()
+
+	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+	if err != nil {
+		return true
+	}
+
+	_ = l.Close()
+
+	return false
+}
+
+func TestSuccessfulCommandRunning(t *testing.T) {
+	// get TCP port number for a test
+	tcpPort, err := getRandomTCPPort(t)
+	assert.NoError(t, err)
+
+	var (
+		output     string
+		executedCh = make(chan struct{})
+	)
+
+	// start HTTP server
+	go func(ch chan<- struct{}) {
+		defer close(ch)
+
+		output = capturer.CaptureStderr(func() {
+			// create command with valid flags to run
+			log, _ := logger.New(true, false, false)
+			cmd := NewCommand(log)
+			cmd.SilenceUsage = true
+			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath})
+
+			assert.NoError(t, cmd.Execute())
+		})
+
+		ch <- struct{}{}
+	}(executedCh)
+
+	portBusyCh := make(chan struct{})
+
+	// check port "busy" (by HTTP server) state
+	go func(ch chan<- struct{}) {
+		defer close(ch)
+
+		for i := 0; i < 2000; i++ {
+			if checkTCPPortIsBusy(t, tcpPort) {
+				ch <- struct{}{}
+				return
+			}
+
+			<-time.After(time.Millisecond * 2)
+		}
+
+		t.Error("port opening timeout exceeded")
+	}(portBusyCh)
+
+	<-portBusyCh // wait for server starting
+
+	// send OS signal for server stopping
+	proc, err := os.FindProcess(os.Getpid())
+	assert.NoError(t, err)
+	assert.NoError(t, proc.Signal(syscall.SIGINT)) // send the signal
+
+	<-executedCh // wait until server has been stopped
+
+	t.Log(output)
+
+	// next asserts is a very bed practice, but i have no idea how to test command execution better
+	assert.Contains(t, output, "Server starting")
+	assert.Contains(t, output, "Stopping by OS signal")
+	assert.Contains(t, output, "Server stopping")
+}
+
+func TestRunningUsingBusyPortFailing(t *testing.T) {
+	port, err := getRandomTCPPort(t)
+	assert.NoError(t, err)
+
+	// occupy a TCP port
+	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+	assert.NoError(t, err)
+	defer func() { assert.NoError(t, l.Close()) }()
+
+	// create command with valid flags to run
+	cmd := NewCommand(zap.NewNop())
+	cmd.SilenceUsage = true
+	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath})
+
+	executedCh := make(chan struct{})
+
+	// start HTTP server
+	go func(ch chan<- struct{}) {
+		defer close(ch)
+
+		err := cmd.Execute()
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "address already in use")
+
+		ch <- struct{}{}
+	}(executedCh)
+
+	<-executedCh // wait until server has been stopped
 }

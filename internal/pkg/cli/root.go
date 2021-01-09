@@ -27,9 +27,9 @@ func NewCommand(appName string) *cobra.Command {
 		PersistentPreRunE: func(*cobra.Command, []string) error {
 			_ = log.Sync() // sync previous logger instance
 
-			customizedLog, err := logger.New(verbose, debug, logJSON)
-			if err != nil {
-				return err
+			customizedLog, e := logger.New(verbose, debug, logJSON)
+			if e != nil {
+				return e
 			}
 
 			*log = *customizedLog // override "default" logger with customized
