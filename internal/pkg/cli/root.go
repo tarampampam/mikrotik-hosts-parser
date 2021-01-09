@@ -43,7 +43,7 @@ func NewCommand(appName string) *cobra.Command {
 			_ = log.Sync()
 		},
 		SilenceErrors: true,
-		SilenceUsage:  false,
+		SilenceUsage:  true,
 	}
 
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")

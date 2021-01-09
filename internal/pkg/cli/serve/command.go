@@ -128,6 +128,7 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 		oss         = breaker.NewOSSignals(ctx)                // OS signals listener
 	)
 
+	// subscribe for system signals
 	oss.Subscribe(func(sig os.Signal) {
 		log.Warn("Stopping by OS signal..", zap.String("signal", sig.String()))
 
@@ -139,15 +140,20 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 		oss.Stop() // stop system signals listening
 	}()
 
+	// create HTTP server
 	server := appHttp.NewServer(ctx, log, fmt.Sprintf("%s:%d", listen, port), resourcesDir, cfg)
 
+	// register server routes, middlewares, etc.
 	if err := server.Register(); err != nil {
 		return err
 	}
 
-	var startingErrCh = make(chan error)
+	startingErrCh := make(chan error, 1) // channel for server starting error
 
+	// start HTTP server in separate goroutine
 	go func(errCh chan<- error) {
+		defer close(errCh)
+
 		log.Info("Server starting",
 			zap.String("addr", listen),
 			zap.Uint16("port", port),
@@ -163,23 +169,23 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 		}
 	}(startingErrCh)
 
+	// and wait for..
 	select {
-	case <-ctx.Done(): // wait for context cancellation
-	case err := <-startingErrCh: // or server starting error
-		close(startingErrCh)
-		log.Error(err.Error())
+	case err := <-startingErrCh: // ..server starting error
 		cancel()
-	}
-
-	log.Debug("Server stopping")
-
-	ctxShutdown, ctxCancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer ctxCancelShutdown()
-
-	if err := server.Stop(ctxShutdown); err != nil {
 		return err
-	} else {
-		log.Info("Server stopped")
+
+	case <-ctx.Done(): // ..or context cancellation
+		log.Debug("Server stopping")
+
+		// create context for server graceful shutdown
+		ctxShutdown, ctxCancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
+		defer ctxCancelShutdown()
+
+		// and stop the server using created context above
+		if err := server.Stop(ctxShutdown); err != nil {
+			return err
+		}
 	}
 
 	return nil

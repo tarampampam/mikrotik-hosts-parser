@@ -1,14 +1,21 @@
 package serve
 
 import (
+	"bufio"
+	"bytes"
+	"net"
+	"os"
+	"path/filepath"
+	"strconv"
+	"syscall"
+	"testing"
+	"time"
+
 	"github.com/kami-zh/go-capturer"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
 	"go.uber.org/zap"
-	"os"
-	"path/filepath"
-	"testing"
+	"go.uber.org/zap/zapcore"
 )
 
 func TestProperties(t *testing.T) {
@@ -52,6 +59,96 @@ func TestFlags(t *testing.T) {
 
 const configFilePath = "../../../../configs/config.yml"
 
+func TestSuccessfulCommandRunning(t *testing.T) {
+	getRandomTCPPort := func() (int, error) {
+		t.Helper()
+
+		// zero port means randomly (os) chosen port
+		listener, err := net.Listen("tcp", ":0") //nolint:gosec
+		if err != nil {
+			return 0, err
+		}
+
+		port := listener.Addr().(*net.TCPAddr).Port
+
+		if err := listener.Close(); err != nil {
+			return 0, err
+		}
+
+		return port, nil
+	}
+
+	// create logger instance with output capturing
+	var (
+		logBuf  bytes.Buffer
+		encoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		writer  = bufio.NewWriter(&logBuf)
+		log     = zap.New(zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel))
+	)
+
+	// get TCP port number for a test
+	tcpPort, err := getRandomTCPPort()
+	assert.NoError(t, err)
+
+	// create command with valid flags to run
+	cmd := NewCommand(log)
+	cmd.SilenceUsage = true
+	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath})
+	var output string
+
+	executed := make(chan struct{})
+
+	// start HTTP server
+	go func() {
+		defer close(executed)
+
+		output = capturer.CaptureOutput(func() {
+			assert.NoError(t, cmd.Execute())
+		})
+
+		executed <- struct{}{}
+	}()
+
+	portBusy := make(chan struct{})
+
+	// check port "busy" (by HTTP server) state
+	go func() {
+		defer close(portBusy)
+
+		for i := 0; i < 3000; i++ {
+			listener, e := net.Listen("tcp", ":"+strconv.Itoa(tcpPort))
+			if e != nil {
+				portBusy <- struct{}{}
+				return
+			}
+			assert.NoError(t, listener.Close())
+			<-time.After(time.Millisecond)
+		}
+
+		t.Error("port opening timeout exceeded")
+	}()
+
+	<-portBusy // wait for server starting
+
+	// send OS signal for server stopping
+	proc, err := os.FindProcess(os.Getpid())
+	assert.NoError(t, err)
+	assert.NoError(t, proc.Signal(syscall.SIGINT)) // send the signal
+
+	<-executed // wait until server has been stopped
+
+	// flush the logger buffer
+	assert.NoError(t, writer.Flush())
+	logged := logBuf.String()
+
+	assert.Empty(t, output) // there is no output, all must be inside logger buffer
+
+	// log asserts is a very bed practice, but i have no idea how to test command execution better
+	assert.Contains(t, logged, "Server starting")
+	assert.Contains(t, logged, "Stopping by OS signal")
+	assert.Contains(t, logged, "Server stopping")
+}
+
 func TestSuccessfulFlagsPreparing(t *testing.T) {
 	cmd := NewCommand(zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
@@ -68,19 +165,6 @@ func TestSuccessfulFlagsPreparing(t *testing.T) {
 
 	assert.Empty(t, output)
 	assert.True(t, executed)
-}
-
-func TestSuccessfulCommandRunning(t *testing.T) {
-	log, _ := logger.New(true, true, false)
-
-	cmd := NewCommand(log)
-	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
-
-	//output := capturer.CaptureOutput(func() {
-		assert.NoError(t, cmd.Execute())
-	//})
-
-	//t.Log(output)
 }
 
 func TestListenFlagWrongArgument(t *testing.T) {

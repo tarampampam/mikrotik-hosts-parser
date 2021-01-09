@@ -125,6 +125,7 @@ the end
 `))
 
 	records, err := Parse(buf)
+	assert.NoError(t, err)
 
 	assert.Len(t, records, 9)
 
@@ -136,7 +137,5 @@ the end
 	assert.ElementsMatch(t, []string{"cloudflare"}, records[5].Hosts)
 	assert.ElementsMatch(t, []string{"example.com"}, records[6].Hosts)
 	assert.ElementsMatch(t, []string{"example.com"}, records[7].Hosts)
-	assert.ElementsMatch(t, []string{"xn--e1aybc.xn--p1ai"}, records[8].Hosts) // "тест.рф" must be encoded in `xn--e1aybc.xn--p1ai`
-
-	t.Log(records, err)
+	assert.ElementsMatch(t, []string{"xn--e1aybc.xn--p1ai"}, records[8].Hosts) // "тест.рф" must be encoded as `xn--e1aybc.xn--p1ai`
 }
