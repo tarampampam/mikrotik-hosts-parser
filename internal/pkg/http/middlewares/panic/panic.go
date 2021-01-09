@@ -17,7 +17,9 @@ type response struct {
 
 const statusCode = http.StatusInternalServerError
 
-func NewMiddleware(log *zap.Logger) mux.MiddlewareFunc {
+// New creates mux.MiddlewareFunc for panics (inside HTTP handlers) logging using "zap" package. Also it allows
+// to respond with JSON-formatted error string instead empty response.
+func New(log *zap.Logger) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {

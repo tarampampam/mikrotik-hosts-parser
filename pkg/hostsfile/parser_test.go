@@ -20,7 +20,9 @@ func BenchmarkParse(b *testing.B) { // 1851661	       567 ns/op	    4106 B/op	  
 	buf := bytes.NewBuffer(raw)
 
 	for n := 0; n < b.N; n++ {
-		_, _ = Parse(buf)
+		if _, e := Parse(buf); e != nil {
+			b.Fatal(e)
+		}
 	}
 }
 

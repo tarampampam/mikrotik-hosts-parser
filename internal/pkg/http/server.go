@@ -67,8 +67,8 @@ func (s *Server) Register() error {
 
 func (s *Server) registerGlobalMiddlewares() {
 	s.router.Use(
-		logreq.NewMiddleware(s.log),
-		panic.NewMiddleware(s.log),
+		logreq.New(s.log),
+		panic.New(s.log),
 	)
 }
 

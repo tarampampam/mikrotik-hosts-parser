@@ -4,48 +4,30 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMiddleware(t *testing.T) {
-	var handled = false
+	var (
+		req, _  = http.NewRequest("GET", "http://testing", nil)
+		rr      = httptest.NewRecorder()
+		handled bool
+	)
 
-	// create a handler to use as "next" which will verify the request
+	assert.Empty(t, rr.Header().Get("Cache-Control"))
+	assert.Empty(t, rr.Header().Get("Pragma"))
+	assert.Empty(t, rr.Header().Get("Expires"))
+
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if w.Header().Get("Cache-Control") != "no-cache, no-store, must-revalidate" {
-			t.Error("Wrong header `Cache-Control` value found")
-		}
-		if w.Header().Get("Pragma") != "no-cache" {
-			t.Error("Wrong header `Pragma` value found")
-		}
-		if w.Header().Get("Expires") != "0" {
-			t.Error("Wrong header `Expires` value found")
-		}
+		assert.Equal(t, "no-cache, no-store, must-revalidate", w.Header().Get("Cache-Control"))
+		assert.Equal(t, "no-cache", w.Header().Get("Pragma"))
+		assert.Equal(t, "0", w.Header().Get("Expires"))
 
 		handled = true
 	})
 
-	middlewareHandler := Middleware(nextHandler)
+	New().Middleware(nextHandler).ServeHTTP(rr, req)
 
-	var (
-		req, _ = http.NewRequest("GET", "http://testing", nil)
-		rr     = httptest.NewRecorder()
-	)
-
-	if rr.Header().Get("Cache-Control") != "" {
-		t.Error("Header `Cache-Control` must be empty before execution")
-	}
-
-	if rr.Header().Get("Pragma") != "" {
-		t.Error("Header `Pragma` must be empty before execution")
-	}
-
-	if rr.Header().Get("Expires") != "" {
-		t.Error("Header `Expires` must be empty before execution")
-	}
-
-	middlewareHandler.ServeHTTP(rr, req)
-
-	if handled != true {
-		t.Error("next handler was not executed")
-	}
+	assert.True(t, handled)
 }

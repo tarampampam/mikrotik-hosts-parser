@@ -1,6 +1,8 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/nocache"
@@ -10,7 +12,7 @@ import (
 func (s *Server) registerScriptGeneratorHandlers() {
 	s.router.
 		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandlerFunc(s.cfg)).
-		Methods("GET").
+		Methods(http.MethodGet).
 		Name("script_generator")
 }
 
@@ -20,21 +22,21 @@ func (s *Server) registerAPIHandlers() {
 		PathPrefix("/api").
 		Subrouter()
 
-	apiRouter.Use(nocache.Middleware)
+	apiRouter.Use(nocache.New())
 
 	apiRouter.
 		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.cfg)).
-		Methods("GET").
+		Methods(http.MethodGet).
 		Name("api_get_settings")
 
 	apiRouter.
 		HandleFunc("/version", api.GetVersionHandler).
-		Methods("GET").
+		Methods(http.MethodGet).
 		Name("api_get_version")
 
 	apiRouter.
 		HandleFunc("/routes", api.GetRoutesHandlerFunc(s.router)).
-		Methods("GET").
+		Methods(http.MethodGet).
 		Name("api_get_routes")
 }
 
@@ -52,6 +54,7 @@ func (s *Server) registerFileServerHandler(resourcesDir string) error {
 
 	s.router.
 		PathPrefix("/").
+		Methods(http.MethodGet, http.MethodHead).
 		Handler(fs).
 		Name("static")
 

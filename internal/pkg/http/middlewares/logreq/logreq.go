@@ -10,7 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewMiddleware(log *zap.Logger) mux.MiddlewareFunc {
+// New creates mux.MiddlewareFunc for HTTP requests logging using "zap" package.
+func New(log *zap.Logger) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			metrics := httpsnoop.CaptureMetrics(next, w, r)
@@ -18,6 +19,7 @@ func NewMiddleware(log *zap.Logger) mux.MiddlewareFunc {
 			log.Info("HTTP request processed",
 				zap.String("remote_addr", getRealClientAddress(r)),
 				zap.String("useragent", r.UserAgent()),
+				zap.String("method", r.Method),
 				zap.String("url", r.URL.String()),
 				zap.Int("status_code", metrics.Code),
 				zap.Int64("duration_micro", metrics.Duration.Microseconds()),

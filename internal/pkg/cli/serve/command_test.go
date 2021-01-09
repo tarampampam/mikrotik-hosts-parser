@@ -12,7 +12,6 @@ import (
 	"github.com/kami-zh/go-capturer"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -291,7 +290,7 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 
 		output = capturer.CaptureStderr(func() {
 			// create command with valid flags to run
-			log, _ := logger.New(true, false, false)
+			log, _ := zap.NewDevelopment()
 			cmd := NewCommand(log)
 			cmd.SilenceUsage = true
 			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath})
@@ -328,8 +327,6 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 	assert.NoError(t, proc.Signal(syscall.SIGINT)) // send the signal
 
 	<-executedCh // wait until server has been stopped
-
-	t.Log(output)
 
 	// next asserts is a very bed practice, but i have no idea how to test command execution better
 	assert.Contains(t, output, "Server starting")
