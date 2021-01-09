@@ -8,7 +8,7 @@ import (
 )
 
 func TestSubcommands(t *testing.T) {
-	cmd, _ := NewCommand("unit test")
+	cmd := NewCommand("unit test")
 
 	cases := []struct {
 		giveName string
@@ -26,20 +26,23 @@ func TestSubcommands(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.giveName, func(t *testing.T) {
 			if _, exists := subcommands[tt.giveName]; !exists {
-				assert.Failf(t, "command not found", "command %s was not found", tt.giveName)
+				assert.Failf(t, "command not found", "command [%s] was not found", tt.giveName)
 			}
 		})
 	}
 }
 
 func TestFlags(t *testing.T) {
-	cmd, _ := NewCommand("unit test")
+	cmd := NewCommand("unit test")
 
 	cases := []struct {
 		giveName      string
 		wantShorthand string
+		wantDefault   string
 	}{
-		{giveName: "verbose", wantShorthand: "v"},
+		{giveName: "verbose", wantShorthand: "v", wantDefault: "false"},
+		{giveName: "debug", wantShorthand: "", wantDefault: "false"},
+		{giveName: "log-json", wantShorthand: "", wantDefault: "false"},
 	}
 
 	for _, tt := range cases {
@@ -47,12 +50,28 @@ func TestFlags(t *testing.T) {
 			flag := cmd.Flag(tt.giveName)
 
 			if flag == nil {
-				assert.Failf(t, "flag not found", "flag %s was not found", tt.giveName)
+				assert.Failf(t, "flag not found", "flag [%s] was not found", tt.giveName)
 
 				return
 			}
 
 			assert.Equal(t, tt.wantShorthand, flag.Shorthand)
+			assert.Equal(t, tt.wantDefault, flag.DefValue)
 		})
 	}
+}
+
+func TestExecuting(t *testing.T) {
+	cmd := NewCommand("unit test")
+	cmd.SetArgs([]string{})
+	var executed bool
+
+	if cmd.Run == nil { // override "Run" property for test (if it was not set)
+		cmd.Run = func(cmd *cobra.Command, args []string) {
+			executed = true
+		}
+	}
+
+	assert.NoError(t, cmd.Execute())
+	assert.True(t, executed)
 }

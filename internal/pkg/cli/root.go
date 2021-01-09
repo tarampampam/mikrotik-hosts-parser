@@ -5,24 +5,35 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/serve"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/version"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
 )
 
 // NewCommand creates root command.
-func NewCommand(appName string) (cmd *cobra.Command, execErrHandler func(error)) {
+func NewCommand(appName string) *cobra.Command {
 	var (
 		verbose bool
 		debug   bool
 		logJSON bool
 	)
 
-	log, _ := zap.NewProduction() // important: logger should be used only inside (sub)command Run* actions
+	log, err := logger.New(false, false, false)
+	if err != nil {
+		panic(err)
+	}
 
-	cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use: appName,
-		PersistentPreRun: func(*cobra.Command, []string) {
-			*log = *createLogger(verbose, debug, logJSON) // override "default" logger with customized
+		PersistentPreRunE: func(*cobra.Command, []string) error {
+			_ = log.Sync() // sync previous logger instance
+
+			customizedLog, err := logger.New(verbose, debug, logJSON)
+			if err != nil {
+				return err
+			}
+
+			*log = *customizedLog // override "default" logger with customized
+
+			return nil
 		},
 		PersistentPostRun: func(*cobra.Command, []string) {
 			// error ignoring reasons:
@@ -31,7 +42,7 @@ func NewCommand(appName string) (cmd *cobra.Command, execErrHandler func(error))
 			_ = log.Sync()
 		},
 		SilenceErrors: true,
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 	}
 
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
@@ -43,46 +54,5 @@ func NewCommand(appName string) (cmd *cobra.Command, execErrHandler func(error))
 		serve.NewCommand(log),
 	)
 
-	cmd.FlagErrorFunc()
-
-	execErrHandler = func(err error) {
-		log.Fatal(err.Error()) // `os.Exit(1)` here
-	}
-
-	return cmd, execErrHandler
-}
-
-func createLogger(verbose, debug, logJSON bool) *zap.Logger {
-	var config zap.Config
-
-	if logJSON {
-		config = zap.NewProductionConfig()
-	} else {
-		config = zap.NewDevelopmentConfig()
-		config.EncoderConfig.EncodeLevel = zapcore.LowercaseColorLevelEncoder
-		config.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("15:04:05")
-	}
-
-	// default configuration for all encoders
-	config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
-	config.Development = false
-	config.DisableStacktrace = true
-	config.DisableCaller = true
-
-	if debug {
-		config.Development = true
-		config.DisableStacktrace = false
-		config.DisableCaller = false
-	}
-
-	if verbose || debug {
-		config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-	}
-
-	log, err := config.Build()
-	if err != nil {
-		panic(err)
-	}
-
-	return log
+	return cmd
 }

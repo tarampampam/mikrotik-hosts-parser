@@ -39,9 +39,9 @@ func (s *Server) registerAPIHandlers() {
 }
 
 // Register file server handler.
-func (s *Server) registerFileServerHandler() error {
+func (s *Server) registerFileServerHandler(resourcesDir string) error {
 	fs, err := fileserver.NewFileServer(fileserver.Settings{
-		FilesRoot:               s.resourcesDir,
+		FilesRoot:               resourcesDir,
 		IndexFileName:           "index.html",
 		ErrorFileName:           "__error__.html",
 		RedirectIndexFileToRoot: true,

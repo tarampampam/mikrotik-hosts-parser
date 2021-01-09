@@ -17,7 +17,7 @@ type (
 	Server struct {
 		ctx          context.Context
 		log          *zap.Logger
-		resourcesDir string
+		resourcesDir string // can be empty
 		cfg          *config.Config
 		srv          *http.Server
 		router       *mux.Router
@@ -29,9 +29,9 @@ func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string
 	var (
 		router     = *mux.NewRouter()
 		httpServer = &http.Server{
-			Addr:    listen,
-			Handler: &router,
-			//ErrorLog:     errLog, // TODO zap.NewStdLog
+			Addr:         listen,
+			Handler:      &router,
+			ErrorLog:     zap.NewStdLog(log),
 			WriteTimeout: time.Second * 15,
 			ReadTimeout:  time.Second * 15,
 		}
@@ -50,27 +50,44 @@ func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string
 // Start server.
 func (s *Server) Start() error { return s.srv.ListenAndServe() }
 
-func (s *Server) RegisterGlobalMiddlewares() {
-	s.router.Use(
-		logreq.NewMiddleware(s.log),
-		panic.NewMiddleware(s.log),
-	)
-}
+// Register server routes, middlewares, etc.
+func (s *Server) Register() error {
+	s.registerGlobalMiddlewares()
 
-// RegisterHandlers register server http handlers.
-func (s *Server) RegisterHandlers() error {
-	s.registerScriptGeneratorHandlers()
-	s.registerAPIHandlers()
+	if err := s.registerHandlers(); err != nil {
+		return err
+	}
 
-	if err := s.registerFileServerHandler(); err != nil {
+	if err := s.registerCustomMimeTypes(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// RegisterCustomMimeTypes registers custom mime types.
-func (*Server) RegisterCustomMimeTypes() error {
+func (s *Server) registerGlobalMiddlewares() {
+	s.router.Use(
+		logreq.NewMiddleware(s.log),
+		panic.NewMiddleware(s.log),
+	)
+}
+
+// registerHandlers register server http handlers.
+func (s *Server) registerHandlers() error {
+	s.registerScriptGeneratorHandlers()
+	s.registerAPIHandlers()
+
+	if s.resourcesDir != "" {
+		if err := s.registerFileServerHandler(s.resourcesDir); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// registerCustomMimeTypes registers custom mime types.
+func (*Server) registerCustomMimeTypes() error {
 	return mime.AddExtensionType(".vue", "text/html; charset=utf-8")
 }
 

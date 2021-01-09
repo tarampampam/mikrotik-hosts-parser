@@ -30,7 +30,7 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 	var (
 		listen       string
 		port         uint16
-		resourcesDir string
+		resourcesDir string // can be empty
 		configPath   string
 	)
 
@@ -65,8 +65,10 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 				return fmt.Errorf("wrong IP address [%s] for listening", listen)
 			}
 
-			if info, err := os.Stat(resourcesDir); err != nil || !info.Mode().IsDir() {
-				return fmt.Errorf("wrong resources directory [%s] path", resourcesDir)
+			if resourcesDir != "" {
+				if info, err := os.Stat(resourcesDir); err != nil || !info.Mode().IsDir() {
+					return fmt.Errorf("wrong resources directory [%s] path", resourcesDir)
+				}
 			}
 
 			if info, err := os.Stat(configPath); err != nil || !info.Mode().IsRegular() {
@@ -81,7 +83,7 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 				return err
 			}
 
-			return execute(log, listen, port, resourcesDir, cfg)
+			return run(log, listen, port, resourcesDir, cfg)
 		},
 	}
 
@@ -119,13 +121,8 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 	return cmd
 }
 
-func execute(
-	log *zap.Logger,
-	listen string,
-	port uint16,
-	resourcesDir string,
-	cfg *config.Config,
-) error {
+// run current command.
+func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *config.Config) error {
 	var (
 		ctx, cancel = context.WithCancel(context.Background()) // main context creation
 		oss         = breaker.NewOSSignals(ctx)                // OS signals listener
@@ -144,11 +141,7 @@ func execute(
 
 	server := appHttp.NewServer(ctx, log, fmt.Sprintf("%s:%d", listen, port), resourcesDir, cfg)
 
-	server.RegisterGlobalMiddlewares()
-	if err := server.RegisterHandlers(); err != nil {
-		return err
-	}
-	if err := server.RegisterCustomMimeTypes(); err != nil {
+	if err := server.Register(); err != nil {
 		return err
 	}
 
@@ -158,6 +151,10 @@ func execute(
 			zap.Uint16("port", port),
 			zap.String("resources", resourcesDir),
 		)
+
+		if resourcesDir == "" {
+			log.Warn("Resources directory was not provided")
+		}
 
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server cannot be started", zap.Error(err))
@@ -173,9 +170,9 @@ func execute(
 
 	if err := server.Stop(ctxShutdown); err != nil {
 		return err
+	} else {
+		log.Info("Server stopped")
 	}
-
-	log.Info("Server stopped")
 
 	return nil
 }

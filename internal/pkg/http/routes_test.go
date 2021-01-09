@@ -59,7 +59,7 @@ func TestServer_RegisterHandlers(t *testing.T) {
 		}
 	}
 
-	assert.NoError(t, s.RegisterHandlers())
+	assert.NoError(t, s.Register())
 
 	for _, testCase := range cases {
 		if route, _ := s.router.Get(testCase.name).GetPathTemplate(); route != testCase.route {
