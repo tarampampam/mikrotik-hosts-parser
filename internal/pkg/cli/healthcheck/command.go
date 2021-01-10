@@ -1,0 +1,49 @@
+package healthcheck
+
+import (
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/spf13/cobra"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/env"
+)
+
+type checker interface {
+	Check(port uint16) error
+}
+
+func NewCommand(checker checker) *cobra.Command {
+	var port uint16
+
+	cmd := &cobra.Command{
+		Use:     "healthcheck",
+		Aliases: []string{"chk", "health", "check"},
+		Short:   "Health checker for the http server. Use case - docker healthcheck.",
+		Hidden:  true,
+		PreRunE: func(*cobra.Command, []string) error {
+			if envPort, exists := os.LookupEnv(env.ListenPort); exists && envPort != "" {
+				if p, err := strconv.ParseUint(envPort, 10, 16); err == nil {
+					port = uint16(p)
+				} else {
+					return fmt.Errorf("wrong TCP port environment variable [%s] value (cannot be parsed)", envPort)
+				}
+			}
+
+			return nil
+		},
+		RunE: func(*cobra.Command, []string) error {
+			return checker.Check(port)
+		},
+	}
+
+	cmd.Flags().Uint16VarP(
+		&port,
+		"port",
+		"p",
+		8080,
+		fmt.Sprintf("TCP port number [$%s]", env.ListenPort),
+	)
+
+	return cmd
+}

@@ -14,15 +14,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/breaker"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/env"
 	appHttp "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http"
 	"go.uber.org/zap"
-)
-
-const (
-	envNameListen       string = "LISTEN_ADDR"
-	envNamePort         string = "LISTEN_PORT"
-	envNameResourcesDir string = "RESOURCES_DIR"
-	envNameConfigPath   string = "CONFIG_PATH"
 )
 
 // NewCommand creates `serve` command.
@@ -37,14 +31,14 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "serve",
 		Aliases: []string{"s", "server"},
-		Short:   "Start HTTP server",
+		Short:   "Start HTTP server.\n\nEnvironment variables have higher priority then flag values.",
 		PreRunE: func(*cobra.Command, []string) error {
 			// lookup for environment variables
-			if envListen, exists := os.LookupEnv(envNameListen); exists {
+			if envListen, exists := os.LookupEnv(env.ListenAddr); exists {
 				listen = envListen
 			}
 
-			if envPort, exists := os.LookupEnv(envNamePort); exists {
+			if envPort, exists := os.LookupEnv(env.ListenPort); exists {
 				if p, err := strconv.ParseUint(envPort, 10, 16); err == nil {
 					port = uint16(p)
 				} else {
@@ -52,11 +46,11 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 				}
 			}
 
-			if envResourcesDir, exists := os.LookupEnv(envNameResourcesDir); exists {
+			if envResourcesDir, exists := os.LookupEnv(env.ResourcesDir); exists {
 				resourcesDir = envResourcesDir
 			}
 
-			if envConfigPath, exists := os.LookupEnv(envNameConfigPath); exists {
+			if envConfigPath, exists := os.LookupEnv(env.ConfigPath); exists {
 				configPath = envConfigPath
 			}
 
@@ -94,28 +88,28 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 		"listen",
 		"l",
 		"0.0.0.0",
-		fmt.Sprintf("IP address to listen on [$%s]", envNameListen),
+		fmt.Sprintf("IP address to listen on [$%s]", env.ListenAddr),
 	)
 	cmd.Flags().Uint16VarP(
 		&port,
 		"port",
 		"p",
 		8080,
-		fmt.Sprintf("TCP port number [$%s]", envNamePort),
+		fmt.Sprintf("TCP port number [$%s]", env.ListenPort),
 	)
 	cmd.Flags().StringVarP(
 		&resourcesDir,
 		"resources-dir",
 		"r",
 		filepath.Join(wd, "web"),
-		fmt.Sprintf("path to the directory with public assets [$%s]", envNameResourcesDir),
+		fmt.Sprintf("path to the directory with public assets [$%s]", env.ResourcesDir),
 	)
 	cmd.Flags().StringVarP(
 		&configPath,
 		"config",
 		"c",
 		filepath.Join(wd, "configs", "config.yml"),
-		fmt.Sprintf("config file path [$%s]", envNameConfigPath),
+		fmt.Sprintf("config file path [$%s]", env.ConfigPath),
 	)
 
 	return cmd
@@ -136,7 +130,7 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 	})
 
 	defer func() {
-		cancel()   // call cancellation function after all (for context "leak" avoiding)
+		cancel()   // call the cancellation function after all
 		oss.Stop() // stop system signals listening
 	}()
 
@@ -172,7 +166,6 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 	// and wait for..
 	select {
 	case err := <-startingErrCh: // ..server starting error
-		cancel()
 		return err
 
 	case <-ctx.Done(): // ..or context cancellation

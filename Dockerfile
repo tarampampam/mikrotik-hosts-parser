@@ -63,6 +63,11 @@ COPY --from=builder /tmp/rootfs /
 # Use an unprivileged user
 USER appuser
 
+# Docs: <https://docs.docker.com/engine/reference/builder/#healthcheck>
+HEALTHCHECK --interval=15s --timeout=3s --start-period=1s CMD [ \
+    "/bin/mikrotik-hosts-parser", "healthcheck", "--port", "8080" \
+]
+
 ENTRYPOINT ["/bin/mikrotik-hosts-parser"]
 
 CMD [ \

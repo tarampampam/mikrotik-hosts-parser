@@ -3,6 +3,8 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/healthcheck"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/serve"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
@@ -53,6 +55,7 @@ func NewCommand(appName string) *cobra.Command {
 	cmd.AddCommand(
 		version.NewCommand(),
 		serve.NewCommand(log),
+		healthcheck.NewCommand(checkers.NewHealthChecker()),
 	)
 
 	return cmd
