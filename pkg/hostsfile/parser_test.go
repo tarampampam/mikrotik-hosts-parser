@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func BenchmarkParse(b *testing.B) { // 1851661	       567 ns/op	    4106 B/op	       1 allocs/op
+func BenchmarkParse(b *testing.B) {
 	b.ReportAllocs()
 
 	raw, err := ioutil.ReadFile("../../test/testdata/hosts/ad_servers.txt")

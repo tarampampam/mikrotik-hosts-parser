@@ -88,7 +88,8 @@ func TestServer_Register(t *testing.T) {
 		{name: "script_generator", route: "/script/source", methods: []string{http.MethodGet}},
 		{name: "api_get_settings", route: "/api/settings", methods: []string{http.MethodGet}},
 		{name: "api_get_version", route: "/api/version", methods: []string{http.MethodGet}},
-		{name: "api_get_routes", route: "/api/routes", methods: []string{http.MethodGet}},
+		{name: "ready", route: "/ready", methods: []string{http.MethodGet, http.MethodHead}},
+		{name: "live", route: "/live", methods: []string{http.MethodGet, http.MethodHead}},
 		{name: "static", route: "/", methods: []string{http.MethodGet, http.MethodHead}},
 	}
 

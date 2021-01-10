@@ -3,8 +3,13 @@ package http
 import (
 	"net/http"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/healthz"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
+	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/settings"
+	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/nocache"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
 )
@@ -16,7 +21,6 @@ func (s *Server) registerScriptGeneratorHandlers() {
 		Name("script_generator")
 }
 
-// Register API handlers.
 func (s *Server) registerAPIHandlers() {
 	apiRouter := s.router.
 		PathPrefix("/api").
@@ -25,22 +29,28 @@ func (s *Server) registerAPIHandlers() {
 	apiRouter.Use(nocache.New())
 
 	apiRouter.
-		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.cfg)).
+		HandleFunc("/settings", apiSettings.NewHandler(*s.cfg)).
 		Methods(http.MethodGet).
 		Name("api_get_settings")
 
 	apiRouter.
-		HandleFunc("/version", api.GetVersionHandler).
+		HandleFunc("/version", apiVersion.NewHandler(version.Version())).
 		Methods(http.MethodGet).
 		Name("api_get_version")
-
-	apiRouter.
-		HandleFunc("/routes", api.GetRoutesHandlerFunc(s.router)).
-		Methods(http.MethodGet).
-		Name("api_get_routes")
 }
 
-// Register file server handler.
+func (s *Server) registerServiceHandlers() {
+	s.router.
+		HandleFunc("/ready", healthz.NewHandler(checkers.NewReadyChecker())).
+		Methods(http.MethodGet, http.MethodHead).
+		Name("ready")
+
+	s.router.
+		HandleFunc("/live", healthz.NewHandler(checkers.NewLiveChecker())).
+		Methods(http.MethodGet, http.MethodHead).
+		Name("live")
+}
+
 func (s *Server) registerFileServerHandler(resourcesDir string) error {
 	fs, err := fileserver.NewFileServer(fileserver.Settings{
 		FilesRoot:               resourcesDir,

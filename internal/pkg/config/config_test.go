@@ -8,6 +8,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConfig_AddSource(t *testing.T) {
+	cfg := Config{}
+
+	assert.Len(t, cfg.Sources, 0)
+	cfg.AddSource("https://foo", "foo", "foo desc", true, 123)
+	assert.Len(t, cfg.Sources, 1)
+	assert.Equal(t, "https://foo", cfg.Sources[0].URI)
+	assert.Equal(t, "foo", cfg.Sources[0].Name)
+	assert.Equal(t, "foo desc", cfg.Sources[0].Description)
+	assert.True(t, cfg.Sources[0].EnabledByDefault)
+	assert.Equal(t, uint(123), cfg.Sources[0].RecordsCount)
+}
+
 func TestFromYaml(t *testing.T) {
 	var cases = []struct {
 		name          string

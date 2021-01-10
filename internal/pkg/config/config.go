@@ -8,45 +8,46 @@ import (
 )
 
 type Config struct {
-	Sources      []source     `yaml:"sources"`
-	Cache        cache        `yaml:"cache"`
-	RouterScript routerScript `yaml:"router_script"`
+	Sources []source `yaml:"sources"`
+
+	Cache struct {
+		File struct {
+			DirPath string `yaml:"dir"`
+		} `yaml:"files"`
+		LifetimeSec uint32 `yaml:"lifetime_sec"`
+	} `yaml:"cache"`
+
+	RouterScript struct {
+		Redirect struct {
+			Address string `yaml:"address"`
+		} `yaml:"redirect"`
+		Exclude struct {
+			Hosts []string `yaml:"hosts"`
+		} `yaml:"exclude"`
+		Comment            string `yaml:"comment"`
+		MaxSourcesCount    uint16 `yaml:"max_sources"`
+		MaxSourceSizeBytes uint32 `yaml:"max_source_size"`
+	} `yaml:"router_script"`
 }
 
-type (
-	source struct {
-		URI              string `yaml:"uri"`
-		Name             string `yaml:"name"`
-		Description      string `yaml:"description"`
-		EnabledByDefault bool   `yaml:"enabled"`
-		RecordsCount     uint   `yaml:"count"` // approximate quantity
-	}
+type source struct {
+	URI              string `yaml:"uri"`
+	Name             string `yaml:"name"`
+	Description      string `yaml:"description"`
+	EnabledByDefault bool   `yaml:"enabled"`
+	RecordsCount     uint   `yaml:"count"` // approximate quantity
+}
 
-	redirect struct {
-		Address string `yaml:"address"`
-	}
-
-	excludes struct {
-		Hosts []string `yaml:"hosts"`
-	}
-
-	cache struct {
-		File        cacheFiles `yaml:"files"`
-		LifetimeSec uint32     `yaml:"lifetime_sec"`
-	}
-
-	cacheFiles struct {
-		DirPath string `yaml:"dir"`
-	}
-
-	routerScript struct {
-		Redirect           redirect `yaml:"redirect"`
-		Exclude            excludes `yaml:"exclude"`
-		Comment            string   `yaml:"comment"`
-		MaxSourcesCount    uint16   `yaml:"max_sources"`
-		MaxSourceSizeBytes uint32   `yaml:"max_source_size"`
-	}
-)
+// AddSource into sources list.
+func (cfg *Config) AddSource(uri, name, description string, enabledByDefault bool, recordsCount uint) {
+	cfg.Sources = append(cfg.Sources, source{
+		URI:              uri,
+		Name:             name,
+		Description:      description,
+		EnabledByDefault: enabledByDefault,
+		RecordsCount:     recordsCount,
+	})
+}
 
 func (cfg *Config) FromYaml(in []byte, expandEnv bool) error {
 	if expandEnv {

@@ -76,6 +76,7 @@ func (s *Server) registerGlobalMiddlewares() {
 func (s *Server) registerHandlers() error {
 	s.registerScriptGeneratorHandlers()
 	s.registerAPIHandlers()
+	s.registerServiceHandlers()
 
 	if s.resourcesDir != "" {
 		if err := s.registerFileServerHandler(s.resourcesDir); err != nil {

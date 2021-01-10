@@ -219,7 +219,7 @@
                 format: 'routeros',
                 cacheLifetimeSec: NaN,
                 entriesComment: 'ADBlock',
-                scriptGeneratorPath: 'script/source',
+                scriptGeneratorPath: '/script/source',
                 useSsl: window.location.protocol === 'https:',
             }
         },
@@ -439,18 +439,16 @@
             axios
                 .all([
                     axios.request({method: 'get', url: '/api/version', timeout: 2000}),
-                    axios.request({method: 'get', url: '/api/routes', timeout: 2000}),
                     axios.request({method: 'get', url: '/api/settings', timeout: 2000}),
                 ])
                 .then(axios.spread(
                     /**
                      * @param {AxiosResponse} versionResponse
-                     * @param {AxiosResponse} routesResponse
                      * @param {AxiosResponse} settingsResponse
                      */
-                    function (versionResponse, routesResponse, settingsResponse) {
+                    function (versionResponse, settingsResponse) {
                         // Attach `hasOwnNestedProperty` function into each `*Response.data` object
-                        [versionResponse, routesResponse, settingsResponse].forEach(function (response) {
+                        [versionResponse, settingsResponse].forEach(function (response) {
                             // @link: <https://stackoverflow.com/a/33445095>
                             response.data.hasOwnNestedProperty = /** @param {string} path */ function (path) {
                                 if (typeof path !== "string" || path.length <= 0) {
@@ -518,10 +516,6 @@
 
                         if (versionResponse.data.hasOwnNestedProperty('version')) {
                             self.version = versionResponse.data.version;
-                        }
-
-                        if (routesResponse.data.hasOwnNestedProperty('script_generator.path')) {
-                            self.scriptGeneratorPath = routesResponse.data.script_generator.path;
                         }
                     }
                 ))
