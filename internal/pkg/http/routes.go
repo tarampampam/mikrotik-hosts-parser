@@ -4,19 +4,18 @@ import (
 	"net/http"
 
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/healthz"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
-
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
 	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/settings"
 	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/generate"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/healthz"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/nocache"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
 func (s *Server) registerScriptGeneratorHandlers() {
 	s.router.
-		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandlerFunc(s.cfg)).
+		HandleFunc("/script/source", generate.RouterOsScriptSourceGenerationHandlerFunc(s.cfg)).
 		Methods(http.MethodGet).
 		Name("script_generator")
 }

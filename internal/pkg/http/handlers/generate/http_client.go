@@ -1,4 +1,4 @@
-package script
+package generate
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package script
+package generate
 
 /*
 type roundTripFunc func(req *http.Request) *http.Response

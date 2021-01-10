@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetVersionHandler(t *testing.T) {
+func TestNewHandler(t *testing.T) {
 	var (
 		req, _ = http.NewRequest("GET", "http://testing", nil)
 		rr     = httptest.NewRecorder()
