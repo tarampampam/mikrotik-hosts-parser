@@ -28,6 +28,7 @@ func TestJSONErrorHandler(t *testing.T) {
 
 	fs, _ := NewFileServer(Settings{FilesRoot: tmpDir})
 	assert.NotNil(t, fs)
+
 	handler := JSONErrorHandler()
 
 	var (
@@ -39,6 +40,7 @@ func TestJSONErrorHandler(t *testing.T) {
 
 	req, _ = http.NewRequest(http.MethodGet, "", nil)
 	req.Header.Add("Accept", "application/json")
+
 	rr = httptest.NewRecorder()
 
 	assert.True(t, handler(rr, req, fs, http.StatusNotFound))
@@ -54,6 +56,7 @@ func TestStaticHtmlPageErrorHandler(t *testing.T) {
 		FilesRoot: tmpDir,
 	})
 	assert.NotNil(t, fs)
+
 	handler := StaticHTMLPageErrorHandler()
 
 	var (

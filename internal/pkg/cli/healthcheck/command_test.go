@@ -49,8 +49,10 @@ func TestPortFlagWrongArgument(t *testing.T) {
 	cmd.SetArgs([]string{"-p", "65536"}) // 65535 is max
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -69,11 +71,14 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 	cmd.SetArgs([]string{"-p", "8090"}) // `-p` flag must be ignored
 
 	assert.NoError(t, os.Setenv("LISTEN_PORT", "65536")) // 65535 is max
+
 	defer func() { assert.NoError(t, os.Unsetenv("LISTEN_PORT")) }()
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 

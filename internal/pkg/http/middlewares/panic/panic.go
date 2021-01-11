@@ -1,3 +1,4 @@
+// Package panic contains middleware for panics (inside HTTP handlers) logging using "zap" package.
 package panic
 
 import (
@@ -36,6 +37,7 @@ func New(log *zap.Logger) mux.MiddlewareFunc {
 						n := runtime.Stack(stackBuf, false)
 						if n < len(stackBuf) {
 							stackBuf = stackBuf[:n]
+
 							break
 						}
 

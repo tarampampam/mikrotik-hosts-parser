@@ -1,3 +1,4 @@
+// Package fileserver contains static files server implementation.
 package fileserver
 
 import (

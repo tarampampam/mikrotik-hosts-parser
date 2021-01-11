@@ -24,6 +24,7 @@ func TestSubcommands(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			if _, exists := subcommands[tt.giveName]; !exists {
 				assert.Failf(t, "command not found", "command [%s] was not found", tt.giveName)
@@ -46,6 +47,7 @@ func TestFlags(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			flag := cmd.Flag(tt.giveName)
 
@@ -64,6 +66,7 @@ func TestFlags(t *testing.T) {
 func TestExecuting(t *testing.T) {
 	cmd := NewCommand("unit test")
 	cmd.SetArgs([]string{})
+
 	var executed bool
 
 	if cmd.Run == nil { // override "Run" property for test (if it was not set)

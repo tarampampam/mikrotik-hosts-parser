@@ -2,6 +2,7 @@ package checkers
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -25,7 +26,7 @@ func TestHealthChecker_CheckSuccess(t *testing.T) {
 		}, nil
 	}
 
-	checker := NewHealthChecker(httpMock)
+	checker := NewHealthChecker(context.Background(), httpMock)
 
 	assert.NoError(t, checker.Check(123))
 }
@@ -38,7 +39,7 @@ func TestHealthChecker_CheckFail(t *testing.T) {
 		}, nil
 	}
 
-	checker := NewHealthChecker(httpMock)
+	checker := NewHealthChecker(context.Background(), httpMock)
 
 	err := checker.Check(123)
 	assert.Error(t, err)

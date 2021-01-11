@@ -1,3 +1,4 @@
+// Package logreq contains middleware for HTTP requests logging using "zap" package.
 package logreq
 
 import (
@@ -28,8 +29,8 @@ func New(log *zap.Logger) mux.MiddlewareFunc {
 	}
 }
 
-// we will trust following HTTP headers for the real ip extracting (priority low -> high)
-var trustHeaders = [...]string{"X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP"}
+// we will trust following HTTP headers for the real ip extracting (priority low -> high).
+var trustHeaders = [...]string{"X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP"} //nolint:gochecknoglobals
 
 // getRealClientAddress extracts real client IP address from request.
 func getRealClientAddress(r *http.Request) string {

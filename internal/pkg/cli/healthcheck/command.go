@@ -1,3 +1,4 @@
+// Package healthcheck contains CLI `healthcheck` command implementation.
 package healthcheck
 
 import (
@@ -13,6 +14,7 @@ type checker interface {
 	Check(port uint16) error
 }
 
+// NewCommand creates `healthcheck` command.
 func NewCommand(checker checker) *cobra.Command {
 	var port uint16
 

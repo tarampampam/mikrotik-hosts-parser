@@ -1,3 +1,4 @@
+// Package version contains version API handler.
 package version
 
 import (
@@ -5,6 +6,7 @@ import (
 	"net/http"
 )
 
+// NewHandler creates version handler.
 func NewHandler(ver string) http.HandlerFunc {
 	var cache []byte
 

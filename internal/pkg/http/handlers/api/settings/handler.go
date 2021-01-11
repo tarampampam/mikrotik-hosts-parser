@@ -1,3 +1,4 @@
+// Package settings contains API handler for application settings getting.
 package settings
 
 import (
@@ -37,6 +38,7 @@ type (
 	}
 )
 
+// NewHandler creates settings handler.
 func NewHandler(cfg config.Config) http.HandlerFunc { //nolint:gocritic
 	var cache []byte
 

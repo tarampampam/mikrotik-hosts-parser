@@ -2,7 +2,7 @@ package hostsfile
 
 import "net"
 
-// Hosts file record.
+// Record is a hosts file record.
 type Record struct {
 	IP    net.IP
 	Hosts []string

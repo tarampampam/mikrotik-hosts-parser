@@ -1,8 +1,9 @@
-// Package version contains CLI `serve` command implementation.
+// Package serve contains CLI `serve` command implementation.
 package serve
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -20,7 +21,7 @@ import (
 )
 
 // NewCommand creates `serve` command.
-func NewCommand(log *zap.Logger) *cobra.Command {
+func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command { //nolint:funlen
 	var (
 		listen       string
 		port         uint16
@@ -77,7 +78,7 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 				return err
 			}
 
-			return run(log, listen, port, resourcesDir, cfg)
+			return run(ctx, log, listen, port, resourcesDir, cfg)
 		},
 	}
 
@@ -115,11 +116,20 @@ func NewCommand(log *zap.Logger) *cobra.Command {
 	return cmd
 }
 
+const serverShutdownTimeout = 5 * time.Second
+
 // run current command.
-func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *config.Config) error {
+func run( //nolint:funlen
+	parentCtx context.Context,
+	log *zap.Logger,
+	listen string,
+	port uint16,
+	resourcesDir string,
+	cfg *config.Config,
+) error {
 	var (
-		ctx, cancel = context.WithCancel(context.Background()) // main context creation
-		oss         = breaker.NewOSSignals(ctx)                // OS signals listener
+		ctx, cancel = context.WithCancel(parentCtx) // serve context creation
+		oss         = breaker.NewOSSignals(ctx)     // OS signals listener
 	)
 
 	// subscribe for system signals
@@ -158,7 +168,7 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 			log.Warn("Resources directory was not provided")
 		}
 
-		if err := server.Start(); err != nil && err != http.ErrServerClosed {
+		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
 	}(startingErrCh)
@@ -172,7 +182,7 @@ func run(log *zap.Logger, listen string, port uint16, resourcesDir string, cfg *
 		log.Debug("Server stopping")
 
 		// create context for server graceful shutdown
-		ctxShutdown, ctxCancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
+		ctxShutdown, ctxCancelShutdown := context.WithTimeout(context.Background(), serverShutdownTimeout)
 		defer ctxCancelShutdown()
 
 		// and stop the server using created context above

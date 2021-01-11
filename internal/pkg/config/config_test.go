@@ -22,7 +22,7 @@ func TestConfig_AddSource(t *testing.T) {
 }
 
 func TestFromYaml(t *testing.T) {
-	var cases = []struct {
+	var cases = []struct { //nolint:maligned
 		name          string
 		giveYaml      []byte
 		giveExpandEnv bool
@@ -148,6 +148,7 @@ router_script:
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.giveEnv != nil {
 				for key, value := range tt.giveEnv {
@@ -204,6 +205,7 @@ router_script:
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			file, err := ioutil.TempFile("", "unit-test-")
 			assert.NoError(t, err)

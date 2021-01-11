@@ -26,6 +26,7 @@ func TestMiddleware(t *testing.T) {
 			}),
 			giveRequest: func() *http.Request {
 				rq, _ := http.NewRequest(http.MethodGet, "http://testing/foo/bar", nil)
+
 				return rq
 			},
 			checkResult: func(t *testing.T, in map[string]interface{}, rr *httptest.ResponseRecorder) {
@@ -55,6 +56,7 @@ func TestMiddleware(t *testing.T) {
 			}),
 			giveRequest: func() *http.Request {
 				rq, _ := http.NewRequest(http.MethodGet, "http://testing/foo/bar", nil)
+
 				return rq
 			},
 			checkResult: func(t *testing.T, in map[string]interface{}, rr *httptest.ResponseRecorder) {
@@ -64,6 +66,7 @@ func TestMiddleware(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			var rr = httptest.NewRecorder()
 

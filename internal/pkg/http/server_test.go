@@ -100,6 +100,7 @@ func TestServer_Register(t *testing.T) {
 	types, err := mime.ExtensionsByType("text/html; charset=utf-8")
 	assert.NoError(t, err)
 	assert.NotContains(t, types, ".vue") // mime types registration can be executed only once
+
 	for _, r := range routes {
 		assert.Nil(t, router.Get(r.name))
 	}
@@ -110,6 +111,7 @@ func TestServer_Register(t *testing.T) {
 	// state *after* registration
 	types, _ = mime.ExtensionsByType("text/html; charset=utf-8") // reload
 	assert.Contains(t, types, ".vue")
+
 	for _, r := range routes {
 		route, _ := router.Get(r.name).GetPathTemplate()
 		assert.Equal(t, r.route, route)

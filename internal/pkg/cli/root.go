@@ -2,12 +2,15 @@
 package cli
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/healthcheck"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/serve"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/version"
+	healthcheckCmd "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/healthcheck"
+	serveCmd "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/serve"
+	versionCmd "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
 // NewCommand creates root command.
@@ -17,6 +20,8 @@ func NewCommand(appName string) *cobra.Command {
 		debug   bool
 		logJSON bool
 	)
+
+	ctx := context.Background() // main CLI context
 
 	// create "default" logger (will be overwritten later with customized)
 	log, err := logger.New(false, false, false)
@@ -53,9 +58,9 @@ func NewCommand(appName string) *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&logJSON, "log-json", "", false, "logs in JSON format")
 
 	cmd.AddCommand(
-		version.NewCommand(),
-		serve.NewCommand(log),
-		healthcheck.NewCommand(checkers.NewHealthChecker()),
+		versionCmd.NewCommand(version.Version()),
+		serveCmd.NewCommand(ctx, log),
+		healthcheckCmd.NewCommand(checkers.NewHealthChecker(ctx)),
 	)
 
 	return cmd

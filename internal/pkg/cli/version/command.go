@@ -6,19 +6,17 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
-
 	"github.com/spf13/cobra"
 )
 
 // NewCommand creates `version` command.
-func NewCommand() *cobra.Command {
+func NewCommand(ver string) *cobra.Command {
 	return &cobra.Command{
 		Use:     "version",
 		Aliases: []string{"v", "ver"},
 		Short:   "Display application version",
 		RunE: func(*cobra.Command, []string) (err error) {
-			_, err = fmt.Fprintf(os.Stdout, "app version:\t%s (%s)\n", version.Version(), runtime.Version())
+			_, err = fmt.Fprintf(os.Stdout, "app version:\t%s (%s)\n", ver, runtime.Version())
 
 			return
 		},

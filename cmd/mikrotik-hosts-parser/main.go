@@ -10,7 +10,7 @@ import (
 )
 
 // exitFn is a function for application exiting.
-var exitFn = os.Exit
+var exitFn = os.Exit //nolint:gochecknoglobals
 
 // main CLI application entrypoint.
 func main() { exitFn(run()) }

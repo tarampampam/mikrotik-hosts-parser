@@ -1,5 +1,6 @@
 package mikrotik
 
+// DNSStaticEntry is static DNS entry for RouterOS usage.
 type DNSStaticEntry struct {
 	Address  string // IP address (net.IP is not used for allocation avoiding reasons (to string), eg.: 0.0.0.0)
 	Comment  string // Short description of the item (eg.: Any text)
@@ -12,7 +13,8 @@ type DNSStaticEntry struct {
 // Format entry as a text in RouterOS script format.
 // Important: keep im mind that any unexpected characters will be formatted as-is (without escaping or filtering).
 func (s *DNSStaticEntry) Format(prefix, postfix string) ([]byte, error) {
-	buf := make([]byte, 0, len(s.Address)+len(s.Comment)+len(s.Name)+len(s.Regexp)+len(s.TTL)+96)
+	const overSize = 96 // pre-allocation reserve
+	buf := make([]byte, 0, len(s.Address)+len(s.Comment)+len(s.Name)+len(s.Regexp)+len(s.TTL)+overSize)
 	err := s.format(&buf, prefix, postfix)
 
 	return buf, err

@@ -33,11 +33,11 @@ func Parse(in io.Reader) ([]Record, error) {
 	return result, nil
 }
 
-// parseRawLine converts raw hosts file line into Record. nil can be returned without an error (line is empty or
+// parseRawLine converts raw hosts file line into Record. Nil can be returned without an error (line is empty or
 // comment).
 // Line format: `IP_address hostname [host_alias]... #some comment`).
 func parseRawLine(line string) (*Record, error) {
-	if len(line) <= 5 {
+	if len(line) <= 5 { //nolint:gomnd
 		return nil, errors.New("line is too short")
 	}
 
@@ -48,7 +48,7 @@ func parseRawLine(line string) (*Record, error) {
 
 	words := strings.Fields(line)
 
-	if len(words) < 2 {
+	if len(words) < 2 { //nolint:gomnd
 		return nil, errors.New("wrong line format")
 	}
 

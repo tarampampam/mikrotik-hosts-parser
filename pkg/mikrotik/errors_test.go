@@ -26,6 +26,7 @@ func TestConstErr_Error(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.giveConst.Error(); tt.wantString != got {
 				t.Errorf(`want: "%s", got: "%s"`, tt.wantString, got)

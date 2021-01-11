@@ -1,3 +1,4 @@
+// Package nocache contains middleware for HTTP response caching disabling.
 package nocache
 
 import (

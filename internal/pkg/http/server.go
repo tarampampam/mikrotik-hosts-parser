@@ -1,3 +1,4 @@
+// Package http contains HTTP server and all required stuff for HTTP server working.
 package http
 
 import (
@@ -14,6 +15,7 @@ import (
 )
 
 type (
+	// Server is HTTP server.
 	Server struct {
 		ctx          context.Context
 		log          *zap.Logger
@@ -24,6 +26,11 @@ type (
 	}
 )
 
+const (
+	defaultWriteTimeout = time.Second * 15
+	defaultReadTimeout  = time.Second * 15
+)
+
 // NewServer creates new server instance.
 func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string, cfg *config.Config) Server {
 	var (
@@ -32,8 +39,8 @@ func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string
 			Addr:         listen,
 			Handler:      &router,
 			ErrorLog:     zap.NewStdLog(log),
-			WriteTimeout: time.Second * 15,
-			ReadTimeout:  time.Second * 15,
+			WriteTimeout: defaultWriteTimeout,
+			ReadTimeout:  defaultReadTimeout,
 		}
 	)
 

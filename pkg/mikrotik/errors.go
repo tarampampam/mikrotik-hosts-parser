@@ -1,6 +1,6 @@
 package mikrotik
 
-// Special type for package-specific errors.
+// Error is a special type for package-specific errors.
 type Error uint8
 
 // Error returns error in a string representation.
@@ -14,7 +14,5 @@ func (err Error) Error() string {
 	}
 }
 
-// Package-specific error constants.
-const (
-	ErrEmptyFields Error = iota + 1 // required fields does not filled
-)
+// ErrEmptyFields means required fields does not filled.
+const ErrEmptyFields Error = 1

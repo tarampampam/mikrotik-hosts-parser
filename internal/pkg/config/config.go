@@ -1,3 +1,4 @@
+// Package config contains application configuration struct with the most useful functions.
 package config
 
 import (
@@ -7,6 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config is main application configuration.
 type Config struct {
 	Sources []source `yaml:"sources"`
 
@@ -49,6 +51,7 @@ func (cfg *Config) AddSource(uri, name, description string, enabledByDefault boo
 	})
 }
 
+// FromYaml configures itself using YAML content.
 func (cfg *Config) FromYaml(in []byte, expandEnv bool) error {
 	if expandEnv {
 		parsed, err := envsubst.Bytes(in)

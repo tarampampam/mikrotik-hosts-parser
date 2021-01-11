@@ -8,11 +8,13 @@ import (
 	"syscall"
 )
 
+// OSSignals allows to subscribe for system signals.
 type OSSignals struct {
 	ctx context.Context
 	ch  chan os.Signal
 }
 
+// NewOSSignals creates new subscriber for system signals.
 func NewOSSignals(ctx context.Context) OSSignals {
 	return OSSignals{
 		ctx: ctx,

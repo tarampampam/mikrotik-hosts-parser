@@ -9,7 +9,7 @@ import (
 )
 
 func TestProperties(t *testing.T) {
-	cmd := NewCommand()
+	cmd := NewCommand("")
 
 	assert.Equal(t, "version", cmd.Use)
 	assert.ElementsMatch(t, []string{"v", "ver"}, cmd.Aliases)
@@ -17,13 +17,13 @@ func TestProperties(t *testing.T) {
 }
 
 func TestCommandRun(t *testing.T) {
-	cmd := NewCommand()
+	cmd := NewCommand("1.2.3@foobar")
 	cmd.SetArgs([]string{})
 
 	output := capturer.CaptureStdout(func() {
 		assert.NoError(t, cmd.Execute())
 	})
 
-	assert.Contains(t, output, "0.0.0@undefined")
+	assert.Contains(t, output, "1.2.3@foobar")
 	assert.Contains(t, output, runtime.Version())
 }

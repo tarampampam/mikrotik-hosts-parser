@@ -1,3 +1,4 @@
+// Package healthz contains healthcheck handler.
 package healthz
 
 import (
@@ -10,6 +11,7 @@ type checker interface {
 	Check() error
 }
 
+// NewHandler creates healthcheck handler.
 func NewHandler(checker checker) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		if err := checker.Check(); err != nil {

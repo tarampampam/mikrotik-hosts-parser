@@ -12,7 +12,7 @@ import (
 )
 
 // ErrorPageTemplate  is error page template in string representation. Is allowed to use basic "replacing patterns"
-// like `{{ code }}` or `{{ message }}`
+// like `{{ code }}` or `{{ message }}`.
 type ErrorPageTemplate string
 
 // String converts template into string representation.

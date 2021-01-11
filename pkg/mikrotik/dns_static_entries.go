@@ -2,8 +2,10 @@ package mikrotik
 
 import "io"
 
+// DNSStaticEntries is static DNS entries set.
 type DNSStaticEntries []DNSStaticEntry
 
+// RenderingOptions describes options for rendering.
 type RenderingOptions struct {
 	Prefix, Postfix string
 }

@@ -83,7 +83,7 @@ func TestDNSStaticEntries_Render(t *testing.T) {
 				Prefix:  "foo",
 				Postfix: "bar",
 			},
-			wantResult: "foo address=0.0.0.0 disabled=no name=\"foo.com\" bar\nfoo address=8.8.8.8 disabled=no name=\"bar.com\" bar",
+			wantResult: "foo address=0.0.0.0 disabled=no name=\"foo.com\" bar\nfoo address=8.8.8.8 disabled=no name=\"bar.com\" bar", //nolint:lll
 		},
 		{
 			name: "entry with all fields",
@@ -95,7 +95,7 @@ func TestDNSStaticEntries_Render(t *testing.T) {
 				Regexp:   `.*\.example\.com`,
 				TTL:      "1d",
 			}},
-			wantResult: `address=1.2.3.4 comment="foo comment" disabled=yes name="Bar name" regexp=".*\.example\.com" ttl="1d"`,
+			wantResult: `address=1.2.3.4 comment="foo comment" disabled=yes name="Bar name" regexp=".*\.example\.com" ttl="1d"`, //nolint:lll
 		},
 		{
 			name: "regular use-case with address, name and comment",
@@ -114,6 +114,7 @@ func TestDNSStaticEntries_Render(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			l, err := tt.giveEntries.Render(&buf, tt.giveOptions)

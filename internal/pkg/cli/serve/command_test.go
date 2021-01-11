@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"context"
 	"net"
 	"os"
 	"path/filepath"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestProperties(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 
 	assert.Equal(t, "serve", cmd.Use)
 	assert.ElementsMatch(t, []string{"s", "server"}, cmd.Aliases)
@@ -24,7 +25,7 @@ func TestProperties(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	wd, _ := os.Getwd()
 
 	cases := []struct {
@@ -39,6 +40,7 @@ func TestFlags(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			flag := cmd.Flag(tt.giveName)
 
@@ -57,12 +59,14 @@ func TestFlags(t *testing.T) {
 const configFilePath = "../../../../configs/config.yml"
 
 func TestSuccessfulFlagsPreparing(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -75,12 +79,14 @@ func TestSuccessfulFlagsPreparing(t *testing.T) {
 }
 
 func TestListenFlagWrongArgument(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "-l", "256.256.256.256"}) // 255 is max
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -94,15 +100,18 @@ func TestListenFlagWrongArgument(t *testing.T) {
 }
 
 func TestListenFlagWrongEnvValue(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "-l", "0.0.0.0"}) // `-l` flag must be ignored
 
 	assert.NoError(t, os.Setenv("LISTEN_ADDR", "256.256.256.256")) // 255 is max
+
 	defer func() { assert.NoError(t, os.Unsetenv("LISTEN_ADDR")) }()
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -116,12 +125,14 @@ func TestListenFlagWrongEnvValue(t *testing.T) {
 }
 
 func TestPortFlagWrongArgument(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "-p", "65536"}) // 65535 is max
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -136,15 +147,18 @@ func TestPortFlagWrongArgument(t *testing.T) {
 }
 
 func TestPortFlagWrongEnvValue(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "-p", "8090"}) // `-p` flag must be ignored
 
 	assert.NoError(t, os.Setenv("LISTEN_PORT", "65536")) // 65535 is max
+
 	defer func() { assert.NoError(t, os.Unsetenv("LISTEN_PORT")) }()
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -160,12 +174,14 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 }
 
 func TestResourcesDirFlagWrongArgument(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "/tmp/nonexistent/bar/baz", "-c", configFilePath})
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -179,15 +195,18 @@ func TestResourcesDirFlagWrongArgument(t *testing.T) {
 }
 
 func TestResourcesDirFlagWrongEnvValue(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-c", configFilePath, "-r", "."}) // `-r` flag must be ignored
 
 	assert.NoError(t, os.Setenv("RESOURCES_DIR", "/tmp/nonexistent/bar/baz"))
+
 	defer func() { assert.NoError(t, os.Unsetenv("RESOURCES_DIR")) }()
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -201,12 +220,14 @@ func TestResourcesDirFlagWrongEnvValue(t *testing.T) {
 }
 
 func TestConfigFlagWrongArgument(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", "/tmp/nonexistent/bar.baz"})
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -221,15 +242,18 @@ func TestConfigFlagWrongArgument(t *testing.T) {
 }
 
 func TestConfigFlagWrongEnvValue(t *testing.T) {
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SetArgs([]string{"-r", "", "-c", configFilePath}) // `-c` flag must be ignored
 
 	assert.NoError(t, os.Setenv("CONFIG_PATH", "/tmp/nonexistent/bar.baz"))
+
 	defer func() { assert.NoError(t, os.Unsetenv("CONFIG_PATH")) }()
 
 	var executed bool
+
 	cmd.RunE = func(*cobra.Command, []string) error {
 		executed = true
+
 		return nil
 	}
 
@@ -291,7 +315,7 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 		output = capturer.CaptureStderr(func() {
 			// create command with valid flags to run
 			log, _ := zap.NewDevelopment()
-			cmd := NewCommand(log)
+			cmd := NewCommand(context.Background(), log)
 			cmd.SilenceUsage = true
 			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath})
 
@@ -310,6 +334,7 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 		for i := 0; i < 2000; i++ {
 			if checkTCPPortIsBusy(t, tcpPort) {
 				ch <- struct{}{}
+
 				return
 			}
 
@@ -341,10 +366,11 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	// occupy a TCP port
 	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	assert.NoError(t, err)
+
 	defer func() { assert.NoError(t, l.Close()) }()
 
 	// create command with valid flags to run
-	cmd := NewCommand(zap.NewNop())
+	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SilenceUsage = true
 	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath})
 

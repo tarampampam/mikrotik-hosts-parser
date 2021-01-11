@@ -27,6 +27,8 @@ func BenchmarkParse(b *testing.B) {
 }
 
 func TestParseUsingHostsFileContent(t *testing.T) {
+	t.Parallel()
+
 	var cases = []struct {
 		giveFilePath  string
 		wantRecords   int
@@ -139,5 +141,6 @@ the end
 	assert.ElementsMatch(t, []string{"cloudflare"}, records[5].Hosts)
 	assert.ElementsMatch(t, []string{"example.com"}, records[6].Hosts)
 	assert.ElementsMatch(t, []string{"example.com"}, records[7].Hosts)
-	assert.ElementsMatch(t, []string{"xn--e1aybc.xn--p1ai"}, records[8].Hosts) // "тест.рф" must be encoded as `xn--e1aybc.xn--p1ai`
+	// "тест.рф" must be encoded as `xn--e1aybc.xn--p1ai`
+	assert.ElementsMatch(t, []string{"xn--e1aybc.xn--p1ai"}, records[8].Hosts)
 }

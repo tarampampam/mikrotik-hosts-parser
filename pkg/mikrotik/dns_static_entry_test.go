@@ -44,7 +44,7 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 			},
 			givePrefix:  "foo",
 			givePostfix: "bar",
-			wantString:  `foo address=0.0.0.0 comment="Any text" disabled=yes name="www.example.com" regexp=".*\.example\.com" ttl="1d" bar`,
+			wantString:  `foo address=0.0.0.0 comment="Any text" disabled=yes name="www.example.com" regexp=".*\.example\.com" ttl="1d" bar`, //nolint:lll
 		},
 		{
 			name: "minimal usage",
@@ -63,7 +63,7 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 				Regexp:  `.*\.example\.com`,
 				TTL:     "1\\d",
 			},
-			wantString: `address=127.0.0.1 comment="Any\ text" disabled=no name="www.example\.com" regexp=".*\.example\.com" ttl="1\d"`,
+			wantString: `address=127.0.0.1 comment="Any\ text" disabled=no name="www.example\.com" regexp=".*\.example\.com" ttl="1\d"`, //nolint:lll
 		},
 		{
 			name:       "empty",
@@ -97,6 +97,7 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := tt.giveEntry.Format(tt.givePrefix, tt.givePostfix)
 

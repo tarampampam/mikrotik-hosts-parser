@@ -1,3 +1,4 @@
+// Package logger contains functions for a working with application logging.
 package logger
 
 import (
@@ -5,6 +6,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// New creates new "zap" logger with little customization.
 func New(verbose, debug, logJSON bool) (*zap.Logger, error) {
 	var config zap.Config
 
