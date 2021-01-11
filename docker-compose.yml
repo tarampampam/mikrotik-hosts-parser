@@ -2,6 +2,7 @@ version: '3.4'
 
 volumes:
   tmp-data:
+  redis-data:
   golint-cache:
 
 x-app: &app-service # application service template
@@ -25,6 +26,15 @@ services:
     ports:
       - '8080:8080/tcp' # Open <http://127.0.0.1:8080>
     command: go run ./cmd/mikrotik-hosts-parser serve --config ./configs/config.yml --resources-dir ./web
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:6.0.9-alpine # Image page: <https://hub.docker.com/_/redis>
+    volumes:
+      - redis-data:/data:cached
+    ports:
+      - 6379
 
   golint:
     image: golangci/golangci-lint:v1.33-alpine # Image page: <https://hub.docker.com/r/golangci/golangci-lint>
