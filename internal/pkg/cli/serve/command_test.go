@@ -2,6 +2,7 @@ package serve
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/kami-zh/go-capturer"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -61,7 +62,7 @@ const configFilePath = "../../../../configs/config.yml"
 
 func TestSuccessfulFlagsPreparing(t *testing.T) {
 	cmd := NewCommand(context.Background(), zap.NewNop())
-	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "--redis-host", "some-redis"})
+	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
 
 	var executed bool
 
@@ -151,7 +152,7 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 	cmd := NewCommand(context.Background(), zap.NewNop())
 
 	// `-p` flag must be ignored
-	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "--redis-host", "some-redis", "-p", "8090"})
+	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "-p", "8090"})
 
 	assert.NoError(t, os.Setenv("LISTEN_PORT", "65536")) // 65535 is max
 
@@ -325,7 +326,7 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 			log, _ := zap.NewDevelopment()
 			cmd := NewCommand(context.Background(), log)
 			cmd.SilenceUsage = true
-			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath, "--redis-host", "127.0.0.1", "--redis-port", mini.Port()}) //nolint:lll
+			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath, "--redis-dsn", fmt.Sprintf("redis://127.0.0.1:%s/0", mini.Port())}) //nolint:lll
 
 			assert.NoError(t, cmd.Execute())
 		})
@@ -386,7 +387,7 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	// create command with valid flags to run
 	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SilenceUsage = true
-	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath, "--redis-host", "127.0.0.1", "--redis-port", mini.Port()}) //nolint:lll
+	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath, "--redis-dsn", fmt.Sprintf("redis://127.0.0.1:%s/0", mini.Port())}) //nolint:lll
 
 	executedCh := make(chan struct{})
 

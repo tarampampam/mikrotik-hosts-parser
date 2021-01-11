@@ -27,7 +27,7 @@ func NewCommand(checker checker) *cobra.Command {
 				if p, err := strconv.ParseUint(envPort, 10, 16); err == nil {
 					port = uint16(p)
 				} else {
-					return fmt.Errorf("wrong TCP port environment variable [%s] value (cannot be parsed)", envPort)
+					return fmt.Errorf("wrong TCP port environment variable [%s] value", envPort)
 				}
 			}
 

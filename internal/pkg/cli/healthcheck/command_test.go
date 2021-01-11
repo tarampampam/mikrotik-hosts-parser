@@ -89,6 +89,5 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 	assert.Contains(t, output, "wrong TCP port")
 	assert.Contains(t, output, "environment variable")
 	assert.Contains(t, output, "65536")
-	assert.Contains(t, output, "cannot be parsed")
 	assert.False(t, executed)
 }

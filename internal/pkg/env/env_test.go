@@ -12,12 +12,7 @@ func TestConstants(t *testing.T) {
 	assert.Equal(t, "LISTEN_PORT", string(ListenPort))
 	assert.Equal(t, "RESOURCES_DIR", string(ResourcesDir))
 	assert.Equal(t, "CONFIG_PATH", string(ConfigPath))
-
-	assert.Equal(t, "REDIS_HOST", string(RedisHost))
-	assert.Equal(t, "REDIS_PORT", string(RedisPort))
-	assert.Equal(t, "REDIS_PASSWORD", string(RedisPassword))
-	assert.Equal(t, "REDIS_DB_NUM", string(RedisDBNum))
-	assert.Equal(t, "REDIS_MAX_CONN", string(RedisMaxConn))
+	assert.Equal(t, "REDIS_DSN", string(RedisDSN))
 }
 
 func TestEnvVariable_Lookup(t *testing.T) {
@@ -28,12 +23,7 @@ func TestEnvVariable_Lookup(t *testing.T) {
 		{giveEnv: ListenPort},
 		{giveEnv: ResourcesDir},
 		{giveEnv: ConfigPath},
-
-		{giveEnv: RedisHost},
-		{giveEnv: RedisPort},
-		{giveEnv: RedisPassword},
-		{giveEnv: RedisDBNum},
-		{giveEnv: RedisMaxConn},
+		{giveEnv: RedisDSN},
 	}
 
 	for _, tt := range cases {

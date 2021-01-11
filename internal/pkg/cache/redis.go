@@ -29,7 +29,7 @@ func (r *RedisCache) key(s string) string {
 	return "cache:" + hex.EncodeToString(h[:])
 }
 
-// Get retrieves value for the key with passed name from the storage.
+// Get retrieves value for the key from the storage.
 func (r *RedisCache) Get(key string) (found bool, data []byte, ttl time.Duration, err error) {
 	if key == "" {
 		err = ErrEmptyKey
@@ -58,7 +58,7 @@ func (r *RedisCache) Get(key string) (found bool, data []byte, ttl time.Duration
 	return // all is ok
 }
 
-// Put value into the cache with optional expiring time.
+// Put value into the storage.
 func (r *RedisCache) Put(key string, data []byte) error {
 	if key == "" {
 		return ErrEmptyKey
@@ -69,7 +69,7 @@ func (r *RedisCache) Put(key string, data []byte) error {
 	return r.redis.Set(r.ctx, r.key(key), data, r.ttl).Err()
 }
 
-// Delete removes value from the storage with passed key.
+// Delete value from the storage with passed key.
 func (r *RedisCache) Delete(key string) (bool, error) {
 	if key == "" {
 		return false, ErrEmptyKey
