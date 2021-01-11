@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis"
 	"github.com/kami-zh/go-capturer"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -60,7 +61,7 @@ const configFilePath = "../../../../configs/config.yml"
 
 func TestSuccessfulFlagsPreparing(t *testing.T) {
 	cmd := NewCommand(context.Background(), zap.NewNop())
-	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
+	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "--redis-host", "some-redis"})
 
 	var executed bool
 
@@ -148,7 +149,9 @@ func TestPortFlagWrongArgument(t *testing.T) {
 
 func TestPortFlagWrongEnvValue(t *testing.T) {
 	cmd := NewCommand(context.Background(), zap.NewNop())
-	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "-p", "8090"}) // `-p` flag must be ignored
+
+	// `-p` flag must be ignored
+	cmd.SetArgs([]string{"-r", "", "-c", configFilePath, "--redis-host", "some-redis", "-p", "8090"})
 
 	assert.NoError(t, os.Setenv("LISTEN_PORT", "65536")) // 65535 is max
 
@@ -169,7 +172,6 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 	assert.Contains(t, output, "wrong TCP port")
 	assert.Contains(t, output, "environment variable")
 	assert.Contains(t, output, "65536")
-	assert.Contains(t, output, "cannot be parsed")
 	assert.False(t, executed)
 }
 
@@ -303,6 +305,12 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 	tcpPort, err := getRandomTCPPort(t)
 	assert.NoError(t, err)
 
+	// start mini-redis
+	mini, err := miniredis.Run()
+	assert.NoError(t, err)
+
+	defer mini.Close()
+
 	var (
 		output     string
 		executedCh = make(chan struct{})
@@ -317,7 +325,7 @@ func TestSuccessfulCommandRunning(t *testing.T) {
 			log, _ := zap.NewDevelopment()
 			cmd := NewCommand(context.Background(), log)
 			cmd.SilenceUsage = true
-			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath})
+			cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(tcpPort), "-c", configFilePath, "--redis-host", "127.0.0.1", "--redis-port", mini.Port()}) //nolint:lll
 
 			assert.NoError(t, cmd.Execute())
 		})
@@ -363,6 +371,12 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	port, err := getRandomTCPPort(t)
 	assert.NoError(t, err)
 
+	// start mini-redis
+	mini, err := miniredis.Run()
+	assert.NoError(t, err)
+
+	defer mini.Close()
+
 	// occupy a TCP port
 	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	assert.NoError(t, err)
@@ -372,7 +386,7 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	// create command with valid flags to run
 	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SilenceUsage = true
-	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath})
+	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath, "--redis-host", "127.0.0.1", "--redis-port", mini.Port()}) //nolint:lll
 
 	executedCh := make(chan struct{})
 

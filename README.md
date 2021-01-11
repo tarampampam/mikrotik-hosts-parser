@@ -19,6 +19,8 @@ More information can be [found here][link_habr_post].
 
 ## Usage
 
+// TODO redis server can be used from `redis.io`
+
 For local application starting using binary file, you must compile application _(after repository cloning)_ using `GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ./mikrotik-hosts-parser ./cmd/mikrotik-hosts-parser/` or `make build`, and then execute:
 
 ```bash

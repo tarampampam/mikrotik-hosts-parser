@@ -17,6 +17,21 @@ const (
 
 	// ConfigPath is a path to the configuration file.
 	ConfigPath envVariable = "CONFIG_PATH"
+
+	// RedisHost is a redis server host.
+	RedisHost envVariable = "REDIS_HOST"
+
+	// RedisPort is a redis server port.
+	RedisPort envVariable = "REDIS_PORT"
+
+	// RedisPassword is a redis server password.
+	RedisPassword envVariable = "REDIS_PASSWORD"
+
+	// RedisDBNum is a redis DN number.
+	RedisDBNum envVariable = "REDIS_DB_NUM"
+
+	// RedisMaxConn is a maximal redis connections number.
+	RedisMaxConn envVariable = "REDIS_MAX_CONN"
 )
 
 // String returns environment variable name in the string representation.
