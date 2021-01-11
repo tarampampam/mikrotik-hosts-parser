@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/logreq"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/panic"
@@ -19,6 +20,7 @@ type (
 	Server struct {
 		ctx          context.Context
 		log          *zap.Logger
+		cache        cache.Engine
 		resourcesDir string // can be empty
 		cfg          *config.Config
 		srv          *http.Server
@@ -32,7 +34,14 @@ const (
 )
 
 // NewServer creates new server instance.
-func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string, cfg *config.Config) Server {
+func NewServer(
+	ctx context.Context,
+	log *zap.Logger,
+	cache cache.Engine,
+	listen string,
+	resourcesDir string,
+	cfg *config.Config,
+) Server {
 	var (
 		router     = *mux.NewRouter()
 		httpServer = &http.Server{
@@ -47,6 +56,7 @@ func NewServer(ctx context.Context, log *zap.Logger, listen, resourcesDir string
 	return Server{
 		ctx:          ctx,
 		log:          log,
+		cache:        cache,
 		resourcesDir: resourcesDir,
 		cfg:          cfg,
 		srv:          httpServer,

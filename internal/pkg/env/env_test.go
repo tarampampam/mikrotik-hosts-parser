@@ -13,6 +13,7 @@ func TestConstants(t *testing.T) {
 	assert.Equal(t, "RESOURCES_DIR", string(ResourcesDir))
 	assert.Equal(t, "CONFIG_PATH", string(ConfigPath))
 	assert.Equal(t, "REDIS_DSN", string(RedisDSN))
+	assert.Equal(t, "CACHING_ENGINE", string(CachingEngine))
 }
 
 func TestEnvVariable_Lookup(t *testing.T) {
@@ -24,6 +25,7 @@ func TestEnvVariable_Lookup(t *testing.T) {
 		{giveEnv: ResourcesDir},
 		{giveEnv: ConfigPath},
 		{giveEnv: RedisDSN},
+		{giveEnv: CachingEngine},
 	}
 
 	for _, tt := range cases {

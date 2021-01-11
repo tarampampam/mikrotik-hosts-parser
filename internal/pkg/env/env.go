@@ -20,6 +20,9 @@ const (
 
 	// RedisDSN is URL-like redis connection string <https://redis.uptrace.dev/#connecting-to-redis-server>.
 	RedisDSN envVariable = "REDIS_DSN"
+
+	// CachingEngine is a caching engine name (like "redis", "memory" or something else).
+	CachingEngine envVariable = "CACHING_ENGINE"
 )
 
 // String returns environment variable name in the string representation.

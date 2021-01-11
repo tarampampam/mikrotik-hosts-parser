@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 	"go.uber.org/zap"
 )
@@ -50,7 +51,10 @@ func TestServer_StartAndStop(t *testing.T) {
 	port, err := getRandomTCPPort(t)
 	assert.NoError(t, err)
 
-	srv := NewServer(context.Background(), zap.NewNop(), ":"+strconv.Itoa(port), ".", &config.Config{})
+	cacheEngine, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	defer cacheEngine.Close()
+
+	srv := NewServer(context.Background(), zap.NewNop(), cacheEngine, ":"+strconv.Itoa(port), ".", &config.Config{})
 
 	assert.False(t, checkTCPPortIsBusy(t, port))
 
@@ -93,7 +97,10 @@ func TestServer_Register(t *testing.T) {
 		{name: "static", route: "/", methods: []string{http.MethodGet, http.MethodHead}},
 	}
 
-	srv := NewServer(context.Background(), zap.NewNop(), ":0", ".", &config.Config{})
+	cacheEngine, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	defer cacheEngine.Close()
+
+	srv := NewServer(context.Background(), zap.NewNop(), cacheEngine, ":0", ".", &config.Config{})
 	router := srv.router // dirty hack, yes, i know
 
 	// state *before* registration
@@ -121,8 +128,11 @@ func TestServer_Register(t *testing.T) {
 }
 
 func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
-	srv := NewServer(context.Background(), zap.NewNop(), ":0", "", &config.Config{}) // resources dir are empty
-	router := srv.router                                                             // dirty hack, yes, i know
+	cacheEngine, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	defer cacheEngine.Close()
+
+	srv := NewServer(context.Background(), zap.NewNop(), cacheEngine, ":0", "", &config.Config{}) // resources dir are empty
+	router := srv.router                                                                          // dirty hack, yes, i know
 
 	assert.Nil(t, router.Get("static"))
 	assert.NoError(t, srv.Register())

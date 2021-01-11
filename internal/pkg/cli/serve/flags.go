@@ -17,8 +17,9 @@ type flags struct {
 		ip   string
 		port uint16
 	}
-	resourcesDir string // can be empty
-	configPath   string
+	resourcesDir  string // can be empty
+	configPath    string
+	cachingEngine string
 
 	// redisDSN allows to setup redis server using single string. Examples:
 	//	redis://<user>:<password>@<host>:<port>/<db_number>
@@ -58,6 +59,13 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		fmt.Sprintf("config file path [$%s]", env.ConfigPath),
 	)
 	flagSet.StringVarP(
+		&f.cachingEngine,
+		"caching-engine",
+		"",
+		cachingEngineMemory,
+		fmt.Sprintf("caching endine (%s|%s) [$%s]", cachingEngineMemory, cachingEngineRedis, env.CachingEngine),
+	)
+	flagSet.StringVarP(
 		&f.redisDSN,
 		"redis-dsn",
 		"",
@@ -87,6 +95,10 @@ func (f *flags) overrideUsingEnv() error {
 		f.configPath = envVar
 	}
 
+	if envVar, exists := env.CachingEngine.Lookup(); exists {
+		f.cachingEngine = envVar
+	}
+
 	if envVar, exists := env.RedisDSN.Lookup(); exists {
 		f.redisDSN = envVar
 	}
@@ -109,8 +121,14 @@ func (f *flags) validate() error {
 		return fmt.Errorf("config file [%s] was not found", f.configPath)
 	}
 
-	if _, err := redis.ParseURL(f.redisDSN); err != nil {
-		return fmt.Errorf("wrong redis DSN [%s]: %w", f.redisDSN, err)
+	switch f.cachingEngine {
+	case cachingEngineMemory:
+	case cachingEngineRedis:
+		if _, err := redis.ParseURL(f.redisDSN); err != nil {
+			return fmt.Errorf("wrong redis DSN [%s]: %w", f.redisDSN, err)
+		}
+	default:
+		return fmt.Errorf("unsupported caching engine: %s", f.cachingEngine)
 	}
 
 	return nil

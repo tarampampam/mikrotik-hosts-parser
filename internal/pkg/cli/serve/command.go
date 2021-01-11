@@ -9,13 +9,17 @@ import (
 	"os"
 	"time"
 
+
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cobra"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/breaker"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 	appHttp "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http"
 	"go.uber.org/zap"
 )
+
+const cachingEngineMemory, cachingEngineRedis = "memory", "redis"
 
 // NewCommand creates `serve` command.
 func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command {
@@ -33,7 +37,12 @@ func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command {
 			return f.validate()
 		},
 		RunE: func(*cobra.Command, []string) error {
-			return run(ctx, log, &f)
+			cfg, err := config.FromYamlFile(f.configPath, true)
+			if err != nil {
+				return err
+			}
+
+			return run(ctx, log, cfg, &f)
 		},
 	}
 
@@ -45,12 +54,7 @@ func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command {
 const serverShutdownTimeout = 5 * time.Second
 
 // run current command.
-func run(parentCtx context.Context, log *zap.Logger, f *flags) error { //nolint:funlen
-	cfg, cfgErr := config.FromYamlFile(f.configPath, true)
-	if cfgErr != nil {
-		return cfgErr
-	}
-
+func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flags) error { //nolint:funlen
 	var (
 		ctx, cancel = context.WithCancel(parentCtx) // serve context creation
 		oss         = breaker.NewOSSignals(ctx)     // OS signals listener
@@ -68,18 +72,48 @@ func run(parentCtx context.Context, log *zap.Logger, f *flags) error { //nolint:
 		oss.Stop() // stop system signals listening
 	}()
 
-	// establish connection to the redis server
-	opt, _ := redis.ParseURL(f.redisDSN) // DSN already checked above
-	rdb := redis.NewClient(opt)
+	var cachingEngine cache.Engine
 
-	defer func() { _ = rdb.Close() }()
+	switch f.cachingEngine {
+	case cachingEngineMemory:
+		var err error
 
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		return fmt.Errorf("cannot establish connection to the redis server: %w", err)
+		cachingEngine, err = cache.NewInMemoryEngine(time.Second*time.Duration(cfg.Cache.LifetimeSec), time.Second)
+		if err != nil {
+			return err
+		}
+
+	case cachingEngineRedis:
+		opt, err := redis.ParseURL(f.redisDSN)
+		if err != nil {
+			return err
+		}
+
+		cachingEngine, err = cache.NewRedisEngine(ctx, opt, time.Second*time.Duration(cfg.Cache.LifetimeSec))
+		if err != nil {
+			return err
+		}
+
+	default:
+		return errors.New("unsupported caching engine")
 	}
 
-	// create HTTP server // TODO pass redis connection for the server
-	server := appHttp.NewServer(ctx, log, fmt.Sprintf("%s:%d", f.listen.ip, f.listen.port), f.resourcesDir, cfg)
+	// try to open caching engine
+	if err := cachingEngine.Open(); err != nil {
+		return err
+	}
+
+	defer func() { _ = cachingEngine.Close() }()
+
+	// create HTTP server
+	server := appHttp.NewServer(
+		ctx,
+		log,
+		cachingEngine,
+		fmt.Sprintf("%s:%d", f.listen.ip, f.listen.port),
+		f.resourcesDir,
+		cfg,
+	)
 
 	// register server routes, middlewares, etc.
 	if err := server.Register(); err != nil {
@@ -97,6 +131,7 @@ func run(parentCtx context.Context, log *zap.Logger, f *flags) error { //nolint:
 			zap.Uint16("port", f.listen.port),
 			zap.String("resources", f.resourcesDir),
 			zap.String("config file", f.configPath),
+			zap.String("caching engine", f.cachingEngine),
 			zap.String("redis dsn", f.redisDSN),
 		)
 
@@ -126,8 +161,7 @@ func run(parentCtx context.Context, log *zap.Logger, f *flags) error { //nolint:
 			return err
 		}
 
-		// do not forget to close connection to the redis server
-		if err := rdb.Close(); err != nil {
+		if err := cachingEngine.Close(); err != nil {
 			return err
 		}
 	}
