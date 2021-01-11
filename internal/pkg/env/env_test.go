@@ -1,14 +1,43 @@
 package env
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConstants(t *testing.T) {
-	assert.Equal(t, "LISTEN_ADDR", ListenAddr)
-	assert.Equal(t, "LISTEN_PORT", ListenPort)
-	assert.Equal(t, "RESOURCES_DIR", ResourcesDir)
-	assert.Equal(t, "CONFIG_PATH", ConfigPath)
+	assert.Equal(t, "LISTEN_ADDR", string(ListenAddr))
+	assert.Equal(t, "LISTEN_PORT", string(ListenPort))
+	assert.Equal(t, "RESOURCES_DIR", string(ResourcesDir))
+	assert.Equal(t, "CONFIG_PATH", string(ConfigPath))
+}
+
+func TestEnvVariable_Lookup(t *testing.T) {
+	cases := []struct {
+		giveEnv envVariable
+	}{
+		{giveEnv: ListenAddr},
+		{giveEnv: ListenPort},
+		{giveEnv: ResourcesDir},
+		{giveEnv: ConfigPath},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.giveEnv.String(), func(t *testing.T) {
+			defer func() { assert.NoError(t, os.Unsetenv(tt.giveEnv.String())) }()
+
+			value, exists := tt.giveEnv.Lookup()
+			assert.False(t, exists)
+			assert.Empty(t, value)
+
+			assert.NoError(t, os.Setenv(tt.giveEnv.String(), "foo"))
+
+			value, exists = tt.giveEnv.Lookup()
+			assert.True(t, exists)
+			assert.Equal(t, "foo", value)
+		})
+	}
 }

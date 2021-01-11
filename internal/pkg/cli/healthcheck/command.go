@@ -3,7 +3,6 @@ package healthcheck
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -24,7 +23,7 @@ func NewCommand(checker checker) *cobra.Command {
 		Short:   "Health checker for the http server. Use case - docker healthcheck.",
 		Hidden:  true,
 		PreRunE: func(*cobra.Command, []string) error {
-			if envPort, exists := os.LookupEnv(env.ListenPort); exists && envPort != "" {
+			if envPort, exists := env.ListenPort.Lookup(); exists && envPort != "" {
 				if p, err := strconv.ParseUint(envPort, 10, 16); err == nil {
 					port = uint16(p)
 				} else {

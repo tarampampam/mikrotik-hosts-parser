@@ -35,11 +35,11 @@ func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command { //nolint:
 		Short:   "Start HTTP server.\n\nEnvironment variables have higher priority then flag values.",
 		PreRunE: func(*cobra.Command, []string) error {
 			// lookup for environment variables
-			if envListen, exists := os.LookupEnv(env.ListenAddr); exists {
+			if envListen, exists := env.ListenAddr.Lookup(); exists {
 				listen = envListen
 			}
 
-			if envPort, exists := os.LookupEnv(env.ListenPort); exists {
+			if envPort, exists := env.ListenPort.Lookup(); exists {
 				if p, err := strconv.ParseUint(envPort, 10, 16); err == nil {
 					port = uint16(p)
 				} else {
@@ -47,11 +47,11 @@ func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command { //nolint:
 				}
 			}
 
-			if envResourcesDir, exists := os.LookupEnv(env.ResourcesDir); exists {
+			if envResourcesDir, exists := env.ResourcesDir.Lookup(); exists {
 				resourcesDir = envResourcesDir
 			}
 
-			if envConfigPath, exists := os.LookupEnv(env.ConfigPath); exists {
+			if envConfigPath, exists := env.ConfigPath.Lookup(); exists {
 				configPath = envConfigPath
 			}
 
