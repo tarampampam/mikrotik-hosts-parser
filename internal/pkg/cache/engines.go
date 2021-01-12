@@ -9,9 +9,9 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// Cacher is a cache engine.
+// Cacher is a byte-cache.
 type Cacher interface {
-	// Get retrieves value for the key from the storage.
+	// Get value associated with the key from the storage.
 	Get(key string) (found bool, data []byte, ttl time.Duration, err error)
 
 	// Put value into the storage.
@@ -21,16 +21,24 @@ type Cacher interface {
 	Delete(key string) (bool, error)
 }
 
+// Tester allows to test something.
 type Tester interface {
+	// Test returns an error only when something is broken down inside.
 	Test() error
 }
 
+// Engine is a wrapper around the cache implementation.
 type Engine interface {
 	io.Closer
+
+	// Open cache storage.
 	Open() error
+
+	// Cache returns cache implementation if Engine was successfully opened before.
 	Cache() (Cacher, error)
 }
 
+// RedisEngine is Engine that uses RedisEngine under the hood.
 type RedisEngine struct {
 	ctx   context.Context
 	opt   *redis.Options
@@ -39,10 +47,12 @@ type RedisEngine struct {
 	cache *RedisCache
 }
 
-func NewRedisEngine(ctx context.Context, opt *redis.Options, ttl time.Duration) (*RedisEngine, error) {
-	return &RedisEngine{ctx: ctx, opt: opt, ttl: ttl}, nil
+// NewRedisEngine creates new RedisEngine.
+func NewRedisEngine(ctx context.Context, opt *redis.Options, ttl time.Duration) *RedisEngine {
+	return &RedisEngine{ctx: ctx, opt: opt, ttl: ttl}
 }
 
+// Open establish connection to the redis server and verify it using Ping command.
 func (e *RedisEngine) Open() error {
 	if e.rdb != nil {
 		return errors.New("already opened")
@@ -60,6 +70,7 @@ func (e *RedisEngine) Open() error {
 	return nil
 }
 
+// Test verifies connection to the redis server using Ping command.
 func (e *RedisEngine) Test() error {
 	if e.rdb == nil {
 		return errors.New("not opened")
@@ -68,6 +79,7 @@ func (e *RedisEngine) Test() error {
 	return e.rdb.Ping(e.ctx).Err()
 }
 
+// Close drops connection to the redis server and forget about it.
 func (e *RedisEngine) Close() error {
 	if e.rdb == nil {
 		return errors.New("already closed or was not opened")
@@ -78,6 +90,7 @@ func (e *RedisEngine) Close() error {
 	return e.rdb.Close()
 }
 
+// Cache returns cache implementation if RedisEngine was successfully opened before.
 func (e *RedisEngine) Cache() (Cacher, error) {
 	if e.rdb == nil || e.cache == nil {
 		return nil, errors.New("not opened")
@@ -86,15 +99,18 @@ func (e *RedisEngine) Cache() (Cacher, error) {
 	return e.cache, nil
 }
 
+// InMemoryEngine is Engine that uses InMemoryCache under the hood.
 type InMemoryEngine struct {
 	ttl, cleanupInterval time.Duration
 	cache                *InMemoryCache
 }
 
-func NewInMemoryEngine(ttl, cleanupInterval time.Duration) (*InMemoryEngine, error) {
-	return &InMemoryEngine{ttl: ttl, cleanupInterval: cleanupInterval}, nil
+// NewInMemoryEngine creates new InMemoryEngine.
+func NewInMemoryEngine(ttl, cleanupInterval time.Duration) *InMemoryEngine {
+	return &InMemoryEngine{ttl: ttl, cleanupInterval: cleanupInterval}
 }
 
+// Open creates inmemory cache implementation.
 func (e *InMemoryEngine) Open() error {
 	if e.cache != nil {
 		return errors.New("already opened")
@@ -105,6 +121,7 @@ func (e *InMemoryEngine) Open() error {
 	return nil
 }
 
+// Close closes current caching storage and forget about it.
 func (e *InMemoryEngine) Close() error {
 	if e.cache == nil {
 		return errors.New("already closed or was not opened")
@@ -115,6 +132,7 @@ func (e *InMemoryEngine) Close() error {
 	return e.cache.Close()
 }
 
+// Cache returns cache implementation if InMemoryEngine was successfully opened before.
 func (e *InMemoryEngine) Cache() (Cacher, error) {
 	if e.cache == nil {
 		return nil, errors.New("not opened")

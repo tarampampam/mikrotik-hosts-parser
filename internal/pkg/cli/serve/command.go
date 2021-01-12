@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cobra"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/breaker"
@@ -76,12 +75,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 
 	switch f.cachingEngine {
 	case cachingEngineMemory:
-		var err error
-
-		cachingEngine, err = cache.NewInMemoryEngine(time.Second*time.Duration(cfg.Cache.LifetimeSec), time.Second)
-		if err != nil {
-			return err
-		}
+		cachingEngine = cache.NewInMemoryEngine(time.Second*time.Duration(cfg.Cache.LifetimeSec), time.Second)
 
 	case cachingEngineRedis:
 		opt, err := redis.ParseURL(f.redisDSN)
@@ -89,10 +83,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 			return err
 		}
 
-		cachingEngine, err = cache.NewRedisEngine(ctx, opt, time.Second*time.Duration(cfg.Cache.LifetimeSec))
-		if err != nil {
-			return err
-		}
+		cachingEngine = cache.NewRedisEngine(ctx, opt, time.Second*time.Duration(cfg.Cache.LifetimeSec))
 
 	default:
 		return errors.New("unsupported caching engine")

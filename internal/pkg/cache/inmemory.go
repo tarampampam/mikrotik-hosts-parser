@@ -6,6 +6,7 @@ import (
 )
 
 type (
+	// InMemoryCache is an inmemory cache (with TTL) implementation.
 	InMemoryCache struct {
 		ttl       time.Duration
 		storageMu sync.RWMutex
@@ -24,12 +25,10 @@ type (
 	}
 )
 
+// NewInMemoryCache creates inmemory storage with TTL.
 func NewInMemoryCache(ttl time.Duration, ci time.Duration) *InMemoryCache {
 	cache := &InMemoryCache{ttl: ttl, ci: ci, storage: make(map[string]inmemoryItem), close: make(chan struct{}, 1)}
-
-	if ttl > 0 {
-		go cache.cleanup()
-	}
+	go cache.cleanup()
 
 	return cache
 }
@@ -74,6 +73,7 @@ func (c *InMemoryCache) isClosed() bool {
 	return c.closed
 }
 
+// Close current in memory storage with data invalidation.
 func (c *InMemoryCache) Close() error {
 	if c.isClosed() {
 		return ErrClosed
@@ -88,6 +88,7 @@ func (c *InMemoryCache) Close() error {
 	return nil
 }
 
+// Get value associated with the key from the storage.
 func (c *InMemoryCache) Get(key string) (bool, []byte, time.Duration, error) {
 	if c.isClosed() {
 		return false, nil, 0, ErrClosed
@@ -119,6 +120,7 @@ func (c *InMemoryCache) Get(key string) (bool, []byte, time.Duration, error) {
 	return false, nil, 0, nil
 }
 
+// Put value into the storage.
 func (c *InMemoryCache) Put(key string, data []byte) error {
 	if c.isClosed() {
 		return ErrClosed
@@ -137,6 +139,7 @@ func (c *InMemoryCache) Put(key string, data []byte) error {
 	return nil
 }
 
+// Delete value from the storage with passed key.
 func (c *InMemoryCache) Delete(key string) (bool, error) {
 	if c.isClosed() {
 		return false, ErrClosed

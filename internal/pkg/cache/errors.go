@@ -9,5 +9,6 @@ var (
 	// ErrEmptyData means "no data provided".
 	ErrEmptyData = errors.New("empty data")
 
+	// ErrClosed means "cache was closed".
 	ErrClosed = errors.New("cache closed")
 )

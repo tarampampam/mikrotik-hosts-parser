@@ -51,7 +51,7 @@ func TestServer_StartAndStop(t *testing.T) {
 	port, err := getRandomTCPPort(t)
 	assert.NoError(t, err)
 
-	cacheEngine, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	cacheEngine := cache.NewInMemoryEngine(time.Second, time.Second)
 	defer cacheEngine.Close()
 
 	srv := NewServer(context.Background(), zap.NewNop(), cacheEngine, ":"+strconv.Itoa(port), ".", &config.Config{})
@@ -97,7 +97,7 @@ func TestServer_Register(t *testing.T) {
 		{name: "static", route: "/", methods: []string{http.MethodGet, http.MethodHead}},
 	}
 
-	cacheEngine, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	cacheEngine := cache.NewInMemoryEngine(time.Second, time.Second)
 	defer cacheEngine.Close()
 
 	srv := NewServer(context.Background(), zap.NewNop(), cacheEngine, ":0", ".", &config.Config{})
@@ -128,7 +128,7 @@ func TestServer_Register(t *testing.T) {
 }
 
 func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
-	cacheEng, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	cacheEng := cache.NewInMemoryEngine(time.Second, time.Second)
 	defer cacheEng.Close()
 
 	srv := NewServer(context.Background(), zap.NewNop(), cacheEng, ":0", "", &config.Config{}) // empty resources dir
