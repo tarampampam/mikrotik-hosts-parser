@@ -372,12 +372,6 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	port, err := getRandomTCPPort(t)
 	assert.NoError(t, err)
 
-	// start mini-redis
-	mini, err := miniredis.Run()
-	assert.NoError(t, err)
-
-	defer mini.Close()
-
 	// occupy a TCP port
 	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	assert.NoError(t, err)
@@ -387,7 +381,7 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	// create command with valid flags to run
 	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SilenceUsage = true
-	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath, "--redis-dsn", fmt.Sprintf("redis://127.0.0.1:%s/0", mini.Port())}) //nolint:lll
+	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath})
 
 	executedCh := make(chan struct{})
 

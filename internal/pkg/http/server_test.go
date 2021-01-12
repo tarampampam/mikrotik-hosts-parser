@@ -128,11 +128,11 @@ func TestServer_Register(t *testing.T) {
 }
 
 func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
-	cacheEngine, _ := cache.NewInMemoryEngine(time.Second, time.Second)
-	defer cacheEngine.Close()
+	cacheEng, _ := cache.NewInMemoryEngine(time.Second, time.Second)
+	defer cacheEng.Close()
 
-	srv := NewServer(context.Background(), zap.NewNop(), cacheEngine, ":0", "", &config.Config{}) // resources dir are empty
-	router := srv.router                                                                          // dirty hack, yes, i know
+	srv := NewServer(context.Background(), zap.NewNop(), cacheEng, ":0", "", &config.Config{}) // empty resources dir
+	router := srv.router                                                                       // dirty hack, yes, i know
 
 	assert.Nil(t, router.Get("static"))
 	assert.NoError(t, srv.Register())

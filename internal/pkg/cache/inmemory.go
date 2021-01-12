@@ -25,8 +25,11 @@ type (
 )
 
 func NewInMemoryCache(ttl time.Duration, ci time.Duration) *InMemoryCache {
-	cache := &InMemoryCache{ttl: ttl, ci: ci, storage: make(map[string]inmemoryItem), close: make(chan struct{})}
-	go cache.cleanup()
+	cache := &InMemoryCache{ttl: ttl, ci: ci, storage: make(map[string]inmemoryItem), close: make(chan struct{}, 1)}
+
+	if ttl > 0 {
+		go cache.cleanup()
+	}
 
 	return cache
 }
@@ -51,6 +54,7 @@ func (c *InMemoryCache) cleanup() {
 		case <-timer.C:
 			c.storageMu.Lock()
 			var now = time.Now().UnixNano()
+
 			for key, item := range c.storage {
 				if now > item.expiresAtNano {
 					delete(c.storage, key)
@@ -63,12 +67,15 @@ func (c *InMemoryCache) cleanup() {
 	}
 }
 
-func (c *InMemoryCache) Close() error {
+func (c *InMemoryCache) isClosed() bool {
 	c.closedMu.RLock()
-	closed := c.closed
-	c.closedMu.RUnlock()
+	defer c.closedMu.RUnlock()
 
-	if closed {
+	return c.closed
+}
+
+func (c *InMemoryCache) Close() error {
+	if c.isClosed() {
 		return ErrClosed
 	}
 
@@ -82,11 +89,7 @@ func (c *InMemoryCache) Close() error {
 }
 
 func (c *InMemoryCache) Get(key string) (bool, []byte, time.Duration, error) {
-	c.closedMu.RLock()
-	closed := c.closed
-	c.closedMu.RUnlock()
-
-	if closed {
+	if c.isClosed() {
 		return false, nil, 0, ErrClosed
 	}
 
@@ -99,18 +102,25 @@ func (c *InMemoryCache) Get(key string) (bool, []byte, time.Duration, error) {
 	c.storageMu.RUnlock()
 
 	if ok {
-		return true, item.data, time.Unix(0, item.expiresAtNano).Sub(time.Now()), nil
+		now := time.Now()
+
+		// item has been expired?
+		if now.UnixNano() > item.expiresAtNano {
+			c.storageMu.Lock()
+			delete(c.storage, key)
+			c.storageMu.Unlock()
+
+			return false, nil, 0, nil
+		}
+
+		return true, item.data, time.Unix(0, item.expiresAtNano).Sub(now), nil
 	}
 
 	return false, nil, 0, nil
 }
 
 func (c *InMemoryCache) Put(key string, data []byte) error {
-	c.closedMu.RLock()
-	closed := c.closed
-	c.closedMu.RUnlock()
-
-	if closed {
+	if c.isClosed() {
 		return ErrClosed
 	}
 
@@ -128,11 +138,7 @@ func (c *InMemoryCache) Put(key string, data []byte) error {
 }
 
 func (c *InMemoryCache) Delete(key string) (bool, error) {
-	c.closedMu.RLock()
-	closed := c.closed
-	c.closedMu.RUnlock()
-
-	if closed {
+	if c.isClosed() {
 		return false, ErrClosed
 	}
 

@@ -48,17 +48,17 @@ func TestInMemoryCache_Expiration(t *testing.T) {
 
 	assert.NoError(t, cache.Put(testKeyName, []byte{1, 2, 3}))
 
-	found, _, _, _ := cache.Get(testKeyName)
+	found, _, _, _ := cache.Get(testKeyName) //nolint:dogsled
 	assert.True(t, found)
 
 	<-time.After(time.Millisecond * 98)
 
-	found, _, _, _ = cache.Get(testKeyName)
+	found, _, _, _ = cache.Get(testKeyName) //nolint:dogsled
 	assert.True(t, found)
 
-	<-time.After(time.Millisecond * 5)
+	<-time.After(time.Millisecond * 2)
 
-	found, _, _, _ = cache.Get(testKeyName)
+	found, _, _, _ = cache.Get(testKeyName) //nolint:dogsled
 	assert.False(t, found)
 }
 
@@ -73,7 +73,7 @@ func TestInMemoryCache_RaceAccess(t *testing.T) {
 			case <-testCtx.Done():
 				return
 			default:
-				cache.Get("foo")
+				_, _, _, _ = cache.Get("foo") //nolint:dogsled
 			}
 		}
 	}()
@@ -84,7 +84,7 @@ func TestInMemoryCache_RaceAccess(t *testing.T) {
 			case <-testCtx.Done():
 				return
 			default:
-				cache.Delete("foo")
+				_, _ = cache.Delete("foo")
 			}
 		}
 	}()
@@ -95,7 +95,7 @@ func TestInMemoryCache_RaceAccess(t *testing.T) {
 			case <-testCtx.Done():
 				return
 			default:
-				cache.Put("foo", []byte{1, 2, 3})
+				_ = cache.Put("foo", []byte{1, 2, 3})
 			}
 		}
 	}()
