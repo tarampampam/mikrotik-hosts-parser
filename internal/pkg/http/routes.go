@@ -15,7 +15,7 @@ import (
 
 func (s *Server) registerScriptGeneratorHandlers() {
 	s.router.
-		HandleFunc("/script/source", generate.RouterOsScriptSourceGenerationHandlerFunc(s.cfg)).
+		HandleFunc("/script/source", generate.RouterOsScriptSourceGenerationHandlerFunc(s.cfg, s.cacher)).
 		Methods(http.MethodGet).
 		Name("script_generator")
 }
@@ -28,7 +28,7 @@ func (s *Server) registerAPIHandlers() {
 	apiRouter.Use(nocache.New())
 
 	apiRouter.
-		HandleFunc("/settings", apiSettings.NewHandler(*s.cfg)).
+		HandleFunc("/settings", apiSettings.NewHandler(*s.cfg, s.cacher)).
 		Methods(http.MethodGet).
 		Name("api_get_settings")
 

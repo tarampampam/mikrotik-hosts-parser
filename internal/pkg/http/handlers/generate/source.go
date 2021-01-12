@@ -1,20 +1,22 @@
 package generate
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 
 	ver "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
 	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik"
-
-	"github.com/tarampampam/go-filecache"
 )
 
 type sourceResponse struct {
@@ -28,11 +30,9 @@ type sourceResponse struct {
 // RouterOsScriptSourceGenerationHandlerFunc generates RouterOS script source and writes it response.
 func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 	serveSettings *config.Config,
+	cacher cache.Cacher,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// initialize default cache pool
-		initDefaultCachePool(serveSettings.Cache.File.DirPath, false)
-
 		queryParameters, queryErr := newQueryParametersBag(
 			r.URL.Query(),
 			serveSettings.RouterScript.Redirect.Address,
@@ -57,7 +57,7 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 			"Sources list: <"+strings.Join(queryParameters.SourceUrls, ">, <")+">",
 			"Excluded hosts: '"+strings.Join(queryParameters.ExcludedHosts, "', '")+"'",
 			"Limit: "+strconv.Itoa(queryParameters.Limit),
-			"cache lifetime: "+strconv.Itoa(int(serveSettings.Cache.LifetimeSec))+" seconds",
+			"cache lifetime: "+strconv.Itoa(int(cacher.TTL()))+" seconds",
 		)
 
 		sourceResponsesChannel := make(chan *sourceResponse) // channel for source responses
@@ -65,10 +65,11 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 		// fetch sources async and write responses into channel
 		for _, sourceURL := range queryParameters.SourceUrls {
 			go writeSourceResponse(
+				cacher,
 				sourceResponsesChannel,
 				sourceURL,
 				int(serveSettings.RouterScript.MaxSourceSizeBytes),
-				int(serveSettings.Cache.LifetimeSec),
+				int(cacher.TTL()),
 			)
 		}
 
@@ -141,42 +142,30 @@ func RouterOsScriptSourceGenerationHandlerFunc( //nolint:funlen,gocyclo
 }
 
 // writeSourceResponse writes source response into channel (content can be fetched from cache)
-func writeSourceResponse(channel chan *sourceResponse, sourceURL string, maxLength, cacheLifetimeSec int) {
-	var (
-		result    = &sourceResponse{URL: sourceURL}
-		cacheItem filecache.CacheItem
-	)
+func writeSourceResponse(cacher cache.Cacher, channel chan *sourceResponse, sourceURL string, maxLength, cacheLifetimeSec int) {
+	var result = &sourceResponse{URL: sourceURL}
+
 	// if cache missed
-	if cached := defaultCachePool.GetItem(sourceURL); !cached.IsHit() {
+	if hit, _, _, _ := cacher.Get(sourceURL); !hit {
 		// do request
 		response, fetchError := defaultHTTPClient.FetchSourceContent(sourceURL, maxLength)
 		result.Error = fetchError
 		if response != nil {
-			// and write response content into cache
-			cacheItem, _ = defaultCachePool.Put(
-				sourceURL,
-				response.Body,
-				time.Now().Add(time.Second*time.Duration(cacheLifetimeSec)),
-			)
+			bodyBytes, _ := ioutil.ReadAll(response.Body)
 			_ = response.Body.Close()
+
+			// and write response content into cache
+			_ = cacher.Put(sourceURL, bodyBytes)
 		}
 	} else {
 		result.CacheIsHit = true
 	}
-	// extract cached item from cache pool (if was missed previously)
-	if cacheItem == nil {
-		cacheItem = defaultCachePool.GetItem(sourceURL)
-	}
-	// read from cache item using pipe
-	var pipeReader, pipeWriter = io.Pipe()
-	go func() {
-		defer func() { _ = pipeWriter.Close() }()
-		_ = cacheItem.Get(pipeWriter)
-	}()
-	result.Content = pipeReader
-	if expiresAt := cacheItem.ExpiresAt(); expiresAt != nil {
-		result.CacheExpiredAfterSec = int(expiresAt.Unix() - time.Now().Unix())
-	}
+
+	_, data, ttl, _ := cacher.Get(sourceURL)
+
+	result.CacheExpiredAfterSec = int(ttl.Seconds())
+	result.Content = ioutil.NopCloser(bytes.NewReader(data))
+
 	channel <- result
 }
 

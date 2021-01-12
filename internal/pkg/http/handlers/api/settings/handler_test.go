@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
@@ -23,9 +26,10 @@ func TestNewHandler(t *testing.T) {
 	cfg.RouterScript.MaxSourcesCount = 1
 	cfg.RouterScript.Comment = " [ blah ] "
 	cfg.RouterScript.MaxSourceSizeBytes = 666
-	cfg.Cache.LifetimeSec = 222
 
-	NewHandler(cfg)(rr, req)
+	cacher := cache.NewInMemoryCache(time.Second*123, time.Second)
+
+	NewHandler(cfg, cacher)(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
 
@@ -48,7 +52,7 @@ func TestNewHandler(t *testing.T) {
 			"hosts":["foo", "bar"]
 		},
 		"cache":{
-			"lifetime_sec":222
+			"lifetime_sec":123
 		}
 	}`, rr.Body.String())
 }

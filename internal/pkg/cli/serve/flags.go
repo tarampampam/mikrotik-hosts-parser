@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/pflag"
@@ -17,9 +18,14 @@ type flags struct {
 		ip   string
 		port uint16
 	}
-	resourcesDir  string // can be empty
-	configPath    string
-	cachingEngine string
+
+	resourcesDir string // can be empty
+	configPath   string
+
+	cache struct {
+		ttl    string
+		engine string
+	}
 
 	// redisDSN allows to setup redis server using single string. Examples:
 	//	redis://<user>:<password>@<host>:<port>/<db_number>
@@ -59,18 +65,25 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		fmt.Sprintf("config file path [$%s]", env.ConfigPath),
 	)
 	flagSet.StringVarP(
-		&f.cachingEngine,
+		&f.cache.engine,
 		"caching-engine",
 		"",
 		cachingEngineMemory,
 		fmt.Sprintf("caching endine (%s|%s) [$%s]", cachingEngineMemory, cachingEngineRedis, env.CachingEngine),
 	)
 	flagSet.StringVarP(
+		&f.cache.ttl,
+		"cache-ttl",
+		"",
+		"30m",
+		fmt.Sprintf("cache entries lifetime (examples: 50s, 1h30m) [$%s]", env.CachingEngine),
+	)
+	flagSet.StringVarP(
 		&f.redisDSN,
 		"redis-dsn",
 		"",
 		"redis://127.0.0.1:6379/0",
-		fmt.Sprintf("redis server DSN (redis://<user>:<password>@<host>:<port>/<db_number>) [$%s]", env.RedisDSN),
+		fmt.Sprintf("redis server DSN (format \"redis://<user>:<password>@<host>:<port>/<db_number>\") [$%s]", env.RedisDSN), //nolint:lll
 	)
 }
 
@@ -96,7 +109,11 @@ func (f *flags) overrideUsingEnv() error {
 	}
 
 	if envVar, exists := env.CachingEngine.Lookup(); exists {
-		f.cachingEngine = envVar
+		f.cache.engine = envVar
+	}
+
+	if envVar, exists := env.CacheTTL.Lookup(); exists {
+		f.cache.ttl = envVar
 	}
 
 	if envVar, exists := env.RedisDSN.Lookup(); exists {
@@ -121,14 +138,18 @@ func (f *flags) validate() error {
 		return fmt.Errorf("config file [%s] was not found", f.configPath)
 	}
 
-	switch f.cachingEngine {
+	switch f.cache.engine {
 	case cachingEngineMemory:
 	case cachingEngineRedis:
 		if _, err := redis.ParseURL(f.redisDSN); err != nil {
 			return fmt.Errorf("wrong redis DSN [%s]: %w", f.redisDSN, err)
 		}
 	default:
-		return fmt.Errorf("unsupported caching engine: %s", f.cachingEngine)
+		return fmt.Errorf("unsupported caching engine: %s", f.cache.engine)
+	}
+
+	if _, err := time.ParseDuration(f.cache.ttl); err != nil {
+		return fmt.Errorf("wrong cache lifetime [%s] period", f.cache.ttl)
 	}
 
 	return nil

@@ -88,6 +88,9 @@ func (c *InMemoryCache) Close() error {
 	return nil
 }
 
+// TTL returns current cache values time-to-live.
+func (c *InMemoryCache) TTL() time.Duration { return c.ttl }
+
 // Get value associated with the key from the storage.
 func (c *InMemoryCache) Get(key string) (bool, []byte, time.Duration, error) {
 	if c.isClosed() {

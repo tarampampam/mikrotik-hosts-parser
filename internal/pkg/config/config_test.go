@@ -52,11 +52,6 @@ sources:
  - uri: http://goo.gl/txt.stsoh
    count: 2
 
-cache:
- files:
-   dir: /foo/bar
- lifetime_sec: 10
-
 router_script:
  redirect:
    address: 0.1.1.0
@@ -84,9 +79,6 @@ router_script:
 
 				assert.Equal(t, "http://goo.gl/txt.stsoh", config.Sources[2].URI)
 				assert.Equal(t, uint(2), config.Sources[2].RecordsCount)
-
-				assert.Equal(t, "/foo/bar", config.Cache.File.DirPath)
-				assert.Equal(t, uint32(10), config.Cache.LifetimeSec)
 
 				assert.Equal(t, "0.1.1.0", config.RouterScript.Redirect.Address)
 				assert.ElementsMatch(t, []string{"foo", "bar"}, config.RouterScript.Exclude.Hosts)

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
 )
 
@@ -39,18 +41,18 @@ type (
 )
 
 // NewHandler creates settings handler.
-func NewHandler(cfg config.Config) http.HandlerFunc { //nolint:gocritic
-	var cache []byte
+func NewHandler(cfg config.Config, cacher cache.Cacher) http.HandlerFunc { //nolint:gocritic
+	var c []byte // response in-memory cache
 
 	return func(w http.ResponseWriter, _ *http.Request) {
-		if cache == nil {
+		if c == nil {
 			// set basic properties
 			resp := &response{}
 			resp.Sources.Max = int(cfg.RouterScript.MaxSourcesCount)
 			resp.Sources.MaxSourceSize = int(cfg.RouterScript.MaxSourceSizeBytes)
 			resp.Redirect.Addr = cfg.RouterScript.Redirect.Address
 			resp.Records.Comment = cfg.RouterScript.Comment
-			resp.Cache.LifetimeSec = int(cfg.Cache.LifetimeSec)
+			resp.Cache.LifetimeSec = int(cacher.TTL().Seconds())
 
 			// append excluded hosts list
 			resp.Excludes.Hosts = append(resp.Excludes.Hosts, cfg.RouterScript.Exclude.Hosts...)
@@ -66,10 +68,10 @@ func NewHandler(cfg config.Config) http.HandlerFunc { //nolint:gocritic
 				})
 			}
 
-			cache, _ = json.Marshal(resp)
+			c, _ = json.Marshal(resp)
 		}
 
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(cache)
+		_, _ = w.Write(c)
 	}
 }

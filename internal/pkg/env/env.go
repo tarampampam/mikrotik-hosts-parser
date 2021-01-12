@@ -18,11 +18,14 @@ const (
 	// ConfigPath is a path to the configuration file.
 	ConfigPath envVariable = "CONFIG_PATH"
 
-	// RedisDSN is URL-like redis connection string <https://redis.uptrace.dev/#connecting-to-redis-server>.
-	RedisDSN envVariable = "REDIS_DSN"
-
 	// CachingEngine is a caching engine name (like "redis", "memory" or something else).
 	CachingEngine envVariable = "CACHING_ENGINE"
+
+	// CacheTTL is a cache items life time.
+	CacheTTL envVariable = "CACHE_TTL"
+
+	// RedisDSN is URL-like redis connection string <https://redis.uptrace.dev/#connecting-to-redis-server>.
+	RedisDSN envVariable = "REDIS_DSN"
 )
 
 // String returns environment variable name in the string representation.

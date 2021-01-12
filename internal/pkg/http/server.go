@@ -5,6 +5,7 @@ import (
 	"context"
 	"mime"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -40,16 +41,14 @@ func NewServer(
 	ctx context.Context,
 	log *zap.Logger,
 	cacher cache.Cacher,
-	listen string,
 	resourcesDir string, // can be empty
 	cfg *config.Config,
 	rdb *redis.Client, // optional, can be nil
 ) Server {
 	var (
-		router     = *mux.NewRouter()
+		router     = mux.NewRouter()
 		httpServer = &http.Server{
-			Addr:         listen,
-			Handler:      &router,
+			Handler:      router,
 			ErrorLog:     zap.NewStdLog(log),
 			WriteTimeout: defaultWriteTimeout,
 			ReadTimeout:  defaultReadTimeout,
@@ -63,13 +62,17 @@ func NewServer(
 		resourcesDir: resourcesDir,
 		cfg:          cfg,
 		srv:          httpServer,
-		router:       &router,
+		router:       router,
 		rdb:          rdb,
 	}
 }
 
 // Start server.
-func (s *Server) Start() error { return s.srv.ListenAndServe() }
+func (s *Server) Start(ip string, port uint16) error {
+	s.srv.Addr = ip + ":" + strconv.Itoa(int(port))
+
+	return s.srv.ListenAndServe()
+}
 
 // Register server routes, middlewares, etc.
 func (s *Server) Register() error {

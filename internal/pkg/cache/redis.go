@@ -23,23 +23,26 @@ func NewRedisCache(ctx context.Context, client *redis.Client, ttl time.Duration)
 }
 
 // key generates cache entry key using passed string.
-func (r *RedisCache) key(s string) string {
+func (c *RedisCache) key(s string) string {
 	h := md5.Sum([]byte(s)) //nolint:gosec
 
 	return "cache:" + hex.EncodeToString(h[:])
 }
 
+// TTL returns current cache values time-to-live.
+func (c *RedisCache) TTL() time.Duration { return c.ttl }
+
 // Get retrieves value for the key from the storage.
-func (r *RedisCache) Get(key string) (found bool, data []byte, ttl time.Duration, err error) {
+func (c *RedisCache) Get(key string) (found bool, data []byte, ttl time.Duration, err error) {
 	if key == "" {
 		err = ErrEmptyKey
 
 		return // wrong argument
 	}
 
-	k := r.key(key)
+	k := c.key(key)
 
-	if data, err = r.redis.Get(r.ctx, k).Bytes(); err != nil {
+	if data, err = c.redis.Get(c.ctx, k).Bytes(); err != nil {
 		if errors.Is(err, redis.Nil) {
 			err = nil
 
@@ -51,7 +54,7 @@ func (r *RedisCache) Get(key string) (found bool, data []byte, ttl time.Duration
 
 	found = true
 
-	if ttl, err = r.redis.TTL(r.ctx, k).Result(); err != nil {
+	if ttl, err = c.redis.TTL(c.ctx, k).Result(); err != nil {
 		return // ttl getting failed
 	}
 
@@ -59,23 +62,23 @@ func (r *RedisCache) Get(key string) (found bool, data []byte, ttl time.Duration
 }
 
 // Put value into the storage.
-func (r *RedisCache) Put(key string, data []byte) error {
+func (c *RedisCache) Put(key string, data []byte) error {
 	if key == "" {
 		return ErrEmptyKey
 	} else if len(data) == 0 {
 		return ErrEmptyData
 	}
 
-	return r.redis.Set(r.ctx, r.key(key), data, r.ttl).Err()
+	return c.redis.Set(c.ctx, c.key(key), data, c.ttl).Err()
 }
 
 // Delete value from the storage with passed key.
-func (r *RedisCache) Delete(key string) (bool, error) {
+func (c *RedisCache) Delete(key string) (bool, error) {
 	if key == "" {
 		return false, ErrEmptyKey
 	}
 
-	if count, err := r.redis.Del(r.ctx, r.key(key)).Result(); err != nil {
+	if count, err := c.redis.Del(c.ctx, c.key(key)).Result(); err != nil {
 		return false, err
 	} else if count <= 0 {
 		return false, nil

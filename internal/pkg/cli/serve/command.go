@@ -4,7 +4,6 @@ package serve
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -73,12 +72,14 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 	}()
 
 	var (
-		cacheTTL = time.Second * time.Duration(cfg.Cache.LifetimeSec)
+		cacheTTL time.Duration
 		rdb      *redis.Client // optional, can be nil
 		cacher   cache.Cacher
 	)
 
-	switch f.cachingEngine {
+	cacheTTL, _ = time.ParseDuration(f.cache.ttl)
+
+	switch f.cache.engine {
 	case cachingEngineMemory:
 		inmemory := cache.NewInMemoryCache(cacheTTL, time.Second)
 
@@ -87,11 +88,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 		cacher = inmemory
 
 	case cachingEngineRedis:
-		opt, err := redis.ParseURL(f.redisDSN)
-		if err != nil {
-			return err
-		}
-
+		opt, _ := redis.ParseURL(f.redisDSN)
 		rdb = redis.NewClient(opt).WithContext(ctx)
 
 		defer func() { _ = rdb.Close() }()
@@ -111,7 +108,6 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 		ctx,
 		log,
 		cacher,
-		fmt.Sprintf("%s:%d", f.listen.ip, f.listen.port),
 		f.resourcesDir,
 		cfg,
 		rdb,
@@ -133,10 +129,11 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 			zap.Uint16("port", f.listen.port),
 			zap.String("resources", f.resourcesDir),
 			zap.String("config file", f.configPath),
-			zap.String("caching engine", f.cachingEngine),
+			zap.String("caching engine", f.cache.engine),
+			zap.Duration("cache ttl", cacheTTL),
 		}
 
-		if f.cachingEngine == cachingEngineRedis {
+		if f.cache.engine == cachingEngineRedis {
 			fields = append(fields, zap.String("redis dsn", f.redisDSN))
 		}
 
@@ -146,7 +143,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 			log.Warn("Resources directory was not provided")
 		}
 
-		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := server.Start(f.listen.ip, f.listen.port); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
 	}(startingErrCh)

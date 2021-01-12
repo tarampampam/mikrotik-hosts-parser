@@ -39,15 +39,6 @@ sources:
     enabled: false
     count: 46000
 
-# caching config
-cache:
-  # file-based cache
-  files:
-    # path to the directory for cache files
-    dir: ${TMPDIR:-/tmp}
-  # cached entries lifetime duration (in seconds)
-  lifetime_sec: ${CACHE_LIFETIME_SEC:-1800}
-
 # router script generation config
 router_script:
   # default requests redirection

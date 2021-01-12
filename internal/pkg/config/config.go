@@ -12,13 +12,6 @@ import (
 type Config struct {
 	Sources []source `yaml:"sources"`
 
-	Cache struct {
-		File struct {
-			DirPath string `yaml:"dir"`
-		} `yaml:"files"`
-		LifetimeSec uint32 `yaml:"lifetime_sec"`
-	} `yaml:"cache"`
-
 	RouterScript struct {
 		Redirect struct {
 			Address string `yaml:"address"`
