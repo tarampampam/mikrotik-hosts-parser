@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
@@ -20,11 +21,12 @@ type (
 	Server struct {
 		ctx          context.Context
 		log          *zap.Logger
-		cacheConn    cache.Connector
+		cacher       cache.Cacher
 		resourcesDir string // can be empty
 		cfg          *config.Config
 		srv          *http.Server
 		router       *mux.Router
+		rdb          *redis.Client // optional, can be nil
 	}
 )
 
@@ -37,10 +39,11 @@ const (
 func NewServer(
 	ctx context.Context,
 	log *zap.Logger,
-	cacheConn cache.Connector,
+	cacher cache.Cacher,
 	listen string,
-	resourcesDir string,
+	resourcesDir string, // can be empty
 	cfg *config.Config,
+	rdb *redis.Client, // optional, can be nil
 ) Server {
 	var (
 		router     = *mux.NewRouter()
@@ -56,11 +59,12 @@ func NewServer(
 	return Server{
 		ctx:          ctx,
 		log:          log,
-		cacheConn:    cacheConn,
+		cacher:       cacher,
 		resourcesDir: resourcesDir,
 		cfg:          cfg,
 		srv:          httpServer,
 		router:       &router,
+		rdb:          rdb,
 	}
 }
 

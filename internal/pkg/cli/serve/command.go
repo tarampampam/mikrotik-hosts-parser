@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -53,7 +54,7 @@ func NewCommand(ctx context.Context, log *zap.Logger) *cobra.Command {
 const serverShutdownTimeout = 5 * time.Second
 
 // run current command.
-func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flags) error { //nolint:funlen
+func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flags) error { //nolint:funlen,gocyclo
 	var (
 		ctx, cancel = context.WithCancel(parentCtx) // serve context creation
 		oss         = breaker.NewOSSignals(ctx)     // OS signals listener
@@ -71,11 +72,19 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 		oss.Stop() // stop system signals listening
 	}()
 
-	var cacheConn cache.Connector
+	var (
+		cacheTTL = time.Second * time.Duration(cfg.Cache.LifetimeSec)
+		cacher   cache.Cacher
+		rdb      *redis.Client // optional
+	)
 
 	switch f.cachingEngine {
 	case cachingEngineMemory:
-		cacheConn = cache.NewInMemoryConnector(time.Second*time.Duration(cfg.Cache.LifetimeSec), time.Second)
+		inmemory := cache.NewInMemoryCache(cacheTTL, time.Second)
+
+		defer func() { _ = inmemory.Close() }()
+
+		cacher = inmemory
 
 	case cachingEngineRedis:
 		opt, err := redis.ParseURL(f.redisDSN)
@@ -83,27 +92,29 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 			return err
 		}
 
-		cacheConn = cache.NewRedisConnector(ctx, opt, time.Second*time.Duration(cfg.Cache.LifetimeSec))
+		rdb = redis.NewClient(opt).WithContext(ctx)
+
+		defer func() { _ = rdb.Close() }()
+
+		if pingErr := rdb.Ping(ctx).Err(); pingErr != nil {
+			return pingErr
+		}
+
+		cacher = cache.NewRedisCache(ctx, rdb, cacheTTL)
 
 	default:
 		return errors.New("unsupported caching engine")
 	}
 
-	// try to open caching engine
-	if err := cacheConn.Open(); err != nil {
-		return err
-	}
-
-	defer func() { _ = cacheConn.Close() }()
-
 	// create HTTP server
 	server := appHttp.NewServer(
 		ctx,
 		log,
-		cacheConn,
+		cacher,
 		fmt.Sprintf("%s:%d", f.listen.ip, f.listen.port),
 		f.resourcesDir,
 		cfg,
+		rdb,
 	)
 
 	// register server routes, middlewares, etc.
@@ -147,13 +158,23 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 		ctxShutdown, ctxCancelShutdown := context.WithTimeout(context.Background(), serverShutdownTimeout)
 		defer ctxCancelShutdown()
 
-		// and stop the server using created context above
+		// stop the server using created context above
 		if err := server.Stop(ctxShutdown); err != nil {
 			return err
 		}
 
-		if err := cacheConn.Close(); err != nil {
-			return err
+		// close cacher (if it is possible)
+		if c, ok := cacher.(io.Closer); ok {
+			if err := c.Close(); err != nil {
+				return err
+			}
+		}
+
+		// and close redis connection
+		if rdb != nil {
+			if err := rdb.Close(); err != nil {
+				return err
+			}
 		}
 	}
 

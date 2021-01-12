@@ -40,7 +40,7 @@ func (s *Server) registerAPIHandlers() {
 
 func (s *Server) registerServiceHandlers() {
 	s.router.
-		HandleFunc("/ready", healthz.NewHandler(checkers.NewReadyChecker())).
+		HandleFunc("/ready", healthz.NewHandler(checkers.NewReadyChecker(s.ctx, s.rdb))).
 		Methods(http.MethodGet, http.MethodHead).
 		Name("ready")
 

@@ -51,10 +51,10 @@ func TestServer_StartAndStop(t *testing.T) {
 	port, err := getRandomTCPPort(t)
 	assert.NoError(t, err)
 
-	cacheConn := cache.NewInMemoryConnector(time.Second, time.Second)
-	defer cacheConn.Close()
+	cacher := cache.NewInMemoryCache(time.Second, time.Second)
+	defer cacher.Close()
 
-	srv := NewServer(context.Background(), zap.NewNop(), cacheConn, ":"+strconv.Itoa(port), ".", &config.Config{})
+	srv := NewServer(context.Background(), zap.NewNop(), cacher, ":"+strconv.Itoa(port), ".", &config.Config{}, nil)
 
 	assert.False(t, checkTCPPortIsBusy(t, port))
 
@@ -97,10 +97,10 @@ func TestServer_Register(t *testing.T) {
 		{name: "static", route: "/", methods: []string{http.MethodGet, http.MethodHead}},
 	}
 
-	cacheConn := cache.NewInMemoryConnector(time.Second, time.Second)
-	defer cacheConn.Close()
+	cacher := cache.NewInMemoryCache(time.Second, time.Second)
+	defer cacher.Close()
 
-	srv := NewServer(context.Background(), zap.NewNop(), cacheConn, ":0", ".", &config.Config{})
+	srv := NewServer(context.Background(), zap.NewNop(), cacher, ":0", ".", &config.Config{}, nil)
 	router := srv.router // dirty hack, yes, i know
 
 	// state *before* registration
@@ -128,11 +128,11 @@ func TestServer_Register(t *testing.T) {
 }
 
 func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
-	cacheEng := cache.NewInMemoryConnector(time.Second, time.Second)
-	defer cacheEng.Close()
+	c := cache.NewInMemoryCache(time.Second, time.Second)
+	defer c.Close()
 
-	srv := NewServer(context.Background(), zap.NewNop(), cacheEng, ":0", "", &config.Config{}) // empty resources dir
-	router := srv.router                                                                       // dirty hack, yes, i know
+	srv := NewServer(context.Background(), zap.NewNop(), c, ":0", "", &config.Config{}, nil) // empty resources dir
+	router := srv.router                                                                     // dirty hack, yes, i know
 
 	assert.Nil(t, router.Get("static"))
 	assert.NoError(t, srv.Register())
