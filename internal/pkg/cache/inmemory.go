@@ -8,15 +8,15 @@ import (
 type (
 	// InMemoryCache is an inmemory cache (with TTL) implementation.
 	InMemoryCache struct {
-		ttl       time.Duration
+		ttl time.Duration
+		ci  time.Duration // cleanup interval
+
 		storageMu sync.RWMutex
 		storage   map[string]inmemoryItem
 
 		close    chan struct{}
 		closedMu sync.RWMutex
 		closed   bool
-
-		ci time.Duration // cleanup interval
 	}
 
 	inmemoryItem struct {

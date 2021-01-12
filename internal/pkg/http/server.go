@@ -20,7 +20,7 @@ type (
 	Server struct {
 		ctx          context.Context
 		log          *zap.Logger
-		cache        cache.Engine
+		cacheConn    cache.Connector
 		resourcesDir string // can be empty
 		cfg          *config.Config
 		srv          *http.Server
@@ -37,7 +37,7 @@ const (
 func NewServer(
 	ctx context.Context,
 	log *zap.Logger,
-	cache cache.Engine,
+	cacheConn cache.Connector,
 	listen string,
 	resourcesDir string,
 	cfg *config.Config,
@@ -56,7 +56,7 @@ func NewServer(
 	return Server{
 		ctx:          ctx,
 		log:          log,
-		cache:        cache,
+		cacheConn:    cacheConn,
 		resourcesDir: resourcesDir,
 		cfg:          cfg,
 		srv:          httpServer,

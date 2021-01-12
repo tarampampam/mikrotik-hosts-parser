@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// Cacher is a byte-cache.
+// Cacher is a byte-based cache with TTL.
 type Cacher interface {
 	// Get value associated with the key from the storage.
 	Get(key string) (found bool, data []byte, ttl time.Duration, err error)
@@ -21,25 +21,19 @@ type Cacher interface {
 	Delete(key string) (bool, error)
 }
 
-// Tester allows to test something.
-type Tester interface {
-	// Test returns an error only when something is broken down inside.
-	Test() error
-}
-
-// Engine is a wrapper around the cache implementation.
-type Engine interface {
+// Connector is a wrapper around the cache implementation.
+type Connector interface {
 	io.Closer
 
 	// Open cache storage.
 	Open() error
 
-	// Cache returns cache implementation if Engine was successfully opened before.
+	// Cache returns cache implementation if Connector was successfully opened before.
 	Cache() (Cacher, error)
 }
 
-// RedisEngine is Engine that uses RedisEngine under the hood.
-type RedisEngine struct {
+// RedisConnector is Connector that uses RedisConnector under the hood.
+type RedisConnector struct {
 	ctx   context.Context
 	opt   *redis.Options
 	rdb   *redis.Client
@@ -47,96 +41,96 @@ type RedisEngine struct {
 	cache *RedisCache
 }
 
-// NewRedisEngine creates new RedisEngine.
-func NewRedisEngine(ctx context.Context, opt *redis.Options, ttl time.Duration) *RedisEngine {
-	return &RedisEngine{ctx: ctx, opt: opt, ttl: ttl}
+// NewRedisConnector creates new RedisConnector.
+func NewRedisConnector(ctx context.Context, opt *redis.Options, ttl time.Duration) *RedisConnector {
+	return &RedisConnector{ctx: ctx, opt: opt, ttl: ttl}
 }
 
 // Open establish connection to the redis server and verify it using Ping command.
-func (e *RedisEngine) Open() error {
-	if e.rdb != nil {
+func (c *RedisConnector) Open() error {
+	if c.rdb != nil {
 		return errors.New("already opened")
 	}
 
-	rdb := redis.NewClient(e.opt).WithContext(e.ctx)
+	rdb := redis.NewClient(c.opt).WithContext(c.ctx)
 
-	if err := rdb.Ping(e.ctx).Err(); err != nil {
+	if err := rdb.Ping(c.ctx).Err(); err != nil {
 		return err
 	}
 
-	e.rdb = rdb
-	e.cache = NewRedisCache(e.ctx, e.rdb, e.ttl)
+	c.rdb = rdb
+	c.cache = NewRedisCache(c.ctx, c.rdb, c.ttl)
 
 	return nil
 }
 
 // Test verifies connection to the redis server using Ping command.
-func (e *RedisEngine) Test() error {
-	if e.rdb == nil {
+func (c *RedisConnector) Test() error {
+	if c.rdb == nil {
 		return errors.New("not opened")
 	}
 
-	return e.rdb.Ping(e.ctx).Err()
+	return c.rdb.Ping(c.ctx).Err()
 }
 
-// Close drops connection to the redis server and forget about it.
-func (e *RedisEngine) Close() error {
-	if e.rdb == nil {
+// Close drops connection to the redis server and forgets about him.
+func (c *RedisConnector) Close() error {
+	if c.rdb == nil {
 		return errors.New("already closed or was not opened")
 	}
 
-	defer func() { e.rdb, e.cache = nil, nil }()
+	defer func() { c.rdb, c.cache = nil, nil }()
 
-	return e.rdb.Close()
+	return c.rdb.Close()
 }
 
-// Cache returns cache implementation if RedisEngine was successfully opened before.
-func (e *RedisEngine) Cache() (Cacher, error) {
-	if e.rdb == nil || e.cache == nil {
+// Cache returns cache implementation if RedisConnector was successfully opened before.
+func (c *RedisConnector) Cache() (Cacher, error) {
+	if c.rdb == nil || c.cache == nil {
 		return nil, errors.New("not opened")
 	}
 
-	return e.cache, nil
+	return c.cache, nil
 }
 
-// InMemoryEngine is Engine that uses InMemoryCache under the hood.
-type InMemoryEngine struct {
+// InMemoryConnector is Connector that uses InMemoryCache under the hood.
+type InMemoryConnector struct {
 	ttl, cleanupInterval time.Duration
 	cache                *InMemoryCache
 }
 
-// NewInMemoryEngine creates new InMemoryEngine.
-func NewInMemoryEngine(ttl, cleanupInterval time.Duration) *InMemoryEngine {
-	return &InMemoryEngine{ttl: ttl, cleanupInterval: cleanupInterval}
+// NewInMemoryConnector creates new InMemoryConnector.
+func NewInMemoryConnector(ttl, cleanupInterval time.Duration) *InMemoryConnector {
+	return &InMemoryConnector{ttl: ttl, cleanupInterval: cleanupInterval}
 }
 
 // Open creates inmemory cache implementation.
-func (e *InMemoryEngine) Open() error {
-	if e.cache != nil {
+func (c *InMemoryConnector) Open() error {
+	if c.cache != nil {
 		return errors.New("already opened")
 	}
 
-	e.cache = NewInMemoryCache(e.ttl, e.cleanupInterval)
+	c.cache = NewInMemoryCache(c.ttl, c.cleanupInterval)
 
 	return nil
 }
 
-// Close closes current caching storage and forget about it.
-func (e *InMemoryEngine) Close() error {
-	if e.cache == nil {
+// Close closes current caching storage and forgets about him.
+func (c *InMemoryConnector) Close() error {
+	if c.cache == nil {
 		return errors.New("already closed or was not opened")
 	}
 
-	defer func() { e.cache = nil }()
+	defer func() { c.cache = nil }()
 
-	return e.cache.Close()
+	return c.cache.Close()
 }
 
-// Cache returns cache implementation if InMemoryEngine was successfully opened before.
-func (e *InMemoryEngine) Cache() (Cacher, error) {
-	if e.cache == nil {
+// Cache returns cache implementation if InMemoryConnector was successfully opened before.
+func (c *InMemoryConnector) Cache() (Cacher, error) {
+	if c.cache == nil {
 		return nil, errors.New("not opened")
 	}
 
-	return e.cache, nil
+	return c.cache, nil
 }

@@ -62,7 +62,7 @@ func TestInMemoryCache_Expiration(t *testing.T) {
 	assert.False(t, found)
 }
 
-func TestInMemoryCache_RaceAccess(t *testing.T) {
+func TestInMemoryCache_ConcurrentAccess(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Microsecond)
 
 	testCtx, testCancel := context.WithCancel(context.Background())

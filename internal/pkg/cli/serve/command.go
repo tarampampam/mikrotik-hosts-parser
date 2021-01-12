@@ -71,11 +71,11 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 		oss.Stop() // stop system signals listening
 	}()
 
-	var cachingEngine cache.Engine
+	var cacheConn cache.Connector
 
 	switch f.cachingEngine {
 	case cachingEngineMemory:
-		cachingEngine = cache.NewInMemoryEngine(time.Second*time.Duration(cfg.Cache.LifetimeSec), time.Second)
+		cacheConn = cache.NewInMemoryConnector(time.Second*time.Duration(cfg.Cache.LifetimeSec), time.Second)
 
 	case cachingEngineRedis:
 		opt, err := redis.ParseURL(f.redisDSN)
@@ -83,24 +83,24 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 			return err
 		}
 
-		cachingEngine = cache.NewRedisEngine(ctx, opt, time.Second*time.Duration(cfg.Cache.LifetimeSec))
+		cacheConn = cache.NewRedisConnector(ctx, opt, time.Second*time.Duration(cfg.Cache.LifetimeSec))
 
 	default:
 		return errors.New("unsupported caching engine")
 	}
 
 	// try to open caching engine
-	if err := cachingEngine.Open(); err != nil {
+	if err := cacheConn.Open(); err != nil {
 		return err
 	}
 
-	defer func() { _ = cachingEngine.Close() }()
+	defer func() { _ = cacheConn.Close() }()
 
 	// create HTTP server
 	server := appHttp.NewServer(
 		ctx,
 		log,
-		cachingEngine,
+		cacheConn,
 		fmt.Sprintf("%s:%d", f.listen.ip, f.listen.port),
 		f.resourcesDir,
 		cfg,
@@ -152,7 +152,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 			return err
 		}
 
-		if err := cachingEngine.Close(); err != nil {
+		if err := cacheConn.Close(); err != nil {
 			return err
 		}
 	}
