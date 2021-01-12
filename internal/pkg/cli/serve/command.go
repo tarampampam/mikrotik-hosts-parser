@@ -75,7 +75,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 	var (
 		cacheTTL = time.Second * time.Duration(cfg.Cache.LifetimeSec)
 		cacher   cache.Cacher
-		rdb      *redis.Client // optional
+		rdb      *redis.Client // optional, can be nil
 	)
 
 	switch f.cachingEngine {
