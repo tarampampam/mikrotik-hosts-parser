@@ -74,8 +74,8 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 
 	var (
 		cacheTTL = time.Second * time.Duration(cfg.Cache.LifetimeSec)
-		cacher   cache.Cacher
 		rdb      *redis.Client // optional, can be nil
+		cacher   cache.Cacher
 	)
 
 	switch f.cachingEngine {
@@ -128,14 +128,19 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 	go func(errCh chan<- error) {
 		defer close(errCh)
 
-		log.Info("Server starting",
+		fields := []zap.Field{
 			zap.String("addr", f.listen.ip),
 			zap.Uint16("port", f.listen.port),
 			zap.String("resources", f.resourcesDir),
 			zap.String("config file", f.configPath),
 			zap.String("caching engine", f.cachingEngine),
-			zap.String("redis dsn", f.redisDSN),
-		)
+		}
+
+		if f.cachingEngine == cachingEngineRedis {
+			fields = append(fields, zap.String("redis dsn", f.redisDSN))
+		}
+
+		log.Info("Server starting", fields...)
 
 		if f.resourcesDir == "" {
 			log.Warn("Resources directory was not provided")
