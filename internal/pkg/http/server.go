@@ -98,7 +98,10 @@ func (s *Server) registerGlobalMiddlewares() {
 
 // registerHandlers register server http handlers.
 func (s *Server) registerHandlers() error {
-	s.registerScriptGeneratorHandlers()
+	if err := s.registerScriptGeneratorHandlers(); err != nil {
+		return err
+	}
+
 	s.registerAPIHandlers()
 	s.registerServiceHandlers()
 

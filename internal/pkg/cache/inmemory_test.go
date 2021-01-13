@@ -9,6 +9,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+/*
+func BenchmarkInMemoryCache_Put(b *testing.B) {
+	b.ReportAllocs()
+
+	cache := NewInMemoryCache(time.Minute, time.Second)
+	defer cache.Close()
+
+	data := []byte(strings.Repeat("xxxxxxxxx", 102400))
+
+	for n := 0; n < b.N; n++ {
+		cache.Put("foo" + strconv.Itoa(n), data)
+	}
+}
+*/
+
 func TestInMemoryCache_GetPutDelete(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Second)
 	defer cache.Close()

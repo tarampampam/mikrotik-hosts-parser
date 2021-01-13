@@ -10,7 +10,9 @@ import (
 )
 
 type httpClient struct {
-	client *http.Client
+	client interface {
+		Do(*http.Request) (*http.Response, error)
+	}
 }
 
 var defaultHTTPClient = newHTTPClient()

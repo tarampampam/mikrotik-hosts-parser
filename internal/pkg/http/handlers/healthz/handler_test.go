@@ -15,7 +15,7 @@ func (c *fakeChecker) Check() error { return c.err }
 
 func TestNewHandlerNoError(t *testing.T) {
 	var (
-		req, _ = http.NewRequest("GET", "http://testing", nil)
+		req, _ = http.NewRequest(http.MethodGet, "http://testing", http.NoBody)
 		rr     = httptest.NewRecorder()
 	)
 
@@ -27,7 +27,7 @@ func TestNewHandlerNoError(t *testing.T) {
 
 func TestNewHandlerError(t *testing.T) {
 	var (
-		req, _ = http.NewRequest("GET", "http://testing", nil)
+		req, _ = http.NewRequest(http.MethodGet, "http://testing?foo=bar", http.NoBody)
 		rr     = httptest.NewRecorder()
 	)
 

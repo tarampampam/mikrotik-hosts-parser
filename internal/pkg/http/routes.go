@@ -13,11 +13,18 @@ import (
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
-func (s *Server) registerScriptGeneratorHandlers() {
+func (s *Server) registerScriptGeneratorHandlers() error {
+	h, err := generate.NewHandler(s.ctx, s.log, s.cacher, s.cfg)
+	if err != nil {
+		return err
+	}
+
 	s.router.
-		HandleFunc("/script/source", generate.RouterOsScriptSourceGenerationHandlerFunc(s.cfg, s.cacher)).
+		Handle("/script/source", h).
 		Methods(http.MethodGet).
 		Name("script_generator")
+
+	return nil
 }
 
 func (s *Server) registerAPIHandlers() {

@@ -14,7 +14,7 @@ import (
 
 func TestNewHandler(t *testing.T) {
 	var (
-		req, _ = http.NewRequest("GET", "http://testing", nil)
+		req, _ = http.NewRequest(http.MethodGet, "http://testing", nil)
 		rr     = httptest.NewRecorder()
 		cfg    config.Config
 	)
