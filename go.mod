@@ -4,12 +4,16 @@ go 1.15
 
 require (
 	github.com/a8m/envsubst v1.2.0
-	github.com/gorilla/handlers v1.5.1
+	github.com/alicebob/miniredis/v2 v2.14.1
+	github.com/fatih/color v1.10.0
+	github.com/felixge/httpsnoop v1.0.1
+	github.com/go-redis/redis/v8 v8.4.8
 	github.com/gorilla/mux v1.8.0
-	github.com/jessevdk/go-flags v1.4.1-0.20181221193153-c0795c8afcf4
-	github.com/kr/pretty v0.2.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/tarampampam/go-filecache v1.0.2
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	github.com/kami-zh/go-capturer v0.0.0-20171211120116-e492ea43421d
+	github.com/spf13/cobra v1.1.1
+	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.6.1
+	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
+	go.uber.org/zap v1.16.0
 	gopkg.in/yaml.v2 v2.4.0
 )

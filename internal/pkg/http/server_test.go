@@ -1,94 +1,146 @@
 package http
 
 import (
-	"log"
+	"context"
+	"errors"
 	"mime"
-	"os"
-	"reflect"
+	"net"
+	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/settings/serve"
+	"github.com/stretchr/testify/assert"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
+	"go.uber.org/zap"
 )
 
-func TestNewServer(t *testing.T) {
-	settings := ServerSettings{
-		WriteTimeout:     10 * time.Second,
-		ReadTimeout:      13 * time.Second,
-		KeepAliveEnabled: false,
+func getRandomTCPPort(t *testing.T) (int, error) {
+	t.Helper()
+
+	// zero port means randomly (os) chosen port
+	l, err := net.Listen("tcp", ":0") //nolint:gosec
+	if err != nil {
+		return 0, err
 	}
 
-	server := NewServer(&settings, &serve.Settings{
-		Listen: serve.Listen{Address: "1.2.3.4", Port: 321},
-	})
+	port := l.Addr().(*net.TCPAddr).Port
 
-	if !reflect.DeepEqual(&settings, server.Settings) {
-		t.Errorf("Wrong settings set. Expected: %v, got: %v", settings, server.Settings)
+	if closingErr := l.Close(); closingErr != nil {
+		return 0, closingErr
 	}
 
-	if server.stdLog.Writer() != os.Stdout {
-		t.Error("Wrong 'stdLog' writer set")
-	}
-
-	if server.stdLog.Flags() != log.Ldate|log.Lmicroseconds {
-		t.Error("Wrong 'stdLog' flags set")
-	}
-
-	if server.errLog.Flags() != log.LstdFlags {
-		t.Error("Wrong 'errLog' flags set")
-	}
-
-	if server.Server.Addr != "1.2.3.4:321" {
-		t.Errorf("Wrong HTTP server addr set. Want [%s], got [%s]", "1.2.3.4:321", server.Server.Addr)
-	}
-
-	if server.Server.WriteTimeout != 10*time.Second {
-		t.Error("Wrong server write timeout value is set")
-	}
-
-	if server.Server.ReadTimeout != 13*time.Second {
-		t.Error("Wrong server read timeout value is set")
-	}
+	return port, nil
 }
 
-func Test_registerCustomMimeTypes(t *testing.T) {
-	testSliceContainsString := func(t *testing.T, slice []string, expects string) {
-		t.Helper()
+func checkTCPPortIsBusy(t *testing.T, port int) bool {
+	t.Helper()
 
-		for _, n := range slice {
-			if expects == n {
-				return
-			}
+	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+	if err != nil {
+		return true
+	}
+
+	_ = l.Close()
+
+	return false
+}
+
+func TestServer_StartAndStop(t *testing.T) {
+	port, err := getRandomTCPPort(t)
+	assert.NoError(t, err)
+
+	cacher := cache.NewInMemoryCache(time.Second, time.Second)
+	defer cacher.Close()
+
+	srv := NewServer(context.Background(), zap.NewNop(), cacher, ".", &config.Config{}, nil)
+
+	assert.False(t, checkTCPPortIsBusy(t, port))
+
+	go func() {
+		startingErr := srv.Start("", uint16(port))
+
+		if !errors.Is(startingErr, http.ErrServerClosed) {
+			assert.NoError(t, startingErr)
 		}
+	}()
 
-		t.Errorf("Slice %v does not contains %s", slice, expects)
-	}
-
-	testSliceNotContainsString := func(t *testing.T, slice []string, expects string) {
-		t.Helper()
-
-		for _, n := range slice {
-			if expects == n {
-				t.Errorf("Slice %v contains %s (but should not)", slice, expects)
+	for i := 0; ; i++ {
+		if !checkTCPPortIsBusy(t, port) {
+			if i > 100 {
+				t.Error("too many attempts for server start checking")
 			}
+
+			<-time.After(time.Microsecond * 10)
+		} else {
+			break
 		}
 	}
 
-	types, _ := mime.ExtensionsByType("text/html; charset=utf-8")
-	testSliceNotContainsString(t, types, ".vue")
+	assert.True(t, checkTCPPortIsBusy(t, port))
+	assert.NoError(t, srv.Stop(context.Background()))
+	assert.False(t, checkTCPPortIsBusy(t, port))
+}
 
-	if err := NewServer(&ServerSettings{}, &serve.Settings{}).registerCustomMimeTypes(); err != nil {
-		t.Error(err)
+func TestServer_Register(t *testing.T) {
+	var routes = []struct {
+		name    string
+		route   string
+		methods []string
+	}{
+		{name: "script_generator", route: "/script/source", methods: []string{http.MethodGet}},
+		{name: "api_get_settings", route: "/api/settings", methods: []string{http.MethodGet}},
+		{name: "api_get_version", route: "/api/version", methods: []string{http.MethodGet}},
+		{name: "ready", route: "/ready", methods: []string{http.MethodGet, http.MethodHead}},
+		{name: "live", route: "/live", methods: []string{http.MethodGet, http.MethodHead}},
+		{name: "static", route: "/", methods: []string{http.MethodGet, http.MethodHead}},
 	}
 
-	types, _ = mime.ExtensionsByType("text/html; charset=utf-8")
-	testSliceContainsString(t, types, ".vue")
+	cacher := cache.NewInMemoryCache(time.Second, time.Second)
+	defer cacher.Close()
+
+	cfg := &config.Config{}
+	cfg.RouterScript.MaxSourcesCount = 1
+
+	srv := NewServer(context.Background(), zap.NewNop(), cacher, ".", cfg, nil)
+	router := srv.router // dirty hack, yes, i know
+
+	// state *before* registration
+	types, err := mime.ExtensionsByType("text/html; charset=utf-8")
+	assert.NoError(t, err)
+	assert.NotContains(t, types, ".vue") // mime types registration can be executed only once
+
+	for _, r := range routes {
+		assert.Nil(t, router.Get(r.name))
+	}
+
+	// call register fn
+	assert.NoError(t, srv.Register())
+
+	// state *after* registration
+	types, _ = mime.ExtensionsByType("text/html; charset=utf-8") // reload
+	assert.Contains(t, types, ".vue")
+
+	for _, r := range routes {
+		route, _ := router.Get(r.name).GetPathTemplate()
+		assert.Equal(t, r.route, route)
+		methods, _ := router.Get(r.name).GetMethods()
+		assert.Equal(t, r.methods, methods)
+	}
 }
 
-func TestServer_Start(t *testing.T) {
-	t.Skip("Not implemented yet")
-}
+func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
+	c := cache.NewInMemoryCache(time.Second, time.Second)
+	defer c.Close()
 
-func TestServer_Stop(t *testing.T) {
-	t.Skip("Not implemented yet")
+	cfg := &config.Config{}
+	cfg.RouterScript.MaxSourcesCount = 1
+
+	srv := NewServer(context.Background(), zap.NewNop(), c, "", cfg, nil) // empty resources dir
+	router := srv.router                                                  // dirty hack, yes, i know
+
+	assert.Nil(t, router.Get("static"))
+	assert.NoError(t, srv.Register())
+	assert.Nil(t, router.Get("static"))
 }

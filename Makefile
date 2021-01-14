@@ -37,7 +37,7 @@ lint: ## Run app linters
 	docker-compose run --rm --no-deps golint golangci-lint run
 
 gotest: ## Run app tests
-	docker-compose run $(DC_RUN_ARGS) --no-deps app go test -v -race -timeout 5s ./...
+	docker-compose run $(DC_RUN_ARGS) --no-deps app go test -v -race -timeout 10s ./...
 
 test: lint gotest ## Run app tests and linters
 
@@ -46,7 +46,7 @@ cover: ## Run app tests with coverage report
 	-sensible-browser ./coverage.html && sleep 2 && rm -f ./coverage.html
 
 up: ## Create and start containers
-	docker-compose up --detach --build web
+	docker-compose up --detach web
 	@printf "\n   \e[30;42m %s \033[0m\n\n" 'Navigate your browser to ⇒ http://127.0.0.1:8080';
 
 down: ## Stop and remove containers, networks, images, and volumes

@@ -3,58 +3,76 @@ package http
 import (
 	"net/http"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/api"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
 	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/script"
+	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/settings"
+	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/generate"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/healthz"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/nocache"
+	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
 )
 
-// RegisterHandlers register server http handlers.
-func (s *Server) RegisterHandlers() {
-	s.registerStaticHandlers()
-	s.registerAPIHandlers()
-	s.registerFileServerHandler()
-}
+func (s *Server) registerScriptGeneratorHandlers() error {
+	h, err := generate.NewHandler(s.ctx, s.log, s.cacher, s.cfg)
+	if err != nil {
+		return err
+	}
 
-// Register static route handlers.
-func (s *Server) registerStaticHandlers() {
-	s.Router.
-		HandleFunc("/script/source", script.RouterOsScriptSourceGenerationHandlerFunc(s.ServeSettings)).
-		Methods("GET").
+	s.router.
+		Handle("/script/source", h).
+		Methods(http.MethodGet).
 		Name("script_generator")
+
+	return nil
 }
 
-// Register API handlers.
 func (s *Server) registerAPIHandlers() {
-	apiRouter := s.Router.
+	apiRouter := s.router.
 		PathPrefix("/api").
 		Subrouter()
 
-	apiRouter.Use(DisableAPICachingMiddleware)
+	apiRouter.Use(nocache.New())
 
 	apiRouter.
-		HandleFunc("/settings", api.GetSettingsHandlerFunc(s.ServeSettings)).
-		Methods("GET").
+		HandleFunc("/settings", apiSettings.NewHandler(*s.cfg, s.cacher)).
+		Methods(http.MethodGet).
 		Name("api_get_settings")
 
 	apiRouter.
-		HandleFunc("/version", api.GetVersionHandler).
-		Methods("GET").
+		HandleFunc("/version", apiVersion.NewHandler(version.Version())).
+		Methods(http.MethodGet).
 		Name("api_get_version")
-
-	apiRouter.
-		HandleFunc("/routes", api.GetRoutesHandlerFunc(s.Router)).
-		Methods("GET").
-		Name("api_get_routes")
 }
 
-// Register file server handler.
-func (s *Server) registerFileServerHandler() {
-	s.Router.
+func (s *Server) registerServiceHandlers() {
+	s.router.
+		HandleFunc("/ready", healthz.NewHandler(checkers.NewReadyChecker(s.ctx, s.rdb))).
+		Methods(http.MethodGet, http.MethodHead).
+		Name("ready")
+
+	s.router.
+		HandleFunc("/live", healthz.NewHandler(checkers.NewLiveChecker())).
+		Methods(http.MethodGet, http.MethodHead).
+		Name("live")
+}
+
+func (s *Server) registerFileServerHandler(resourcesDir string) error {
+	fs, err := fileserver.NewFileServer(fileserver.Settings{
+		FilesRoot:               resourcesDir,
+		IndexFileName:           "index.html",
+		ErrorFileName:           "__error__.html",
+		RedirectIndexFileToRoot: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	s.router.
 		PathPrefix("/").
-		Handler(&fileserver.FileServer{Settings: fileserver.Settings{
-			Root:         http.Dir(s.ServeSettings.Resources.DirPath),
-			IndexFile:    s.ServeSettings.Resources.IndexName,
-			Error404file: s.ServeSettings.Resources.Error404Name,
-		}}).
+		Methods(http.MethodGet, http.MethodHead).
+		Handler(fs).
 		Name("static")
+
+	return nil
 }

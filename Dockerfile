@@ -36,9 +36,10 @@ RUN set -x \
     && mkdir -p /tmp/rootfs/etc/ssl \
     && mkdir -p /tmp/rootfs/bin \
     && mkdir -p /tmp/rootfs/opt/mikrotik-hosts-parser \
+    && mkdir -p --mode=777 /tmp/rootfs/tmp \
     && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
     && cp -R /src/web /tmp/rootfs/opt/mikrotik-hosts-parser/web \
-    && cp /src/serve.yml /tmp/rootfs/etc/serve.yml \
+    && cp /src/configs/config.yml /tmp/rootfs/etc/config.yml \
     && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
     && mv /tmp/mikrotik-hosts-parser /tmp/rootfs/bin/mikrotik-hosts-parser
 
@@ -62,12 +63,18 @@ COPY --from=builder /tmp/rootfs /
 # Use an unprivileged user
 USER appuser
 
+# Docs: <https://docs.docker.com/engine/reference/builder/#healthcheck>
+HEALTHCHECK --interval=15s --timeout=3s --start-period=1s CMD [ \
+    "/bin/mikrotik-hosts-parser", "healthcheck", \
+    "--port", "8080" \
+]
+
 ENTRYPOINT ["/bin/mikrotik-hosts-parser"]
 
 CMD [ \
     "serve", \
-    "--config", "/etc/serve.yml", \
-    "--listen", "0.0.0.0", \
+    "--log-json", \
+    "--config", "/etc/config.yml", \
     "--port", "8080", \
     "--resources-dir", "/opt/mikrotik-hosts-parser/web" \
 ]

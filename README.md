@@ -19,17 +19,19 @@ More information can be [found here][link_habr_post].
 
 ## Usage
 
+// TODO redis server can be used from `redis.io`
+
 For local application starting using binary file, you must compile application _(after repository cloning)_ using `GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ./mikrotik-hosts-parser ./cmd/mikrotik-hosts-parser/` or `make build`, and then execute:
 
 ```bash
 $ ./mikrotik-hosts-parser serve \
-    --config ./serve.yml \
+    --config ./config.yml \
     --listen 0.0.0.0 \
     --port 8080 \
     --resources-dir ./web
 ```
 
-This command will start HTTP server using configuration from `./serve.yml` on port `8080` and use directory `./web` for serving static files. Configuration file well-documented, so, feel free to change any settings on your choice!
+This command will start HTTP server using configuration from `./config.yml` on port `8080` and use directory `./web` for serving static files. Configuration file well-documented, so, feel free to change any settings on your choice!
 
 > Configuration file allows you to use environment variables with default values!
 
