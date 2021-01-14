@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"syscall"
@@ -28,7 +29,8 @@ func TestProperties(t *testing.T) {
 
 func TestFlags(t *testing.T) {
 	cmd := NewCommand(context.Background(), zap.NewNop())
-	wd, _ := os.Getwd()
+	exe, _ := os.Executable()
+	exe = path.Dir(exe)
 
 	cases := []struct {
 		giveName      string
@@ -37,8 +39,8 @@ func TestFlags(t *testing.T) {
 	}{
 		{giveName: "listen", wantShorthand: "l", wantDefault: "0.0.0.0"},
 		{giveName: "port", wantShorthand: "p", wantDefault: "8080"},
-		{giveName: "resources-dir", wantShorthand: "r", wantDefault: filepath.Join(wd, "web")},
-		{giveName: "config", wantShorthand: "c", wantDefault: filepath.Join(wd, "configs", "config.yml")},
+		{giveName: "resources-dir", wantShorthand: "r", wantDefault: filepath.Join(exe, "web")},
+		{giveName: "config", wantShorthand: "c", wantDefault: filepath.Join(exe, "configs", "config.yml")},
 		{giveName: "caching-engine", wantShorthand: "", wantDefault: "memory"},
 		{giveName: "redis-dsn", wantShorthand: "", wantDefault: "redis://127.0.0.1:6379/0"},
 	}

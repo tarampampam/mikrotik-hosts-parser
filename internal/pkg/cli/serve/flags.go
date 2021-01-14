@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -34,7 +35,8 @@ type flags struct {
 }
 
 func (f *flags) init(flagSet *pflag.FlagSet) {
-	wd, _ := os.Getwd()
+	exe, _ := os.Executable()
+	exe = path.Dir(exe)
 
 	flagSet.StringVarP(
 		&f.listen.ip,
@@ -54,14 +56,14 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		&f.resourcesDir,
 		"resources-dir",
 		"r",
-		filepath.Join(wd, "web"),
+		filepath.Join(exe, "web"),
 		fmt.Sprintf("path to the directory with public assets [$%s]", env.ResourcesDir),
 	)
 	flagSet.StringVarP(
 		&f.configPath,
 		"config",
 		"c",
-		filepath.Join(wd, "configs", "config.yml"),
+		filepath.Join(exe, "configs", "config.yml"),
 		fmt.Sprintf("config file path [$%s]", env.ConfigPath),
 	)
 	flagSet.StringVarP(

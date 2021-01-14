@@ -19,8 +19,8 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 - More strict linter settings
 - Config file now contains only sources list and script generator options
 - Default values for the next `serve` sub-command flags:
-  - For `--config` now is `%current_working_directory%/configs/config.yml` (instead nothing)
-  - For `--resources-dir` now is `%current_working_directory%/web` (instead nothing)
+  - For `--config` now is `%binary_file_dir%/configs/config.yml` (instead nothing)
+  - For `--resources-dir` now is `%binary_file_dir%/web` (instead nothing)
   - For `--listen` flag now is `8080` (instead nothing)
 - For static files serving disabling you can set `--resources-dir` empty value (`""`)
 - Large performance improvements

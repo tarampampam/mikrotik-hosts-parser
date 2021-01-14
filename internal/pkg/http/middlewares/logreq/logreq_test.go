@@ -34,7 +34,7 @@ func TestMiddleware(t *testing.T) {
 			},
 			checkOutputFields: func(t *testing.T, in map[string]interface{}) {
 				assert.Equal(t, http.MethodGet, in["method"])
-				assert.InDelta(t, 1080, in["duration_micro"], 1500)
+				assert.NotZero(t, in["duration_micro"])
 				assert.Equal(t, "info", in["level"])
 				assert.Contains(t, in["msg"], "processed")
 				assert.Equal(t, "4.3.2.1", in["remote_addr"])
