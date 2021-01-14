@@ -65,7 +65,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: /tmp/coverage.txt
-          fail_ci_if_error: false
 
   build:
     name: Build for ${{ matrix.os }}

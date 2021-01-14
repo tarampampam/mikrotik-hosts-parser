@@ -76,7 +76,7 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		"cache-ttl",
 		"",
 		"30m",
-		fmt.Sprintf("cache entries lifetime (examples: 50s, 1h30m) [$%s]", env.CachingEngine),
+		fmt.Sprintf("cache entries lifetime (examples: 50s, 1h30m) [$%s]", env.CacheTTL),
 	)
 	flagSet.StringVarP(
 		&f.redisDSN,

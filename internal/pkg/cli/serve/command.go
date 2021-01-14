@@ -104,14 +104,7 @@ func run(parentCtx context.Context, log *zap.Logger, cfg *config.Config, f *flag
 	}
 
 	// create HTTP server
-	server := appHttp.NewServer(
-		ctx,
-		log,
-		cacher,
-		f.resourcesDir,
-		cfg,
-		rdb,
-	)
+	server := appHttp.NewServer(ctx, log, cacher, f.resourcesDir, cfg, rdb)
 
 	// register server routes, middlewares, etc.
 	if err := server.Register(); err != nil {
