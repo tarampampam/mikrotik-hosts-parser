@@ -77,7 +77,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 	// TODO write more asserts
 
-	t.Log(body)
+	//t.Log(body)
 }
 
 func BenchmarkHandler_ServeHTTP(b *testing.B) {

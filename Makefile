@@ -37,7 +37,7 @@ lint: ## Run app linters
 	docker-compose run --rm --no-deps golint golangci-lint run
 
 gotest: ## Run app tests
-	docker-compose run $(DC_RUN_ARGS) --no-deps app go test -v -race -timeout 5s ./...
+	docker-compose run $(DC_RUN_ARGS) --no-deps app go test -v -race -timeout 10s ./...
 
 test: lint gotest ## Run app tests and linters
 

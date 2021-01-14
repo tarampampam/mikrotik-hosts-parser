@@ -171,17 +171,29 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			//dd := data.Bytes()[:]
+			//_ = h.cacher.Put(url, dd)
+
 			// FIXME a lot of allocations due working with data
 
 			//_ = bytes.NewReader(data)
 			//_, _ = hostsfile.Parse(bytes.NewReader(data))
 
 			//_ = h.cacher.Put(url, data.Bytes())
-			//_, _ = hostsfile.Parse(data)
+			//_ = h.cacher.Put(url, dd)
+			//_ = h.cacher.Put(url, dd)
+			//_, _ = hostsfile.Parse(bytes.NewReader(dd))
 			//_, _ = hostsfile.Parse(data)
 			//_, _ = hostsfile.Parse(data)
 			//_, _ = hostsfile.Parse(data)
 			//
+
+			//for k, d := 0, data.Bytes()[:]; k < len(d); k++ {
+			//d[k] = d[k]
+			//tmpByte = d[k]
+			//_ = fmt.Sprintf("%v", d[k])
+			//}
+
 			//ch <- hostsFileData{url: url, err: errors.New("foo err")}
 			//return
 
@@ -238,19 +250,26 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	recordsLoop:
 		for j := 0; j < len(data.records); j++ { // loop over records inside hosts file
-			for k := 0; k < len(data.records[j].Hosts); k++ { // loop over hostnames inside hosts file record
-				if len(hostNames) >= limit { // hostnames limit has been reached
-					break recordsLoop
-				}
+			if name := data.records[j].Host; name != "" && !containsIllegalSymbols(name) {
+				hostNames[name] = struct{}{} // append
+			}
 
-				name := data.records[j].Hosts[k]
+			if len(data.records[j].AdditionalHosts) > 0 {
 
-				if _, ok := excludes[name]; ok { // is in excludes list?
-					continue
-				}
+				for k := 0; k < len(data.records[j].AdditionalHosts); k++ { // loop over additional hostnames
+					if len(hostNames) >= limit { // hostnames limit has been reached
+						break recordsLoop
+					}
 
-				if !containsIllegalSymbols(name) {
-					hostNames[name] = struct{}{} // append
+					name := data.records[j].AdditionalHosts[k]
+
+					if _, ok := excludes[name]; ok { // is in excludes list?
+						continue
+					}
+
+					if !containsIllegalSymbols(name) {
+						hostNames[name] = struct{}{} // append
+					}
 				}
 			}
 		}
@@ -319,7 +338,7 @@ func (h *handler) fetchRemoteSource(url string) (*bytes.Buffer, error) {
 	}
 
 	var buf bytes.Buffer
-	const defaultBufCapacity = 63 * 1024 // 64 KiB
+	const defaultBufCapacity = 64 * 1024 // 64 KiB
 
 	if cl := resp.Header.Get("Content-Length"); cl != "" {
 		value, parsingErr := strconv.Atoi(cl)

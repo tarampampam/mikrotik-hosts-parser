@@ -100,7 +100,10 @@ func TestServer_Register(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Second, time.Second)
 	defer cacher.Close()
 
-	srv := NewServer(context.Background(), zap.NewNop(), cacher, ".", &config.Config{}, nil)
+	cfg := &config.Config{}
+	cfg.RouterScript.MaxSourcesCount = 1
+
+	srv := NewServer(context.Background(), zap.NewNop(), cacher, ".", cfg, nil)
 	router := srv.router // dirty hack, yes, i know
 
 	// state *before* registration
@@ -131,8 +134,11 @@ func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
 	c := cache.NewInMemoryCache(time.Second, time.Second)
 	defer c.Close()
 
-	srv := NewServer(context.Background(), zap.NewNop(), c, "", &config.Config{}, nil) // empty resources dir
-	router := srv.router                                                               // dirty hack, yes, i know
+	cfg := &config.Config{}
+	cfg.RouterScript.MaxSourcesCount = 1
+
+	srv := NewServer(context.Background(), zap.NewNop(), c, "", cfg, nil) // empty resources dir
+	router := srv.router                                                  // dirty hack, yes, i know
 
 	assert.Nil(t, router.Get("static"))
 	assert.NoError(t, srv.Register())

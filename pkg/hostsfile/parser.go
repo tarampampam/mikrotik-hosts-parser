@@ -2,27 +2,131 @@ package hostsfile
 
 import (
 	"bufio"
-	"errors"
+	"bytes"
 	"io"
 	"net"
-	"regexp"
-	"strings"
 )
 
-// hostnameValidationRegex is regular expression for hostname validation, link <https://stackoverflow.com/a/26987741>
-var hostnameValidationRegex = regexp.MustCompile(`(?i)^((-?)(xn--|_)?[a-z0-9-_]{0,61}[a-z0-9-_]\.)*(xn--)?([a-z0-9][a-z0-9\-]{0,60}|[a-z0-9-]{1,30}\.[a-z]{2,})$`) //nolint:lll
+// Hostname validator generation (execute linux shell):
+//	$ cd ./pkg/hostsfile
+//	$ docker run --rm -ti -v $(pwd):/rootfs:rw -w /rootfs golang:1.15-buster
+//	$ go get -u gitlab.com/opennota/re2dfa
+//	$ re2dfa -o hostname_validator.go \
+//	'(?i)^((-?)(xn--|_)?[a-z0-9-_]{0,61}[a-z0-9-_]\.)*(xn--)?([a-z0-9][a-z0-9\-]{0,60}|[a-z0-9-]{1,30}\.[a-z]{2,})$' \
+//	hostsfile.validateHostname []byte
+//	$ exit
+//	$ sudo chown "$(id -u):$(id -g)" ./hostname_validator.go
+
+type wordFlag uint8
+
+func (f wordFlag) HasFlag(flag wordFlag) bool { return f&flag != 0 }
+func (f *wordFlag) AddFlag(flag wordFlag)     { *f |= flag }
+func (f *wordFlag) ClearFlag(flag wordFlag)   { *f &= ^flag }
+func (f *wordFlag) Reset()                    { *f = wordFlag(0) }
+
+const (
+	wordEnded wordFlag = 1 << iota
+	wordWithDot
+	wordWithColon
+)
+
+type word struct {
+	buf    bytes.Buffer
+	count  uint
+	flag   wordFlag
+	isLast bool
+}
+
+func (w *word) Reset() {
+	w.count = 0
+	w.flag.Reset()
+	w.isLast = false
+	w.buf.Reset()
+}
 
 // Parse input and return slice of records. Result order are same as in source.
-func Parse(in io.Reader) ([]Record, error) {
+func Parse(in io.Reader) ([]Record, error) { //nolint:funlen,gocognit,gocyclo
 	var (
-		result []Record
-		scan   = bufio.NewScanner(in)
+		result    = make([]Record, 0, 5)
+		scan      = bufio.NewScanner(in)
+		w         word
+		hostnames = make([]string, 0, 3)
+		ip        bytes.Buffer
 	)
 
-	// read content "line by line"
+	w.buf.Grow(32) //nolint:gomnd
+	ip.Grow(7)     //nolint:gomnd
+
+scan: // read content "line by line"
 	for scan.Scan() {
-		if entry, err := parseRawLine(scan.Text()); err == nil && entry != nil {
-			result = append(result, *entry)
+		line := scan.Bytes()
+
+		if len(line) <= 5 { //nolint:gomnd
+			continue scan // line is too short
+		}
+
+		if line[0] == '#' {
+			continue scan // skip any lines, that looks like comments in format: `# Any comment text`
+		}
+
+		w.Reset()
+		ip.Reset()
+		if len(hostnames) > 0 {
+			hostnames = hostnames[:0]
+		}
+
+		for i, ll := 0, len(line); i < ll && !w.isLast; i++ { // loop over line runes
+			if char := line[i]; char != ' ' && char != '\t' {
+				if char == '.' {
+					w.flag.AddFlag(wordWithDot)
+				} else if char == ':' {
+					w.flag.AddFlag(wordWithColon)
+				}
+
+				w.buf.WriteByte(char)
+				w.flag.ClearFlag(wordEnded)
+			} else {
+				w.flag.AddFlag(wordEnded)
+			}
+
+			if w.flag.HasFlag(wordEnded) || i == ll-1 { //nolint:nestif // word filled completely
+				if w.buf.Len() == 0 {
+					continue // skip any empty words
+				}
+
+				w.count++
+
+				if w.count == 1 && w.buf.Bytes()[0] == '#' {
+					continue scan // skip if first word starts with comment char
+				}
+
+				if w.count == 1 {
+					if (w.flag.HasFlag(wordWithDot) && validateIPv4(w.buf.Bytes())) ||
+						(w.flag.HasFlag(wordWithColon) && net.ParseIP(w.buf.String()) != nil) {
+						ip.Write(w.buf.Bytes())
+					}
+				} else {
+					if w.buf.Bytes()[0] == '#' { // comment at the end of line
+						w.isLast = true
+					} else if ip.Len() > 0 && validateHostname(w.buf.Bytes()) > 0 {
+						hostnames = append(hostnames, w.buf.String()) // +1 memory allocation here
+					}
+				}
+
+				w.buf.Reset()
+				w.flag.Reset()
+			}
+		}
+
+		if ip.Len() > 0 && len(hostnames) > 0 {
+			rec := Record{IP: ip.String(), Host: hostnames[0]} // +1 memory allocation here
+
+			if l := len(hostnames); l > 1 {
+				rec.AdditionalHosts = make([]string, 0, l-1) // +1 memory allocation here (but not for each record)
+				rec.AdditionalHosts = append(rec.AdditionalHosts, hostnames[1:]...)
+			}
+
+			result = append(result, rec)
 		}
 	}
 
@@ -33,46 +137,50 @@ func Parse(in io.Reader) ([]Record, error) {
 	return result, nil
 }
 
-// parseRawLine converts raw hosts file line into Record. Nil can be returned without an error (line is empty or
-// comment).
-// Line format: `IP_address hostname [host_alias]... #some comment`).
-func parseRawLine(line string) (*Record, error) {
-	if len(line) <= 5 { //nolint:gomnd
-		return nil, errors.New("line is too short")
-	}
+// validateIPv4 address (d.d.d.d).
+func validateIPv4(s []byte) bool {
+	var p [net.IPv4len]byte
 
-	// skip any lines, that looks like comments in format: `# Any comment text`
-	if strings.HasPrefix(line, "#") {
-		return nil, nil
-	}
-
-	words := strings.Fields(line)
-
-	if len(words) < 2 { //nolint:gomnd
-		return nil, errors.New("wrong line format")
-	}
-
-	// first word must be an IP address
-	ip := net.ParseIP(words[0])
-	if ip == nil {
-		return nil, errors.New("wrong IP address")
-	}
-
-	hosts := make([]string, 0, len(words)-1)
-
-	for i := 1; i < len(words); i++ {
-		if strings.HasPrefix(words[i], "#") {
-			break
+	for i := 0; i < net.IPv4len; i++ {
+		if len(s) == 0 {
+			return false // missing octets
 		}
 
-		if hostnameValidationRegex.MatchString(words[i]) {
-			hosts = append(hosts, words[i])
+		if i > 0 {
+			if s[0] != '.' {
+				return false
+			}
+
+			s = s[1:]
+		}
+
+		n, c, ok := dtoi(s)
+		if !ok || n > 0xFF {
+			return false
+		}
+
+		s = s[c:]
+		p[i] = byte(n)
+	}
+
+	return len(s) == 0
+}
+
+// dtoi converts decimal to integer. Returns number, characters consumed, success.
+func dtoi(s []byte) (n int, i int, ok bool) {
+	const big = 0xFFFFFF
+
+	n = 0
+	for i = 0; i < len(s) && '0' <= s[i] && s[i] <= '9'; i++ {
+		n = n*10 + int(s[i]-'0') //nolint:gomnd
+		if n >= big {
+			return big, i, false
 		}
 	}
 
-	if len(hosts) == 0 {
-		return nil, errors.New("hosts was not found")
+	if i == 0 {
+		return 0, 0, false
 	}
 
-	return &Record{IP: ip, Hosts: hosts}, nil
+	return n, i, true
 }

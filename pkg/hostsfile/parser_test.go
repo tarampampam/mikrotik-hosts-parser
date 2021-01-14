@@ -4,25 +4,47 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func BenchmarkParse(b *testing.B) {
-	b.ReportAllocs()
+var benchDataset = []struct{ filePath string }{ //nolint:gochecknoglobals
+	{"../../test/testdata/hosts/foo.txt"},
+	{"../../test/testdata/hosts/ad_servers.txt"},
+	{"../../test/testdata/hosts/block_shit.txt"},
+	{"../../test/testdata/hosts/hosts_adaway.txt"},
+	{"../../test/testdata/hosts/serverlist.txt"},
+	{"../../test/testdata/hosts/spy.txt"},
+}
 
-	raw, err := ioutil.ReadFile("../../test/testdata/hosts/ad_servers.txt")
-	if err != nil {
-		panic(err)
-	}
+func BenchmarkParse(b *testing.B) { //nolint:dupl
+	for _, tt := range benchDataset {
+		tt := tt
 
-	buf := bytes.NewBuffer(raw)
+		b.Run(filepath.Base(tt.filePath), func(b *testing.B) {
+			b.ReportAllocs()
 
-	for n := 0; n < b.N; n++ {
-		if _, e := Parse(buf); e != nil {
-			b.Fatal(e)
-		}
+			raw, err := ioutil.ReadFile(tt.filePath)
+			if err != nil {
+				panic(err)
+			}
+
+			b.SetBytes(int64(len(raw)))
+			b.ResetTimer()
+			for n := 0; n < b.N; n++ {
+				b.StopTimer()
+				buf := bytes.NewBuffer(raw)
+				b.StartTimer()
+
+				_, e := Parse(buf)
+
+				if e != nil {
+					b.Fatal(e)
+				}
+			}
+		})
 	}
 }
 
@@ -93,7 +115,11 @@ func TestParseUsingHostsFileContent(t *testing.T) {
 			var hostsCount = 0
 
 			for i := 0; i < len(records); i++ {
-				hostsCount += len(records[i].Hosts)
+				if records[i].Host != "" {
+					hostsCount++
+				}
+
+				hostsCount += len(records[i].AdditionalHosts)
 			}
 
 			assert.Equal(t, tt.wantHostNames, hostsCount)
@@ -133,14 +159,40 @@ the end
 
 	assert.Len(t, records, 9)
 
-	assert.ElementsMatch(t, []string{"dns.google"}, records[0].Hosts)
-	assert.ElementsMatch(t, []string{"bar.com"}, records[1].Hosts)
-	assert.ElementsMatch(t, []string{"___id___.c.mystat-in.net"}, records[2].Hosts)
-	assert.ElementsMatch(t, []string{"a.cn", "b.cn", "a.cn"}, records[3].Hosts)
-	assert.ElementsMatch(t, []string{"localfoo"}, records[4].Hosts)
-	assert.ElementsMatch(t, []string{"cloudflare"}, records[5].Hosts)
-	assert.ElementsMatch(t, []string{"example.com"}, records[6].Hosts)
-	assert.ElementsMatch(t, []string{"example.com"}, records[7].Hosts)
+	assert.Equal(t, "1.2.3.4", records[0].IP)
+	assert.Equal(t, "dns.google", records[0].Host)
+	assert.Nil(t, records[0].AdditionalHosts)
+
+	assert.Equal(t, "4.3.2.1", records[1].IP)
+	assert.Equal(t, "bar.com", records[1].Host)
+	assert.Nil(t, records[1].AdditionalHosts)
+
+	assert.Equal(t, "4.3.2.1", records[2].IP)
+	assert.Equal(t, "___id___.c.mystat-in.net", records[2].Host)
+	assert.Nil(t, records[2].AdditionalHosts)
+
+	assert.Equal(t, "1.1.1.1", records[3].IP)
+	assert.Equal(t, "a.cn", records[3].Host)
+	assert.ElementsMatch(t, []string{"b.cn", "a.cn"}, records[3].AdditionalHosts)
+
+	assert.Equal(t, "::1", records[4].IP)
+	assert.Equal(t, "localfoo", records[4].Host)
+	assert.Nil(t, records[4].AdditionalHosts)
+
+	assert.Equal(t, "2606:4700:4700::1111", records[5].IP)
+	assert.Equal(t, "cloudflare", records[5].Host)
+	assert.Nil(t, records[5].AdditionalHosts)
+
+	assert.Equal(t, "0.0.0.1", records[6].IP)
+	assert.Equal(t, "example.com", records[6].Host)
+	assert.Nil(t, records[6].AdditionalHosts)
+
+	assert.Equal(t, "0.0.0.1", records[7].IP)
+	assert.Equal(t, "example.com", records[7].Host)
+	assert.Nil(t, records[7].AdditionalHosts)
+
 	// "тест.рф" must be encoded as `xn--e1aybc.xn--p1ai`
-	assert.ElementsMatch(t, []string{"xn--e1aybc.xn--p1ai"}, records[8].Hosts)
+	assert.Equal(t, "3.3.3.3", records[8].IP)
+	assert.Equal(t, "xn--e1aybc.xn--p1ai", records[8].Host)
+	assert.Nil(t, records[8].AdditionalHosts)
 }

@@ -2,7 +2,6 @@ package mikrotik
 
 import (
 	"bytes"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,8 +23,21 @@ func BenchmarkDNSStaticEntries_Render(b *testing.B) {
 		})
 	}
 
+	var (
+		i int
+		e error
+	)
+
+	dest := bytes.NewBuffer([]byte{})
+
+	b.ResetTimer()
+
 	for n := 0; n < b.N; n++ {
-		_, _ = data.Render(ioutil.Discard)
+		i, e = data.Render(dest)
+	}
+
+	if e != nil || i <= 0 || dest.Len() <= 0 {
+		b.Fail()
 	}
 }
 

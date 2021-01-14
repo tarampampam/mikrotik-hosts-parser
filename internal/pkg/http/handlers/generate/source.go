@@ -190,8 +190,10 @@ func hostsRecordsToStaticEntries(
 	// loop over all passed hosts file records
 records:
 	for _, record := range in {
+		h := []string{record.Host}
+		h = append(h, record.AdditionalHosts...)
 		// iterate hosts in record
-		for _, host := range record.Hosts {
+		for _, host := range h {
 			// maximal hosts checking
 			if limit > 0 && len(out) >= limit {
 				break records
