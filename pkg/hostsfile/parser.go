@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-// Hostname validator generation (execute linux shell):
+// Hostname validator generation (execute in linux shell) using <https://gitlab.com/opennota/re2dfa>:
 //	$ cd ./pkg/hostsfile
 //	$ docker run --rm -ti -v $(pwd):/rootfs:rw -w /rootfs golang:1.15-buster
 //	$ go get -u gitlab.com/opennota/re2dfa

@@ -5,7 +5,6 @@ run:
   skip-dirs:
     - .github
     - .git
-    - internal/pkg/http/handlers/generate # TODO remove this line
   modules-download-mode: readonly
   allow-parallel-runners: true
 
