@@ -175,6 +175,9 @@ jobs:
       - name: Try to execute
         run: docker run --rm mikrotik-hosts-parser:local version
 
+      - name: Show image platforms info
+        run: docker run --rm mplatform/mquery mikrotik-hosts-parser:local
+
       - name: Scan image
         uses: anchore/scan-action@v2 # action page: <https://github.com/anchore/scan-action>
         with:
