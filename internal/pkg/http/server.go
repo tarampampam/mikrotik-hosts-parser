@@ -10,10 +10,10 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/logreq"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/panic"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/logreq"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/panic"
 	"go.uber.org/zap"
 )
 

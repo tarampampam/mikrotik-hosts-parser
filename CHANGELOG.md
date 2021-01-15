@@ -4,14 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
-## UNRELEASED
+## v4.0.0
 
 ### Changed
 
 - GitHub actions updated
 - Docker image based on `scratch` (instead `alpine` image)
 - Go version updated from `1.13` up to `1.15`
-- Package name changed from `mikrotik-hosts-parser` to `github.com/tarampampam/mikrotik-hosts-parser`
+- Package name changed from `mikrotik-hosts-parser` to `github.com/tarampampam/mikrotik-hosts-parser/v4`
 - Directory `public` renamed to `web`
 - Config file location now is `./configs/config.yml` (instead `./serve.yml`)
 - App packages refactored

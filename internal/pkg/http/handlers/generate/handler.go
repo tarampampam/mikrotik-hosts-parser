@@ -17,11 +17,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
-	"github.com/tarampampam/mikrotik-hosts-parser/pkg/hostsfile"
-	"github.com/tarampampam/mikrotik-hosts-parser/pkg/mikrotik"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/pkg/hostsfile"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/pkg/mikrotik"
 	"go.uber.org/zap"
 )
 

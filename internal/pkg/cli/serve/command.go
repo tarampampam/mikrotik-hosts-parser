@@ -11,10 +11,10 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cobra"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/breaker"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/config"
-	appHttp "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/breaker"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
+	appHttp "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http"
 	"go.uber.org/zap"
 )
 

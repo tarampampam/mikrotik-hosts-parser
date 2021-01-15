@@ -119,7 +119,7 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
-          LDFLAGS: -s -w -X github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version.version=${{ steps.version.outputs.value }}
+          LDFLAGS: -s -w -X github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version.version=${{ steps.version.outputs.value }}
         run: go build -trimpath -ldflags "$LDFLAGS" -o /tmp/mikrotik-hosts-parser ./cmd/mikrotik-hosts-parser/
 
       - name: Try to execute

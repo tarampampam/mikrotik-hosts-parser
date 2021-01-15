@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cli"
 )
 
 // exitFn is a function for application exiting.

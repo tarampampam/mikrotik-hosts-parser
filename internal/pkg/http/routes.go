@@ -3,14 +3,14 @@ package http
 import (
 	"net/http"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/fileserver"
-	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/settings"
-	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/api/version"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/generate"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/handlers/healthz"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/http/middlewares/nocache"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/checkers"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/fileserver"
+	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/settings"
+	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/generate"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/healthz"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/nocache"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
 )
 
 func (s *Server) registerScriptGeneratorHandlers() error {

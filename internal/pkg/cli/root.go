@@ -5,12 +5,12 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/checkers"
-	healthcheckCmd "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/healthcheck"
-	serveCmd "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/serve"
-	versionCmd "github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/cli/version"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/logger"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/checkers"
+	healthcheckCmd "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cli/healthcheck"
+	serveCmd "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cli/serve"
+	versionCmd "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cli/version"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/logger"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
 )
 
 // NewCommand creates root command.

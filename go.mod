@@ -1,4 +1,4 @@
-module github.com/tarampampam/mikrotik-hosts-parser
+module github.com/tarampampam/mikrotik-hosts-parser/v4
 
 go 1.15
 

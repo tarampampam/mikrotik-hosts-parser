@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/env"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/env"
 )
 
 type checker interface {
@@ -20,7 +20,7 @@ func NewCommand(checker checker) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "healthcheck",
 		Aliases: []string{"chk", "health", "check"},
-		Short:   "Health checker for the http server. Use case - docker healthcheck.",
+		Short:   "Health checker for the HTTP server. Use case - docker healthcheck.",
 		Hidden:  true,
 		PreRunE: func(*cobra.Command, []string) error {
 			if envPort, exists := env.ListenPort.Lookup(); exists && envPort != "" {
