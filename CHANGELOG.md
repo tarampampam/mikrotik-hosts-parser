@@ -52,6 +52,10 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 - File-based cache support
 - HTTP `/api/routes` handler
 
+### Fixed
+
+- Wrong HTTP `Content-Type` header value for docker environment
+
 ## v3.0.3
 
 ### Fixed
