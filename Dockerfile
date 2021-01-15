@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.2
+
 # Image page: <https://hub.docker.com/_/golang>
 FROM --platform=${TARGETPLATFORM:-linux/amd64} golang:1.15.6-alpine as builder
 
