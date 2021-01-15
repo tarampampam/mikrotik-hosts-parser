@@ -14,6 +14,13 @@ RUN set -x \
 
 WORKDIR /src
 
+COPY ./go.mod ./go.sum ./
+
+# Burn modules cache
+RUN set -x \
+    && go mod download \
+    && go mod verify
+
 COPY . .
 
 # arguments to pass on each go tool link invocation
