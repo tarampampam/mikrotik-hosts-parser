@@ -207,7 +207,7 @@ jobs:
 
       - name: Start redis server
         if: matrix.caching-engine == 'redis'
-        run: docker run --rm -d --network "app-network" --name=redis redis:6.0.9-alpine
+        run: docker run --rm -d --network "app-network" -p "6379:6379/tcp" --name=redis redis:6.0.9-alpine
 
       - name: Download builded docker image
         uses: actions/download-artifact@v2
