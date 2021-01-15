@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/pflag"
-	"github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/env"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/env"
 )
 
 type flags struct {
@@ -71,7 +71,7 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		"caching-engine",
 		"",
 		cachingEngineMemory,
-		fmt.Sprintf("caching endine (%s|%s) [$%s]", cachingEngineMemory, cachingEngineRedis, env.CachingEngine),
+		fmt.Sprintf("caching engine (%s|%s) [$%s]", cachingEngineMemory, cachingEngineRedis, env.CachingEngine),
 	)
 	flagSet.StringVarP(
 		&f.cache.ttl,
@@ -85,7 +85,7 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		"redis-dsn",
 		"",
 		"redis://127.0.0.1:6379/0",
-		fmt.Sprintf("redis server DSN (format \"redis://<user>:<password>@<host>:<port>/<db_number>\") [$%s]", env.RedisDSN), //nolint:lll
+		fmt.Sprintf("redis server DSN (format: \"redis://<user>:<password>@<host>:<port>/<db_number>\") [$%s]", env.RedisDSN), //nolint:lll
 	)
 }
 

@@ -34,6 +34,15 @@ jobs:
       - name: Check for GitLeaks
         uses: zricethezav/gitleaks-action@v1.2.0 # Action page: <https://github.com/zricethezav/gitleaks-action>
 
+  goreportcard:
+    name: Update state on goreportcard.com
+    runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/master' # only for `master` branch
+    steps:
+      - name: Send update request
+        continue-on-error: true
+        run: curl -X POST -F "repo=github.com/$GITHUB_REPOSITORY" https://goreportcard.com/checks
+
   go-test:
     name: Unit tests
     runs-on: ubuntu-20.04
@@ -110,7 +119,7 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
-          LDFLAGS: -s -w -X github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version.version=${{ steps.version.outputs.value }}
+          LDFLAGS: -s -w -X github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version.version=${{ steps.version.outputs.value }}
         run: go build -trimpath -ldflags "$LDFLAGS" -o /tmp/mikrotik-hosts-parser ./cmd/mikrotik-hosts-parser/
 
       - name: Try to execute

@@ -19,7 +19,7 @@ WORKDIR /src
 COPY . .
 
 # arguments to pass on each go tool link invocation
-ENV LDFLAGS="-s -w -X github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version.version=$APP_VERSION"
+ENV LDFLAGS="-s -w -X github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version.version=$APP_VERSION"
 
 RUN set -x \
     && go version \
