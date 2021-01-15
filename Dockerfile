@@ -66,6 +66,7 @@ USER appuser
 # Docs: <https://docs.docker.com/engine/reference/builder/#healthcheck>
 HEALTHCHECK --interval=15s --timeout=3s --start-period=1s CMD [ \
     "/bin/mikrotik-hosts-parser", "healthcheck", \
+    "--log-json", \
     "--port", "8080" \
 ]
 

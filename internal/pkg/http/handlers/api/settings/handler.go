@@ -71,6 +71,7 @@ func NewHandler(cfg config.Config, cacher cache.Cacher) http.HandlerFunc { //nol
 			c, _ = json.Marshal(resp)
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(c)
 	}
