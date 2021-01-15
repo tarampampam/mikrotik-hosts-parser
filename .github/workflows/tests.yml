@@ -169,14 +169,23 @@ jobs:
         id: version # for PR this value will be `merge@__hash__`, SO: <https://stackoverflow.com/a/59780579/2252921>
         run: echo "::set-output name=value::`echo ${GITHUB_REF##*/} | sed -e 's/^[vV ]*//'`@`echo ${GITHUB_SHA} | cut -c1-8`"
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1 # Action page: <https://github.com/docker/setup-buildx-action>
+        id: buildx
+        with:
+          version: latest
+
       - name: Build image
-        run: docker build -t mikrotik-hosts-parser:local --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" -f ./Dockerfile .
+        run: |
+          docker build \
+            --platform linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x \
+            -t mikrotik-hosts-parser:local \
+            --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" \
+            -f ./Dockerfile \
+            .
 
       - name: Try to execute
         run: docker run --rm mikrotik-hosts-parser:local version
-
-      - name: Show image platforms info
-        run: docker run --rm mplatform/mquery mikrotik-hosts-parser:local
 
       - name: Scan image
         uses: anchore/scan-action@v2 # action page: <https://github.com/anchore/scan-action>
