@@ -180,6 +180,7 @@ jobs:
             -t mikrotik-hosts-parser:local \
             --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" \
             -f ./Dockerfile \
+            --load \
             .
 
       - name: Try to execute
