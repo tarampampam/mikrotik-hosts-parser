@@ -17,5 +17,6 @@ func TestNewHandler(t *testing.T) {
 	NewHandler("1.2.3@foo")(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
+	assert.Equal(t, rr.Header().Get("Content-Type"), "application/json")
 	assert.JSONEq(t, `{"version":"1.2.3@foo"}`, rr.Body.String())
 }

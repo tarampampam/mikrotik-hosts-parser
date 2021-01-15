@@ -80,12 +80,12 @@ func TestInMemoryCache_Expiration(t *testing.T) {
 	found, _, _, _ := cache.Get(testKeyName) //nolint:dogsled
 	assert.True(t, found)
 
-	<-time.After(time.Millisecond * 98)
+	<-time.After(time.Millisecond * 90)
 
 	found, _, _, _ = cache.Get(testKeyName) //nolint:dogsled
 	assert.True(t, found)
 
-	<-time.After(time.Millisecond * 3)
+	<-time.After(time.Millisecond * 10)
 
 	found, _, _, _ = cache.Get(testKeyName) //nolint:dogsled
 	assert.False(t, found)

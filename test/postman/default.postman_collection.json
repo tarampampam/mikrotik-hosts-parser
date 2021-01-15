@@ -1,0 +1,385 @@
+{
+	"info": {
+		"_postman_id": "ba39d653-9c2c-4a01-a84e-d3298db7c352",
+		"name": "default",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "API",
+			"item": [
+				{
+					"name": "api/settings",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type header is application/json', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('application/json');",
+									"});",
+									"",
+									"pm.test('JSON object has correct structure', function () {",
+									"    var data = pm.response.json();",
+									"",
+									"    pm.expect(data).to.have.all.keys('sources', 'redirect', 'records', 'excludes', 'cache');",
+									"",
+									"    pm.expect(data.sources).to.have.all.keys('provided', 'max', 'max_source_size');",
+									"    pm.expect(data.sources.provided).to.be.an('array');",
+									"    data.sources.provided.forEach(function (item) {",
+									"        pm.expect(item).to.have.all.keys('uri', 'name', 'description', 'default', 'count');",
+									"        pm.expect(item.uri).to.be.a('string');",
+									"        pm.expect(item.name).to.be.a('string');",
+									"        pm.expect(item.description).to.be.a('string');",
+									"        pm.expect(item.default).to.be.a('boolean');",
+									"        pm.expect(item.count).to.be.a('number');",
+									"    });",
+									"    ",
+									"    pm.expect(data.sources.max).to.be.a('number');",
+									"    pm.expect(data.sources.max_source_size).to.be.a('number');",
+									"",
+									"    pm.expect(data.redirect).to.have.all.keys('addr');",
+									"    pm.expect(data.redirect.addr).to.be.a('string');",
+									"",
+									"    pm.expect(data.records).to.have.all.keys('comment');",
+									"    pm.expect(data.records.comment).to.be.a('string');",
+									"",
+									"    pm.expect(data.excludes).to.have.all.keys('hosts');",
+									"    pm.expect(data.excludes.hosts).to.be.an('array');",
+									"    data.excludes.hosts.forEach(function (item) {",
+									"        pm.expect(item).to.be.a('string');",
+									"    });",
+									"",
+									"    pm.expect(data.cache).to.have.all.keys('lifetime_sec');",
+									"    pm.expect(data.cache.lifetime_sec).to.be.a('number');",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/settings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "api/version",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type header is application/json', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('application/json');",
+									"});",
+									"",
+									"pm.test('JSON object has property named version', function () {",
+									"    var data = pm.response.json();",
+									"    pm.expect(data.version).to.be.a('string');",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/version",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"version"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Script",
+			"item": [
+				{
+					"name": "script/source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type header is text/plain', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('text/plain');",
+									"});",
+									"",
+									"pm.test('Body contains `/ip dns static`',() => {",
+									"  pm.expect(pm.response.text()).to.include('/ip dns static');",
+									"});",
+									"",
+									"pm.test('Body contains records',() => {",
+									"  pm.expect(pm.response.text()).to.include('add address=8.8.8.8 comment=\"ADBlock\" disabled=no');",
+									"});",
+									"",
+									"pm.test('Body not contains excluded hostname',() => {",
+									"  pm.expect(pm.response.text()).to.not.include('name=\"adselector.ru\"');",
+									"  pm.expect(pm.response.text()).to.not.include('name=\"localhost\"');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/script/source?format=routeros&version=0.0.0@undefined&redirect_to=8.8.8.8&limit=5000&sources_urls=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Ftarampampam%2Fmikrotik-hosts-parser%40master%2F.hosts%2Fbasic.txt&excluded_hosts=localhost,adselector.ru",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"script",
+								"source"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "routeros"
+								},
+								{
+									"key": "version",
+									"value": "0.0.0@undefined"
+								},
+								{
+									"key": "redirect_to",
+									"value": "8.8.8.8"
+								},
+								{
+									"key": "limit",
+									"value": "5000"
+								},
+								{
+									"key": "sources_urls",
+									"value": "https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Ftarampampam%2Fmikrotik-hosts-parser%40master%2F.hosts%2Fbasic.txt"
+								},
+								{
+									"key": "excluded_hosts",
+									"value": "localhost,adselector.ru"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Service endpoints",
+			"item": [
+				{
+					"name": "ready",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test('Empty response body', function () {\r",
+									"    pm.expect(pm.response.responseSize).to.be.equal(0);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ready",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ready"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "live",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Empty response body', function () {",
+									"    pm.expect(pm.response.responseSize).to.be.equal(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/live",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"live"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Static assets",
+			"item": [
+				{
+					"name": "favicon.ico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type header is image', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('image');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/favicon.ico",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favicon.ico"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "robots.txt",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type header is text/plain', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('text/plain');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/robots.txt",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"robots.txt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sitemap.xml",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type header is application/xml', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('application/xml');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/sitemap.xml",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sitemap.xml"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

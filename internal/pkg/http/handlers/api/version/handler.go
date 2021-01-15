@@ -19,6 +19,7 @@ func NewHandler(ver string) http.HandlerFunc {
 			})
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(cache)
 	}

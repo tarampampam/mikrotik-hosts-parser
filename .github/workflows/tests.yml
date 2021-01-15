@@ -67,13 +67,18 @@ jobs:
           file: /tmp/coverage.txt
 
   build:
-    name: Build for ${{ matrix.os }}
+    name: Build for ${{ matrix.os }} (${{ matrix.arch }})
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         os: [linux, windows, darwin] # linux, freebsd, darwin, windows
         arch: [amd64]                # amd64, 386
+        include:
+          - os: linux
+            arch: 386
+          - os: windows
+            arch: 386
     needs: [golangci-lint, go-test]
     steps:
       - name: Set up Go
@@ -118,7 +123,41 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  image:
+  e2e:
+    name: End-to-End tests (cache in ${{ matrix.caching-engine }})
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        caching-engine: [memory, redis]
+    needs: [build]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Start redis server
+        if: matrix.caching-engine == 'redis'
+        run: docker run --rm -d -p "6379:6379/tcp" redis:6.0.9-alpine
+
+      - name: Download compiled binary file
+        uses: actions/download-artifact@v2
+        with:
+          name: mikrotik-hosts-parser-linux-amd64
+          path: .artifact
+
+      - name: Prepare binary file to run
+        working-directory: .artifact
+        run: mv ./mikrotik-hosts-parser ./../app && chmod +x ./../app
+
+      - name: Start HTTP server
+        run: ./app serve --debug --port 8081 --caching-engine "${{ matrix.caching-engine }}" --redis-dsn "redis://127.0.0.1:6379/0" &
+
+      - name: Run Newman
+        uses: ./.github/actions/newman
+        with:
+          baseurl: 'http://127.0.0.1:8081'
+
+  docker-image:
     name: Build docker image
     runs-on: ubuntu-20.04
     needs: [golangci-lint, go-test]
@@ -142,3 +181,56 @@ jobs:
           image: mikrotik-hosts-parser:local
           fail-build: true
           severity-cutoff: low # negligible, low, medium, high or critical
+
+      - name: Save docker image
+        run: docker save mikrotik-hosts-parser:local > ./docker-image.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-image
+          path: ./docker-image.tar
+
+  docker-image-e2e:
+    name: Docker image End-to-End tests (cache in ${{ matrix.caching-engine }})
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        caching-engine: [memory, redis]
+    needs: [docker-image]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Create docker network
+        run: docker network create "app-network"
+
+      - name: Start redis server
+        if: matrix.caching-engine == 'redis'
+        run: docker run --rm -d --network "app-network" -p "6379:6379/tcp" --name=redis redis:6.0.9-alpine
+
+      - name: Download builded docker image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-image
+          path: .artifact
+
+      - name: Prepare image to run
+        working-directory: .artifact
+        run: docker load < docker-image.tar
+
+      - name: Run docker image with app
+        run: |
+          docker run --rm -d \
+            --network "app-network" \
+            -p "8081:8081/tcp" \
+            -e "CACHING_ENGINE=${{ matrix.caching-engine }}" \
+            -e "REDIS_DSN=redis://redis:6379/0" \
+            -e "LISTEN_PORT=8081" \
+              mikrotik-hosts-parser:local
+
+      - name: Run Newman
+        uses: ./.github/actions/newman
+        with:
+          baseurl: 'http://127.0.0.1:8081'
