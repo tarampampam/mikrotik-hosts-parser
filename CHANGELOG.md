@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 - HTTP endpoints:
   - `/live` for liveness probe
   - `/ready` for readiness probe
+- E2E tests (using [postman](https://www.postman.com/))
 
 ### Removed
 
