@@ -146,7 +146,8 @@ jobs:
           path: .artifact
 
       - name: Prepare binary file to run
-        run: mv ./.artifact/mikrotik-hosts-parser ./app && rm -R ./.artifact && chmod +x ./app && stat ./app
+        working-directory: .artifact
+        run: mv ./mikrotik-hosts-parser ./../app && chmod +x ./../app
 
       - name: Start HTTP server
         run: ./app serve --debug --port 8081 --caching-engine "${{ matrix.caching-engine }}" --redis-dsn "redis://127.0.0.1:6379/0" &
