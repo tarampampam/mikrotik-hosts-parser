@@ -90,7 +90,7 @@ Flag                    | Description                              | Default val
 `--config`, `-c`        | Config file path                         | `./configs/config.yml`     | `CONFIG_PATH`
 `--caching-engine`      | Caching engine (`memory` or `redis`)     | `memory`                   | `CACHING_ENGINE`
 `--cache-ttl`           | Cached entries lifetime (examples: `50s`, `1h30m`) | `30m`            | `CACHE_TTL`
-`--redis-dsn`           | Redis server DSN (format: `redis://<user>:<password>@<host>:<port>/<db_number>`), required only if `redis` caching engine is enabled | `redis://127.0.0.1:6379/0` | `REDIS_DSN`
+`--redis-dsn`           | Redis server DSN, required only if `redis` caching engine is enabled | `redis://127.0.0.1:6379/0` | `REDIS_DSN`
 
 > Environment variables have higher priority then flag values.
 
