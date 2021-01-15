@@ -171,35 +171,26 @@ jobs:
         id: version # for PR this value will be `merge@__hash__`, SO: <https://stackoverflow.com/a/59780579/2252921>
         run: echo "::set-output name=value::`echo ${GITHUB_REF##*/} | sed -e 's/^[vV ]*//'`@`echo ${GITHUB_SHA} | cut -c1-8`"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1 # Action page: <https://github.com/docker/setup-buildx-action>
-        id: buildx
-
-      - name: Docker login in default registry
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_LOGIN }}" --password-stdin
-
       - name: Build image
         run: |
-          docker buildx build \
-            --platform ${{ steps.buildx.outputs.platforms }} \
-            -t tarampampam/mikrotik-hosts-parser:local \
+          docker build \
+            -t mikrotik-hosts-parser:local \
             --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" \
             -f ./Dockerfile \
-            --push \
             .
 
       - name: Try to execute
-        run: docker run --rm tarampampam/mikrotik-hosts-parser:local version
+        run: docker run --rm mikrotik-hosts-parser:local version
 
       - name: Scan image
         uses: anchore/scan-action@v2 # action page: <https://github.com/anchore/scan-action>
         with:
-          image: tarampampam/mikrotik-hosts-parser:local
+          image: mikrotik-hosts-parser:local
           fail-build: true
           severity-cutoff: low # negligible, low, medium, high or critical
 
       - name: Save docker image
-        run: docker save tarampampam/mikrotik-hosts-parser:local > ./docker-image.tar
+        run: docker save mikrotik-hosts-parser:local > ./docker-image.tar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -244,7 +235,7 @@ jobs:
             -e "CACHING_ENGINE=${{ matrix.caching-engine }}" \
             -e "REDIS_DSN=redis://redis:6379/0" \
             -e "LISTEN_PORT=8081" \
-              tarampampam/mikrotik-hosts-parser:local
+              mikrotik-hosts-parser:local
 
       - name: Run Newman
         uses: ./.github/actions/newman
