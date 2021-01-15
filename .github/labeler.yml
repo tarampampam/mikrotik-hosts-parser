@@ -1,5 +1,4 @@
 docs:
-  - '!CHANGELOG.md'
   - '**/*.md'
   - '**/*.MD'
 

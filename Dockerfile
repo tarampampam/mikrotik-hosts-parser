@@ -1,5 +1,7 @@
+# syntax=docker/dockerfile:1.2
+
 # Image page: <https://hub.docker.com/_/golang>
-FROM golang:1.15.6-alpine as builder
+FROM --platform=${TARGETPLATFORM:-linux/amd64} golang:1.15.6-alpine as builder
 
 # can be passed with any prefix (like `v1.2.3@GITHASH`)
 # e.g.: `docker build --build-arg "APP_VERSION=v1.2.3@GITHASH" .`
@@ -13,13 +15,6 @@ RUN set -x \
     && update-ca-certificates
 
 WORKDIR /src
-
-COPY ./go.mod ./go.sum ./
-
-# Burn modules cache
-RUN set -x \
-    && go mod download \
-    && go mod verify
 
 COPY . .
 

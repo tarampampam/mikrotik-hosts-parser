@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 - HTTP requests log records contains request processing duration
 - Panics inside HTTP handlers now will be logged and JSON-formatted string will be returned (instead empty response)
 - Frontend dependencies updated
+- Docker image (for release) now supports `linux/amd64` + `linux/386` platforms
 
 ### Added
 
