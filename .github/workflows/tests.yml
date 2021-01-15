@@ -219,7 +219,7 @@ jobs:
         working-directory: .artifact
         run: docker load < docker-image.tar
 
-      - name: Start HTTP server
+      - name: Run docker image with app
         run: |
           docker run --rm -d \
             --network "app-network" \

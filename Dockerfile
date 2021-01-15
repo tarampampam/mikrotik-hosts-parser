@@ -8,7 +8,8 @@ ARG APP_VERSION="undefined@docker"
 RUN set -x \
     && mkdir /src \
     # SSL ca certificates (ca-certificates is required to call HTTPS endpoints)
-    && apk add --no-cache mailcap ca-certificates \
+    # packages mailcap and apache2 is needed for /etc/mime.types and /etc/apache2/mime.types files respectively
+    && apk add --no-cache mailcap apache2 ca-certificates \
     && update-ca-certificates
 
 WORKDIR /src
@@ -33,12 +34,13 @@ RUN set -x \
 
 # prepare rootfs for runtime
 RUN set -x \
-    && mkdir -p /tmp/rootfs/etc/ssl \
+    && mkdir -p /tmp/rootfs/etc/ssl /tmp/rootfs/etc/apache2 \
     && mkdir -p /tmp/rootfs/bin \
     && mkdir -p /tmp/rootfs/opt/mikrotik-hosts-parser \
     && mkdir -p --mode=777 /tmp/rootfs/tmp \
     && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
     && cp /etc/mime.types /tmp/rootfs/etc/mime.types \
+    && cp /etc/apache2/mime.types /tmp/rootfs/etc/apache2/mime.types \
     && cp -R /src/web /tmp/rootfs/opt/mikrotik-hosts-parser/web \
     && cp /src/configs/config.yml /tmp/rootfs/etc/config.yml \
     && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
