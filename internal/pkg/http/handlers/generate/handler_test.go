@@ -118,6 +118,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			"https%3A%2F%2Fmock%2Fad_servers.txt"+
 			",http://mock/hosts_adaway.txt"+
 			",http://non-existing-file.txt"+
+			",http://non-existing-file2.txt"+
 			"&excluded_hosts="+
 			"aaa.com"+
 			",bbb.org"+
@@ -132,6 +133,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	assert.Regexp(t, `Cache.+miss.+http:\/\/mock\/hosts_adaway\.txt`, body)
 	assert.Regexp(t, `Cache.+miss.+https:\/\/mock\/ad_servers\.txt`, body)
 	assert.Regexp(t, `Source.+non-existing-file\.txt.+404`, body)
+	assert.Regexp(t, `Source.+non-existing-file2\.txt.+404`, body)
 	assert.Regexp(t, `(?sU)Excluded hosts.+aaa\.com.+bbb\.org.+localhost`, rr.Body.String())
 	assert.Contains(t, body, "/ip dns static")
 	assert.Equal(t, strings.Count(body, "add address=127.0.0.5 comment=\"foo\" disabled=no"), 1234)
