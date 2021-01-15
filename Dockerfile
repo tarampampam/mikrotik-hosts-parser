@@ -22,7 +22,7 @@ RUN set -x \
     && go mod verify
 
 COPY . .
-
+# Test line
 # arguments to pass on each go tool link invocation
 ENV LDFLAGS="-s -w -X github.com/tarampampam/mikrotik-hosts-parser/internal/pkg/version.version=$APP_VERSION"
 
