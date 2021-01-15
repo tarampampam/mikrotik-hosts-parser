@@ -137,7 +137,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 	if len(params.excluded) > 0 {
 		h.writeComment(w, "Excluded hosts:")
 
-		for i := 0; i < len(params.sources); i++ {
+		for i := 0; i < len(params.excluded); i++ {
 			h.writeComment(w, fmt.Sprintf(" - %s", params.excluded[i]))
 		}
 	}
