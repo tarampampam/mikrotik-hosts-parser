@@ -3,7 +3,7 @@ name: release
 on:
   release: # Docs: <https://help.github.com/en/articles/events-that-trigger-workflows#release-event-release>
     types: [published]
-# Test line
+
 jobs:
   build:
     name: Build for ${{ matrix.os }} (${{ matrix.arch }})
