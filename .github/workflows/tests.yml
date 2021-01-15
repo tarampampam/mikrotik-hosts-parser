@@ -46,7 +46,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 2
+          fetch-depth: 2 # Fixes codecov error 'Issue detecting commit SHA'
 
       - name: Go modules Cache # Docs: <https://git.io/JfAKn#go---modules>
         uses: actions/cache@v2
@@ -170,6 +170,9 @@ jobs:
       - name: Generate version value
         id: version # for PR this value will be `merge@__hash__`, SO: <https://stackoverflow.com/a/59780579/2252921>
         run: echo "::set-output name=value::`echo ${GITHUB_REF##*/} | sed -e 's/^[vV ]*//'`@`echo ${GITHUB_SHA} | cut -c1-8`"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1 # Action page: <https://github.com/docker/setup-buildx-action>
