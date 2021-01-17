@@ -32,7 +32,6 @@ RUN set -x \
     && mkdir -p /tmp/rootfs/etc/ssl /tmp/rootfs/etc/apache2 \
     && mkdir -p /tmp/rootfs/bin \
     && mkdir -p /tmp/rootfs/opt/mikrotik-hosts-parser \
-    && mkdir -p --mode=777 /tmp/rootfs/tmp \
     && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
     && cp /etc/mime.types /tmp/rootfs/etc/mime.types \
     && cp /etc/apache2/mime.types /tmp/rootfs/etc/apache2/mime.types \
