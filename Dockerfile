@@ -28,18 +28,24 @@ RUN set -x \
     && /tmp/mikrotik-hosts-parser -h
 
 # prepare rootfs for runtime
+RUN mkdir -p /tmp/rootfs
+
+WORKDIR /tmp/rootfs
+
 RUN set -x \
-    && mkdir -p /tmp/rootfs/etc/ssl /tmp/rootfs/etc/apache2 \
-    && mkdir -p /tmp/rootfs/bin \
-    && mkdir -p /tmp/rootfs/opt/mikrotik-hosts-parser \
-    && cp -R /etc/ssl/certs /tmp/rootfs/etc/ssl/certs \
-    && cp /etc/mime.types /tmp/rootfs/etc/mime.types \
-    && cp /etc/apache2/mime.types /tmp/rootfs/etc/apache2/mime.types \
-    && cp -R /src/web /tmp/rootfs/opt/mikrotik-hosts-parser/web \
-    && cp /src/configs/config.yml /tmp/rootfs/etc/config.yml \
-    && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
-    && echo 'appuser:x:10001:' > /tmp/rootfs/etc/group \
-    && mv /tmp/mikrotik-hosts-parser /tmp/rootfs/bin/mikrotik-hosts-parser
+    && mkdir -p \
+        ./etc/ssl \
+        ./etc/apache2 \
+        ./bin \
+        ./opt/mikrotik-hosts-parser \
+    && cp -R /etc/ssl/certs ./etc/ssl/certs \
+    && cp /etc/mime.types ./etc/mime.types \
+    && cp /etc/apache2/mime.types ./etc/apache2/mime.types \
+    && cp -R /src/web ./opt/mikrotik-hosts-parser/web \
+    && cp /src/configs/config.yml ./etc/config.yml \
+    && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > ./etc/passwd \
+    && echo 'appuser:x:10001:' > ./etc/group \
+    && mv /tmp/mikrotik-hosts-parser ./bin/mikrotik-hosts-parser
 
 # use empty filesystem
 FROM scratch
