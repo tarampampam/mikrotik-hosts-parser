@@ -42,7 +42,7 @@ gotest: ## Run app tests
 test: lint gotest ## Run app tests and linters
 
 cover: ## Run app tests with coverage report
-	docker-compose run $(DC_RUN_ARGS) app sh -c 'go test -race -covermode=atomic -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'
+	docker-compose run $(DC_RUN_ARGS) --no-deps app sh -c 'go test -race -covermode=atomic -coverprofile /tmp/cp.out ./... && go tool cover -html=/tmp/cp.out -o ./coverage.html'
 	-sensible-browser ./coverage.html && sleep 2 && rm -f ./coverage.html
 
 up: ## Create and start containers
