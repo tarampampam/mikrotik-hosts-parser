@@ -38,6 +38,7 @@ RUN set -x \
     && cp -R /src/web /tmp/rootfs/opt/mikrotik-hosts-parser/web \
     && cp /src/configs/config.yml /tmp/rootfs/etc/config.yml \
     && echo 'appuser:x:10001:10001::/nonexistent:/sbin/nologin' > /tmp/rootfs/etc/passwd \
+    && echo 'appuser:x:10001:' > /tmp/rootfs/etc/group \
     && mv /tmp/mikrotik-hosts-parser /tmp/rootfs/bin/mikrotik-hosts-parser
 
 # use empty filesystem
@@ -58,7 +59,7 @@ LABEL \
 COPY --from=builder /tmp/rootfs /
 
 # Use an unprivileged user
-USER appuser
+USER appuser:appuser
 
 # Docs: <https://docs.docker.com/engine/reference/builder/#healthcheck>
 HEALTHCHECK --interval=15s --timeout=3s --start-period=1s CMD [ \
