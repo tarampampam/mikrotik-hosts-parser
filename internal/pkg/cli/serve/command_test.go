@@ -295,6 +295,8 @@ func checkTCPPortIsBusy(t *testing.T, port int) bool {
 }
 
 func startAndStopServer(t *testing.T, port int, args []string) string {
+	t.Helper()
+
 	var (
 		output     string
 		executedCh = make(chan struct{})
