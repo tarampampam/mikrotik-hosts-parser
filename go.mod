@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/a8m/envsubst v1.2.0
-	github.com/alicebob/miniredis/v2 v2.14.1
+	github.com/alicebob/miniredis/v2 v2.14.2
 	github.com/fatih/color v1.10.0
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/go-redis/redis/v8 v8.4.11
@@ -13,7 +13,6 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	go.uber.org/zap v1.16.0
 	gopkg.in/yaml.v2 v2.4.0
 )
