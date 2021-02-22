@@ -4,10 +4,10 @@ go 1.15
 
 require (
 	github.com/a8m/envsubst v1.2.0
-	github.com/alicebob/miniredis/v2 v2.14.2
+	github.com/alicebob/miniredis/v2 v2.14.3
 	github.com/fatih/color v1.10.0
 	github.com/felixge/httpsnoop v1.0.1
-	github.com/go-redis/redis/v8 v8.4.11
+	github.com/go-redis/redis/v8 v8.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kami-zh/go-capturer v0.0.0-20171211120116-e492ea43421d
 	github.com/spf13/cobra v1.1.3
