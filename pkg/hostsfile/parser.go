@@ -9,7 +9,7 @@ import (
 
 // Hostname validator generation (execute in linux shell) using <https://gitlab.com/opennota/re2dfa>:
 //	$ cd ./pkg/hostsfile
-//	$ docker run --rm -ti -v $(pwd):/rootfs:rw -w /rootfs golang:1.15-buster
+//	$ docker run --rm -ti -v $(pwd):/rootfs:rw -w /rootfs golang:1.16-buster
 //	$ go get -u gitlab.com/opennota/re2dfa
 //	$ re2dfa -o hostname_validator.go \
 //	'(?i)^((-?)(xn--|_)?[a-z0-9-_]{0,61}[a-z0-9-_]\.)*(xn--)?([a-z0-9][a-z0-9\-]{0,60}|[a-z0-9-]{1,30}\.[a-z]{2,})$' \
