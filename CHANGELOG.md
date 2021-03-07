@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
+## v4.1.0
+
+### Changed
+
+- Go version updated from `1.15.7` up to `1.16.0`
+
 ## v4.0.1
 
 ### Fixed
