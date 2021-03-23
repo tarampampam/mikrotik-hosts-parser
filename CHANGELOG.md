@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][keepachangelog] and this project adheres to [Semantic Versioning][semver].
 
+## v4.2.0
+
+### Changed
+
+- Go version updated from `1.16.0` up to `1.16.2`
+
+### Added
+
+- Support for `linux/arm64`, `linux/arm/v6` and `linux/arm/v7` platforms for docker image
+
 ## v4.1.0
 
 ### Changed
