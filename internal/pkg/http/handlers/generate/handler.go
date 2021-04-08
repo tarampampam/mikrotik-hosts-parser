@@ -25,11 +25,18 @@ import (
 	"go.uber.org/zap"
 )
 
+type metrics interface {
+	IncrementCacheHits()
+	IncrementCacheMisses()
+	ObserveGenerationDuration(time.Duration)
+}
+
 type handler struct {
 	ctx    context.Context
 	log    *zap.Logger
 	cacher cache.Cacher
 	cfg    *config.Config
+	m      metrics
 
 	defaultRedirectIP net.IP
 
@@ -45,7 +52,13 @@ const (
 )
 
 // NewHandler creates RouterOS script generation handler.
-func NewHandler(ctx context.Context, log *zap.Logger, cacher cache.Cacher, cfg *config.Config) (http.Handler, error) {
+func NewHandler(
+	ctx context.Context,
+	log *zap.Logger,
+	cacher cache.Cacher,
+	cfg *config.Config,
+	m metrics,
+) (http.Handler, error) {
 	if containsIllegalSymbols(cfg.RouterScript.Comment) {
 		return nil, errors.New("wrong config: script comment contains illegal symbols")
 	}
@@ -67,6 +80,7 @@ func NewHandler(ctx context.Context, log *zap.Logger, cacher cache.Cacher, cfg *
 		log:    log,
 		cacher: cacher,
 		cfg:    cfg,
+		m:      m,
 
 		httpClient: &http.Client{Timeout: httpClientTimeout, CheckRedirect: checkRedirectFn},
 	}
@@ -90,6 +104,7 @@ type hostsFileData struct {
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:funlen,gocognit,gocyclo
 	params := newReqParams(h.defaultRedirectIP)
+	startedAt := time.Now()
 
 	if r == nil || r.URL == nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -230,8 +245,12 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 		}
 
 		if data.cacheHit {
+			h.m.IncrementCacheHits()
+
 			h.writeComment(w, fmt.Sprintf("Cache HIT for <%s> (expires after %s)", data.url, data.cacheTTL.Round(time.Second)))
 		} else {
+			h.m.IncrementCacheMisses()
+
 			h.writeComment(w, fmt.Sprintf("Cache miss for <%s>", data.url))
 		}
 
@@ -304,6 +323,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 		len(result),
 		int(atomic.LoadUint32(&hostsRecordsCount))-len(result),
 	))
+
+	generationDuration := time.Since(startedAt)
+	h.writeComment(w, fmt.Sprintf("Generated in %s", generationDuration))
+	h.m.ObserveGenerationDuration(generationDuration)
 }
 
 func containsIllegalSymbols(s string) bool {

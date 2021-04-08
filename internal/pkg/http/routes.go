@@ -3,18 +3,27 @@ package http
 import (
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/checkers"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/fileserver"
 	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/settings"
 	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/generate"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/healthz"
+	metricsHandler "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/metrics"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/nocache"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
 )
 
-func (s *Server) registerScriptGeneratorHandlers() error {
-	h, err := generate.NewHandler(s.ctx, s.log, s.cacher, s.cfg)
+func (s *Server) registerScriptGeneratorHandlers(registerer prometheus.Registerer) error {
+	m := metrics.NewGenerator()
+	if err := m.Register(registerer); err != nil {
+		return err
+	}
+
+	h, err := generate.NewHandler(s.ctx, s.log, s.cacher, s.cfg, &m)
 	if err != nil {
 		return err
 	}
@@ -45,7 +54,12 @@ func (s *Server) registerAPIHandlers() {
 		Name("api_get_version")
 }
 
-func (s *Server) registerServiceHandlers() {
+func (s *Server) registerServiceHandlers(registry prometheus.Gatherer) {
+	s.router.
+		HandleFunc("/metrics", metricsHandler.NewHandler(registry)).
+		Methods(http.MethodGet).
+		Name("metrics")
+
 	s.router.
 		HandleFunc("/ready", healthz.NewHandler(checkers.NewReadyChecker(s.ctx, s.rdb))).
 		Methods(http.MethodGet, http.MethodHead).

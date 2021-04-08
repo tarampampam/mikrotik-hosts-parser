@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 
 - Go version updated from `1.16.2` up to `1.16.3`
 
+### Added
+
+- HTTP route `/metrics` with metrics in [prometheus](https://github.com/prometheus) format
+- Comment in generated script with "script generation" time
+
 ## v4.2.0
 
 ### Changed
