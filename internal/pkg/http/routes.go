@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
-
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/checkers"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/fileserver"
 	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/settings"
@@ -14,6 +12,7 @@ import (
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/healthz"
 	metricsHandler "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/metrics"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/nocache"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
 )
 

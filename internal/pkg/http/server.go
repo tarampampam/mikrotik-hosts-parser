@@ -8,15 +8,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/logreq"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/panic"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
 	"go.uber.org/zap"
 )
 
