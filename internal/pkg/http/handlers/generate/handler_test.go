@@ -24,6 +24,15 @@ type fakeHTTPClientFunc func(*http.Request) (*http.Response, error)
 
 func (f fakeHTTPClientFunc) Do(req *http.Request) (*http.Response, error) { return f(req) }
 
+type fakeMetrics struct {
+	h, m int
+	d    time.Duration
+}
+
+func (f *fakeMetrics) IncrementCacheHits()                       { f.h++ }
+func (f *fakeMetrics) IncrementCacheMisses()                     { f.m++ }
+func (f *fakeMetrics) ObserveGenerationDuration(d time.Duration) { f.d = d }
+
 var httpMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error) { //nolint:gochecknoglobals
 	path, absErr := filepath.Abs(testDataPath + req.URL.RequestURI())
 	if absErr != nil {
@@ -70,7 +79,7 @@ func BenchmarkHandler_ServeHTTP(b *testing.B) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, _ := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	h, _ := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &fakeMetrics{})
 
 	h.(*handler).httpClient = httpMock
 
@@ -103,7 +112,9 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	m := fakeMetrics{}
+
+	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &m)
 	assert.NoError(t, err)
 
 	h.(*handler).httpClient = httpMock
@@ -153,13 +164,18 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	assert.Regexp(t, `Source.+non-existing-file\.txt.+404`, body)
 
 	assert.Equal(t, 1234+1, len(lineWithoutCommentsRegex.FindAllStringIndex(body, -1)))
+
+	assert.Equal(t, 2, m.m)
+	assert.Equal(t, 2, m.h)
 }
 
 func TestHandler_ServeHTTPHostnamesExcluding(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	m := fakeMetrics{}
+
+	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &m)
 	assert.NoError(t, err)
 
 	var customHTTPMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error) {
@@ -206,13 +222,18 @@ broken line format
 	assert.Contains(t, body, "name=\"example.com\"")
 	assert.Contains(t, body, "/ip dns static")
 	assert.Equal(t, strings.Count(body, "add address=127.0.0.1 comment=\"foo\" disabled=no"), 5)
+
+	assert.Equal(t, 0, m.h)
+	assert.Equal(t, 1, m.m)
 }
 
 func TestHandler_ServeHTTPWithoutRequest(t *testing.T) { //nolint:dupl
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	m := fakeMetrics{}
+
+	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &m)
 	assert.NoError(t, err)
 
 	var rr = httptest.NewRecorder()
@@ -221,13 +242,18 @@ func TestHandler_ServeHTTPWithoutRequest(t *testing.T) { //nolint:dupl
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.Equal(t, "## Empty request or query parameters\n", rr.Body.String())
+
+	assert.Equal(t, 0, m.h)
+	assert.Equal(t, 0, m.m)
 }
 
 func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) { //nolint:dupl
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	m := fakeMetrics{}
+
+	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &m)
 	assert.NoError(t, err)
 
 	var (
@@ -239,13 +265,18 @@ func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) { //nolint:dup
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.Regexp(t, `(?mU)## Query parameters error.*sources_urls`, rr.Body.String())
+
+	assert.Equal(t, 0, m.h)
+	assert.Equal(t, 0, m.m)
 }
 
 func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) { //nolint:dupl
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	m := fakeMetrics{}
+
+	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &m)
 	assert.NoError(t, err)
 
 	var (
@@ -257,13 +288,18 @@ func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) { //nolint:dupl
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.Regexp(t, `(?mU)## Query parameters.*fail.*empty.*sources`, rr.Body.String())
+
+	assert.Equal(t, 0, m.h)
+	assert.Equal(t, 0, m.m)
 }
 
 func TestHandler_ServeHTTPRequestWrongFormat(t *testing.T) { //nolint:dupl
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
-	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig())
+	m := fakeMetrics{}
+
+	h, err := NewHandler(context.Background(), zap.NewNop(), cacher, createConfig(), &m)
 	assert.NoError(t, err)
 
 	var (
@@ -275,4 +311,7 @@ func TestHandler_ServeHTTPRequestWrongFormat(t *testing.T) { //nolint:dupl
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.Regexp(t, `(?mU)## Unsupported format.*foobar`, rr.Body.String())
+
+	assert.Equal(t, 0, m.h)
+	assert.Equal(t, 0, m.m)
 }

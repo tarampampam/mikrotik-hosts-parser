@@ -10,10 +10,12 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/logreq"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/panic"
+	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
 	"go.uber.org/zap"
 )
 
@@ -76,9 +78,11 @@ func (s *Server) Start(ip string, port uint16) error {
 
 // Register server routes, middlewares, etc.
 func (s *Server) Register() error {
+	registry := metrics.NewRegistry()
+
 	s.registerGlobalMiddlewares()
 
-	if err := s.registerHandlers(); err != nil {
+	if err := s.registerHandlers(registry); err != nil {
 		return err
 	}
 
@@ -97,13 +101,13 @@ func (s *Server) registerGlobalMiddlewares() {
 }
 
 // registerHandlers register server http handlers.
-func (s *Server) registerHandlers() error {
-	if err := s.registerScriptGeneratorHandlers(); err != nil {
+func (s *Server) registerHandlers(registry *prometheus.Registry) error {
+	if err := s.registerScriptGeneratorHandlers(registry); err != nil {
 		return err
 	}
 
 	s.registerAPIHandlers()
-	s.registerServiceHandlers()
+	s.registerServiceHandlers(registry)
 
 	if s.resourcesDir != "" {
 		if err := s.registerFileServerHandler(s.resourcesDir); err != nil {
