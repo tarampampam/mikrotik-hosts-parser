@@ -1,2 +1,0 @@
-ignore:
-  - "pkg/hostsfile/hostname_validator.go" # generated file
