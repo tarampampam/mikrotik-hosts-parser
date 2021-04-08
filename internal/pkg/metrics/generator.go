@@ -20,7 +20,7 @@ func NewGenerator() Generator {
 			Namespace: "generator",
 			Subsystem: "cache",
 			Name:      "hits",
-			Help:      "The count of cache hist during script generation.",
+			Help:      "The count of cache hits during script generation.",
 		}),
 		cacheMiss: prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "generator",
