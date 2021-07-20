@@ -136,7 +136,7 @@ jobs:
           name: mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}
           path: /tmp/mikrotik-hosts-parser
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
 
   e2e:
     name: End-to-End tests (cache in ${{ matrix.caching-engine }})
@@ -210,6 +210,7 @@ jobs:
         with:
           name: docker-image
           path: ./docker-image.tar
+          retention-days: 1
 
   docker-image-e2e:
     name: Docker image End-to-End tests (cache in ${{ matrix.caching-engine }})
