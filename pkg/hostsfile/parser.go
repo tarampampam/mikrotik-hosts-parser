@@ -104,7 +104,7 @@ scan: // read content "line by line"
 				if w.count == 1 {
 					if (w.flag.HasFlag(wordWithDot) && validateIPv4(w.buf.Bytes())) ||
 						(w.flag.HasFlag(wordWithColon) && net.ParseIP(w.buf.String()) != nil) ||
-						(validateIPLong(w.buf.Bytes())) {
+						(validateIPLong(w.buf.String())) {
 						ip.Write(w.buf.Bytes())
 					}
 				} else {
@@ -169,8 +169,8 @@ func validateIPv4(s []byte) bool {
 }
 
 // validateIPLong address (0 - 4294967295).
-func validateIPLong(s []byte) bool {
-	f, err := strconv.ParseFloat(string(s), 64)
+func validateIPLong(s string) bool {
+	f, err := strconv.ParseFloat(s, 64)
 	if err != nil || f < 0 || f > 4294967295 {
 		return false
 	}
