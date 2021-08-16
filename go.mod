@@ -7,7 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.15.1
 	github.com/fatih/color v1.12.0
 	github.com/felixge/httpsnoop v1.0.2
-	github.com/go-redis/redis/v8 v8.11.2
+	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gorilla/mux v1.8.0
 	github.com/kami-zh/go-capturer v0.0.0-20171211120116-e492ea43421d
 	github.com/prometheus/client_golang v1.11.0
