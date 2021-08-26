@@ -356,8 +356,8 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test('Content-Type header is application/xml', () => {",
-									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('application/xml');",
+									"pm.test('Content-Type header is contains xml', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.contains('xml');",
 									"});"
 								],
 								"type": "text/javascript"
