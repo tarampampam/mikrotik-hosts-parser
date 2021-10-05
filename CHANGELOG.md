@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 
 - Go version updated from `1.16.3` up to `1.17.1`
 
+### Added
+
+- Possibility to use IP addresses in hosts file lists in long integer format [#123] (thx [@vadimpronin])
+
+[@vadimpronin]:https://github.com/vadimpronin
+[#123]:https://github.com/tarampampam/mikrotik-hosts-parser/pull/123
+
 ## v4.3.0
 
 ### Changed

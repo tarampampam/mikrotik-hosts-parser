@@ -151,13 +151,19 @@ broken line format
 next line with IP only (spaces and tabs after)
 0.0.0.0 		 		  	 	 		 	'
 
+0 min.long.integer.ip               # valid
+4294967295 max.long.integer.ip      # valid
+4294967296 too-big.long.integer.ip  # invalid
+-1 too-small.long.integer.ip        # invalid
+4294N67295 broken.long.integer.ip   # invalid
+
 the end
 `))
 
 	records, err := Parse(buf)
 	assert.NoError(t, err)
 
-	assert.Len(t, records, 9)
+	assert.Len(t, records, 11)
 
 	assert.Equal(t, "1.2.3.4", records[0].IP)
 	assert.Equal(t, "dns.google", records[0].Host)
@@ -195,4 +201,12 @@ the end
 	assert.Equal(t, "3.3.3.3", records[8].IP)
 	assert.Equal(t, "xn--e1aybc.xn--p1ai", records[8].Host)
 	assert.Nil(t, records[8].AdditionalHosts)
+
+	assert.Equal(t, "0.0.0.0", records[9].IP) // long: 0
+	assert.Equal(t, "min.long.integer.ip", records[9].Host)
+	assert.Nil(t, records[7].AdditionalHosts)
+
+	assert.Equal(t, "255.255.255.255", records[10].IP) // long: 4294967295
+	assert.Equal(t, "max.long.integer.ip", records[10].Host)
+	assert.Nil(t, records[7].AdditionalHosts)
 }

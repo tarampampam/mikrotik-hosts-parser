@@ -3,8 +3,10 @@ package hostsfile
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	"io"
 	"net"
+	"strconv"
 )
 
 // Hostname validator generation (execute in linux shell) using <https://gitlab.com/opennota/re2dfa>:
@@ -104,6 +106,10 @@ scan: // read content "line by line"
 					if (w.flag.HasFlag(wordWithDot) && validateIPv4(w.buf.Bytes())) ||
 						(w.flag.HasFlag(wordWithColon) && net.ParseIP(w.buf.String()) != nil) {
 						ip.Write(w.buf.Bytes())
+					} else if !w.flag.HasFlag(wordWithDot) && !w.flag.HasFlag(wordWithColon) {
+						if long, ok := parseLongIP(w.buf.String()); ok {
+							ip.WriteString(long.To4().String())
+						}
 					}
 				} else {
 					if w.buf.Bytes()[0] == '#' { // comment at the end of line
@@ -164,6 +170,19 @@ func validateIPv4(s []byte) bool {
 	}
 
 	return len(s) == 0
+}
+
+// parseLongIP parses IP address in long format (0 - 4294967295).
+func parseLongIP(s string) (ip net.IP, ok bool) {
+	f, err := strconv.ParseUint(s, 10, 32)
+	if err == nil && f >= 0 && f <= 4294967295 {
+		ip, ok = make(net.IP, 4), true
+		binary.BigEndian.PutUint32(ip, uint32(f))
+
+		return
+	}
+
+	return
 }
 
 // dtoi converts decimal to integer. Returns number, characters consumed, success.
