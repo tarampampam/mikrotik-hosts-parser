@@ -202,11 +202,11 @@ the end
 	assert.Equal(t, "xn--e1aybc.xn--p1ai", records[8].Host)
 	assert.Nil(t, records[8].AdditionalHosts)
 
-	assert.Equal(t, "0", records[9].IP)
+	assert.Equal(t, "0.0.0.0", records[9].IP) // long: 0
 	assert.Equal(t, "min.long.integer.ip", records[9].Host)
 	assert.Nil(t, records[7].AdditionalHosts)
 
-	assert.Equal(t, "4294967295", records[10].IP)
+	assert.Equal(t, "255.255.255.255", records[10].IP) // long: 4294967295
 	assert.Equal(t, "max.long.integer.ip", records[10].Host)
 	assert.Nil(t, records[7].AdditionalHosts)
 }
