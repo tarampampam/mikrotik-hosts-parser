@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/a8m/envsubst v1.3.0
-	github.com/alicebob/miniredis/v2 v2.16.0
+	github.com/alicebob/miniredis/v2 v2.16.1
 	github.com/fatih/color v1.13.0
 	github.com/felixge/httpsnoop v1.0.2
 	github.com/go-redis/redis/v8 v8.11.4
