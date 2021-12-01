@@ -3,7 +3,7 @@ module github.com/tarampampam/mikrotik-hosts-parser/v4
 go 1.15
 
 require (
-	github.com/a8m/envsubst v1.2.0
+	github.com/a8m/envsubst v1.3.0
 	github.com/alicebob/miniredis/v2 v2.16.0
 	github.com/fatih/color v1.13.0
 	github.com/felixge/httpsnoop v1.0.2
