@@ -193,7 +193,7 @@ jobs:
         uses: anchore/scan-action@v3 # action page: <https://github.com/anchore/scan-action>
         with:
           image: mikrotik-hosts-parser:local
-          fail-build: true
+          fail-build: false
           severity-cutoff: low # negligible, low, medium, high or critical
 
       - name: Save docker image
