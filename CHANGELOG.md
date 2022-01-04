@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 
 ### Changed
 
-- Go version updated from `1.17.2` up to `1.17.3`
+- Go version updated from `1.17.2` up to `1.17.5`
 
 ## v4.4.0
 
