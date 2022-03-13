@@ -134,7 +134,6 @@ Where `X.X.X` is image tag _(application version)_.
 
 I can't guarantee that this links will available forever, but you can use this application by the following links:
 
-- <https://stopad.hook.sh/>
 - <https://stopad.cgood.ru/>
 
 ## Testing
