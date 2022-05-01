@@ -130,7 +130,7 @@ jobs:
         run: /tmp/mikrotik-hosts-parser version && /tmp/mikrotik-hosts-parser -h
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mikrotik-hosts-parser-${{ matrix.os }}-${{ matrix.arch }}
           path: /tmp/mikrotik-hosts-parser
@@ -204,7 +204,7 @@ jobs:
         run: docker save mikrotik-hosts-parser:local > ./docker-image.tar
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: docker-image
           path: ./docker-image.tar
