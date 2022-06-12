@@ -152,7 +152,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	// assert non-comments and non-empty lines count
 	var lineWithoutCommentsRegex = regexp.MustCompile(`(?mU)^([^#\n]+.*)\n`) // <https://regex101.com/r/O23cel/1>
 
-	assert.Equal(t, 1234+1, len(lineWithoutCommentsRegex.FindAllStringIndex(body, -1))) //nolint:wsl
+	assert.Equal(t, 1234+1, len(lineWithoutCommentsRegex.FindAllStringIndex(body, -1)))
 
 	rr = httptest.NewRecorder()
 	h.ServeHTTP(rr, req) // second run
@@ -227,7 +227,7 @@ broken line format
 	assert.Equal(t, 1, m.m)
 }
 
-func TestHandler_ServeHTTPWithoutRequest(t *testing.T) { //nolint:dupl
+func TestHandler_ServeHTTPWithoutRequest(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
@@ -247,7 +247,7 @@ func TestHandler_ServeHTTPWithoutRequest(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 0, m.m)
 }
 
-func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) { //nolint:dupl
+func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
@@ -270,7 +270,7 @@ func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) { //nolint:dup
 	assert.Equal(t, 0, m.m)
 }
 
-func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) { //nolint:dupl
+func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 
@@ -293,7 +293,7 @@ func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 0, m.m)
 }
 
-func TestHandler_ServeHTTPRequestWrongFormat(t *testing.T) { //nolint:dupl
+func TestHandler_ServeHTTPRequestWrongFormat(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
 

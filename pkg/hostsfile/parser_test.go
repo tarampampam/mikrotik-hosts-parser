@@ -19,7 +19,7 @@ var benchDataset = []struct{ filePath string }{ //nolint:gochecknoglobals
 	{"../../test/testdata/hosts/spy.txt"},
 }
 
-func BenchmarkParse(b *testing.B) { //nolint:dupl
+func BenchmarkParse(b *testing.B) {
 	for _, tt := range benchDataset {
 		tt := tt
 

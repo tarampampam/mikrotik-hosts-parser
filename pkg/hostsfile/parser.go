@@ -49,10 +49,10 @@ func (w *word) Reset() {
 // Parse input and return slice of records. Result order are same as in source.
 func Parse(in io.Reader) ([]Record, error) { //nolint:funlen,gocognit,gocyclo
 	var (
-		result    = make([]Record, 0, 5)
+		result    = make([]Record, 0, 5) //nolint:gomnd
 		scan      = bufio.NewScanner(in)
 		w         word
-		hostnames = make([]string, 0, 3)
+		hostnames = make([]string, 0, 3) //nolint:gomnd
 		ip        bytes.Buffer
 	)
 
@@ -174,9 +174,9 @@ func validateIPv4(s []byte) bool {
 
 // parseLongIP parses IP address in long format (0 - 4294967295).
 func parseLongIP(s string) (ip net.IP, ok bool) {
-	f, err := strconv.ParseUint(s, 10, 32)
+	f, err := strconv.ParseUint(s, 10, 32)       //nolint:gomnd
 	if err == nil && f >= 0 && f <= 4294967295 { //nolint:staticcheck
-		ip, ok = make(net.IP, 4), true
+		ip, ok = make(net.IP, 4), true //nolint:gomnd
 		binary.BigEndian.PutUint32(ip, uint32(f))
 
 		return

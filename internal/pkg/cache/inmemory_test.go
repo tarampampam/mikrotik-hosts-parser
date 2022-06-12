@@ -103,7 +103,7 @@ func TestInMemoryCache_ConcurrentAccess(t *testing.T) {
 			case <-testCtx.Done():
 				return
 			default:
-				_, _, _, _ = cache.Get("foo") //nolint:dogsled
+				_, _, _, _ = cache.Get("foo")
 			}
 		}
 	}()
