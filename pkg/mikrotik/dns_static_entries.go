@@ -14,7 +14,7 @@ type RenderingOptions struct {
 // if something goes wrong.
 func (se DNSStaticEntries) Render(to io.Writer, opts ...RenderingOptions) (int, error) {
 	var (
-		buf     = make([]byte, 0, 128) // reusable
+		buf     = make([]byte, 0, 128) //nolint:gomnd // reusable
 		total   int
 		options RenderingOptions
 	)

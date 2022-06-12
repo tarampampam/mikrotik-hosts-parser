@@ -49,7 +49,7 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		&f.listen.port,
 		"port",
 		"p",
-		8080,
+		8080, //nolint:gomnd
 		fmt.Sprintf("TCP port number [$%s]", env.ListenPort),
 	)
 	flagSet.StringVarP(
@@ -95,7 +95,7 @@ func (f *flags) overrideUsingEnv() error {
 	}
 
 	if envVar, exists := env.ListenPort.Lookup(); exists {
-		if p, err := strconv.ParseUint(envVar, 10, 16); err == nil {
+		if p, err := strconv.ParseUint(envVar, 10, 16); err == nil { //nolint:gomnd
 			f.listen.port = uint16(p)
 		} else {
 			return fmt.Errorf("wrong TCP port environment variable [%s] value", envVar)

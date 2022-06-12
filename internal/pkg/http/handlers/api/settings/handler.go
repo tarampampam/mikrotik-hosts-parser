@@ -41,7 +41,7 @@ type (
 )
 
 // NewHandler creates settings handler.
-func NewHandler(cfg config.Config, cacher cache.Cacher) http.HandlerFunc { //nolint:gocritic
+func NewHandler(cfg config.Config, cacher cache.Cacher) http.HandlerFunc {
 	var c []byte // response in-memory cache
 
 	return func(w http.ResponseWriter, _ *http.Request) {

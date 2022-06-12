@@ -401,16 +401,16 @@ type reqParams struct {
 
 func newReqParams(redirect net.IP) reqParams {
 	return reqParams{
-		sources:  make([]string, 0, 8),
-		format:   formatRouterOS, // default value
-		excluded: make([]string, 0, 16),
+		sources:  make([]string, 0, 8),  //nolint:gomnd
+		format:   formatRouterOS,        // default value
+		excluded: make([]string, 0, 16), //nolint:gomnd
 		redirect: redirect,
 	}
 }
 
 func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,gocyclo
 	if urls, ok := v["sources_urls"]; ok {
-		m := make(map[string]struct{}, 8)
+		m := make(map[string]struct{}, 8) //nolint:gomnd
 
 		for i := 0; i < len(urls); i++ {
 			for list, j := strings.Split(urls[i], ","), 0; j < len(list); j++ {
@@ -442,7 +442,7 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 	}
 
 	if hosts, ok := v["excluded_hosts"]; ok { // optional
-		m := make(map[string]struct{}, 16)
+		m := make(map[string]struct{}, 16) //nolint:gomnd
 
 		for i := 0; i < len(hosts); i++ {
 			for list, j := strings.Split(hosts[i], ","), 0; j < len(list); j++ {
@@ -461,7 +461,7 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 
 	if value, ok := v["limit"]; ok { // optional
 		if len(value) > 0 {
-			if limit, err := strconv.ParseUint(value[0], 10, 32); err == nil && limit > 0 {
+			if limit, err := strconv.ParseUint(value[0], 10, 32); err == nil && limit > 0 { //nolint:gomnd
 				p.limit = uint32(limit)
 			} else {
 				return errors.New("wrong 'limit' value")

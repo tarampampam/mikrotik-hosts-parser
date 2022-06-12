@@ -23,18 +23,12 @@ jobs:
     name: Golang-CI (lint)
     runs-on: ubuntu-20.04
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with: {go-version: 1.17}
 
-      - name: Run linter
-        uses: golangci/golangci-lint-action@v3 # Action page: <https://github.com/golangci/golangci-lint-action>
-        with:
-          version: v1.33 # without patch version
-          only-new-issues: false # show only new issues if it's a pull request
+      - uses: golangci/golangci-lint-action@v3 # Action page: <https://github.com/golangci/golangci-lint-action>
 
   goreportcard:
     name: Update state on goreportcard.com
@@ -49,13 +43,11 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-20.04
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Check out code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 2 # Fixes codecov error 'Issue detecting commit SHA'
 
@@ -66,11 +58,9 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
 
-      - name: Install Go dependencies
-        run: go mod download
+      - run: go mod download
 
-      - name: Run Unit tests
-        run: go test -race -covermode=atomic -coverprofile /tmp/coverage.txt ./...
+      - run: go test -race -covermode=atomic -coverprofile /tmp/coverage.txt ./...
 
       - name: Upload Coverage report to CodeCov
         continue-on-error: true
@@ -94,13 +84,11 @@ jobs:
             arch: 386
     needs: [golangci-lint, go-test]
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Check out code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - uses: gacts/github-slug@v1
         id: slug
@@ -112,11 +100,9 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
 
-      - name: Install Go dependencies
-        run: go mod download
+      - run: go mod download
 
-      - name: Build application
-        env:
+      - env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
@@ -144,12 +130,11 @@ jobs:
         caching-engine: [memory, redis]
     needs: [build]
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Start redis server
         if: matrix.caching-engine == 'redis'
-        run: docker run --rm -d -p "6379:6379/tcp" redis:6.0.9-alpine
+        run: docker run --rm -d -p "6379:6379/tcp" redis:7-alpine
 
       - name: Download compiled binary file
         uses: actions/download-artifact@v3
@@ -174,8 +159,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [golangci-lint, go-test]
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - uses: gacts/github-slug@v1
         id: slug
@@ -188,11 +172,9 @@ jobs:
             -f ./Dockerfile \
             .
 
-      - name: Try to execute
-        run: docker run --rm mikrotik-hosts-parser:local version
+      - run: docker run --rm mikrotik-hosts-parser:local version
 
-      - name: Scan image
-        uses: anchore/scan-action@v3 # action page: <https://github.com/anchore/scan-action>
+      - uses: anchore/scan-action@v3 # action page: <https://github.com/anchore/scan-action>
         with:
           image: mikrotik-hosts-parser:local
           fail-build: false
@@ -217,15 +199,14 @@ jobs:
         caching-engine: [memory, redis]
     needs: [docker-image]
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Create docker network
         run: docker network create "app-network"
 
       - name: Start redis server
         if: matrix.caching-engine == 'redis'
-        run: docker run --rm -d --network "app-network" -p "6379:6379/tcp" --name=redis redis:6.0.9-alpine
+        run: docker run --rm -d --network "app-network" -p "6379:6379/tcp" --name=redis redis:7-alpine
 
       - name: Download builded docker image
         uses: actions/download-artifact@v3
