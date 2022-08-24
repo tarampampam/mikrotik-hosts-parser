@@ -3,7 +3,7 @@ package generate
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,9 +15,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
-	"go.uber.org/zap"
 )
 
 type fakeHTTPClientFunc func(*http.Request) (*http.Response, error)
@@ -40,7 +41,7 @@ var httpMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error
 	}
 
 	if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
-		raw, readingErr := ioutil.ReadFile(path)
+		raw, readingErr := os.ReadFile(path)
 		if readingErr != nil {
 			panic(readingErr)
 		}
@@ -51,14 +52,14 @@ var httpMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error
 				"Content-Type":   []string{"text/plain; charset=utf-8"},
 				"Content-Length": []string{strconv.FormatInt(info.Size(), 10)},
 			},
-			Body: ioutil.NopCloser(bytes.NewReader(raw)),
+			Body: io.NopCloser(bytes.NewReader(raw)),
 		}, nil
 	}
 
 	return &http.Response{
 		StatusCode: http.StatusNotFound,
 		Header:     http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
-		Body:       ioutil.NopCloser(bytes.NewReader([]byte("Requested file was not found: " + path))),
+		Body:       io.NopCloser(bytes.NewReader([]byte("Requested file was not found: " + path))),
 	}, nil
 }
 
@@ -184,7 +185,7 @@ func TestHandler_ServeHTTPHostnamesExcluding(t *testing.T) {
 			Header: http.Header{
 				"Content-Type": []string{"text/plain; charset=utf-8"},
 			},
-			Body: ioutil.NopCloser(bytes.NewReader([]byte(`
+			Body: io.NopCloser(bytes.NewReader([]byte(`
 4.3.2.1 ___id___.c.mystat-in.net		# comment with double tab
 1.1.1.1 a.cn b.cn a.cn # "a.cn" is duplicate
 

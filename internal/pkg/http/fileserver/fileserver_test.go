@@ -1,7 +1,6 @@
 package fileserver
 
 import (
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -39,7 +38,7 @@ func TestNewFileServer_WrongDirectoryError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not exists")
 
-	tmpDir, _ := ioutil.TempDir("", "test-")
+	tmpDir, _ := os.MkdirTemp("", "test-")
 	defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)
 	file, _ := os.Create(filepath.Join(tmpDir, "foo"))
 	file.Close()
@@ -218,7 +217,7 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 	for _, tt := range cases {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir, tmpDirErr := ioutil.TempDir("", "test-")
+			tmpDir, tmpDirErr := os.MkdirTemp("", "test-")
 			assert.NoError(t, tmpDirErr)
 
 			defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)

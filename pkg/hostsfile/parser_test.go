@@ -2,7 +2,6 @@ package hostsfile
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,7 +25,7 @@ func BenchmarkParse(b *testing.B) {
 		b.Run(filepath.Base(tt.filePath), func(b *testing.B) {
 			b.ReportAllocs()
 
-			raw, err := ioutil.ReadFile(tt.filePath)
+			raw, err := os.ReadFile(tt.filePath)
 			if err != nil {
 				panic(err)
 			}

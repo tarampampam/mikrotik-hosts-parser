@@ -3,7 +3,7 @@ package fileserver
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -64,7 +64,7 @@ func StaticHTMLPageErrorHandler() ErrorHandlerFunc {
 			if f, err := os.Open(path.Join(fs.Settings.FilesRoot, fs.Settings.ErrorFileName)); err == nil {
 				defer func() { _ = f.Close() }()
 
-				if data, err := ioutil.ReadAll(f); err == nil {
+				if data, err := io.ReadAll(f); err == nil {
 					w.Header().Set("Content-Type", "text/html; charset=utf-8")
 					w.WriteHeader(errorCode)
 					_, _ = w.Write([]byte(ErrorPageTemplate(data).Build(errorCode)))
