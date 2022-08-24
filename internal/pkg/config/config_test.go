@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -199,7 +198,7 @@ router_script:
 	for _, tt := range cases {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			file, err := ioutil.TempFile("", "unit-test-")
+			file, err := os.CreateTemp("", "unit-test-")
 			assert.NoError(t, err)
 
 			_, err = file.Write(tt.giveYaml)

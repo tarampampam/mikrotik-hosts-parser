@@ -1,7 +1,6 @@
 package fileserver
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -23,7 +22,7 @@ func TestErrorPageTemplate_Build(t *testing.T) {
 }
 
 func TestJSONErrorHandler(t *testing.T) {
-	tmpDir, _ := ioutil.TempDir("", "test-")
+	tmpDir, _ := os.MkdirTemp("", "test-")
 	defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)
 
 	fs, _ := NewFileServer(Settings{FilesRoot: tmpDir})
@@ -49,7 +48,7 @@ func TestJSONErrorHandler(t *testing.T) {
 }
 
 func TestStaticHtmlPageErrorHandler(t *testing.T) {
-	tmpDir, _ := ioutil.TempDir("", "test-")
+	tmpDir, _ := os.MkdirTemp("", "test-")
 	defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)
 
 	fs, _ := NewFileServer(Settings{
