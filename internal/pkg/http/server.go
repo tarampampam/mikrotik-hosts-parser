@@ -11,12 +11,13 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/logreq"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/panic"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
-	"go.uber.org/zap"
 )
 
 type (
@@ -50,10 +51,11 @@ func NewServer(
 	var (
 		router     = mux.NewRouter()
 		httpServer = &http.Server{
-			Handler:      router,
-			ErrorLog:     zap.NewStdLog(log),
-			WriteTimeout: defaultWriteTimeout,
-			ReadTimeout:  defaultReadTimeout,
+			Handler:           router,
+			ErrorLog:          zap.NewStdLog(log),
+			WriteTimeout:      defaultWriteTimeout,
+			ReadHeaderTimeout: defaultReadTimeout,
+			ReadTimeout:       defaultReadTimeout,
 		}
 	)
 
