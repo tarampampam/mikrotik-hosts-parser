@@ -17,12 +17,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/pkg/hostsfile"
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/pkg/mikrotik"
-	"go.uber.org/zap"
 )
 
 type metrics interface {
@@ -461,7 +462,7 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 
 	if value, ok := v["limit"]; ok { // optional
 		if len(value) > 0 {
-			if limit, err := strconv.ParseUint(value[0], 10, 32); err == nil && limit > 0 { //nolint:gomnd
+			if limit, err := strconv.ParseUint(value[0], 10, 32); err == nil && limit > 0 {
 				p.limit = uint32(limit)
 			} else {
 				return errors.New("wrong 'limit' value")

@@ -174,7 +174,7 @@ func validateIPv4(s []byte) bool {
 
 // parseLongIP parses IP address in long format (0 - 4294967295).
 func parseLongIP(s string) (ip net.IP, ok bool) {
-	f, err := strconv.ParseUint(s, 10, 32)       //nolint:gomnd
+	f, err := strconv.ParseUint(s, 10, 32)
 	if err == nil && f >= 0 && f <= 4294967295 { //nolint:staticcheck
 		ip, ok = make(net.IP, 4), true //nolint:gomnd
 		binary.BigEndian.PutUint32(ip, uint32(f))
