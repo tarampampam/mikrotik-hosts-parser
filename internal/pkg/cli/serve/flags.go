@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/pflag"
+
 	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/env"
 )
 
@@ -95,7 +96,7 @@ func (f *flags) overrideUsingEnv() error {
 	}
 
 	if envVar, exists := env.ListenPort.Lookup(); exists {
-		if p, err := strconv.ParseUint(envVar, 10, 16); err == nil { //nolint:gomnd
+		if p, err := strconv.ParseUint(envVar, 10, 16); err == nil {
 			f.listen.port = uint16(p)
 		} else {
 			return fmt.Errorf("wrong TCP port environment variable [%s] value", envVar)
