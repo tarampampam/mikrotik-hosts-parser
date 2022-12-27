@@ -176,7 +176,7 @@ If you will find any package errors, please, [make an issue][link_create_issue] 
 
 This is open-sourced software licensed under the [MIT License][link_license].
 
-[badge_build]:https://img.shields.io/github/workflow/status/tarampampam/mikrotik-hosts-parser/tests?maxAge=30
+[badge_build]:https://img.shields.io/github/actions/workflow/status/tarampampam/mikrotik-hosts-parser/tests.yml?branch=master&maxAge=30
 [badge_coverage]:https://img.shields.io/codecov/c/github/tarampampam/mikrotik-hosts-parser/master.svg?maxAge=30
 [badge_release_version]:https://img.shields.io/github/release/tarampampam/mikrotik-hosts-parser.svg?maxAge=30
 [badge_size_latest]:https://img.shields.io/docker/image-size/tarampampam/mikrotik-hosts-parser/latest?maxAge=30
