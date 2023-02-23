@@ -7,7 +7,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/metrics"
+
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/metrics"
 )
 
 func TestNewHandlerError(t *testing.T) {

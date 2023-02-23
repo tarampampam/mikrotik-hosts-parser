@@ -15,7 +15,7 @@ concurrency:
 jobs:
   gitleaks:
     name: Gitleaks
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with: {fetch-depth: 0}
@@ -25,18 +25,18 @@ jobs:
 
   golangci-lint:
     name: Golang-CI (lint)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: gacts/setup-go-with-cache@v1
+        with: {go-version-file: go.mod}
 
-      - uses: actions/setup-go@v3
-        with: {go-version: 1.19}
+      - uses: actions/checkout@v3
 
       - uses: golangci/golangci-lint-action@v3 # Action page: <https://github.com/golangci/golangci-lint-action>
 
   goreportcard:
     name: Update state on goreportcard.com
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' # only for `master` branch
     steps:
       - name: Send update request
@@ -45,23 +45,13 @@ jobs:
 
   go-test:
     name: Unit tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
-        with: {go-version: 1.19}
+      - uses: gacts/setup-go-with-cache@v1
+        with: {go-version-file: go.mod}
 
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2 # Fixes codecov error 'Issue detecting commit SHA'
-
-      - name: Go modules Cache # Docs: <https://git.io/JfAKn#go---modules>
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
-      - run: go mod download
+        with: {fetch-depth: 2} # Fixes codecov error 'Issue detecting commit SHA'
 
       - run: go test -race -covermode=atomic -coverprofile /tmp/coverage.txt ./...
 
@@ -74,7 +64,7 @@ jobs:
 
   build:
     name: Build for ${{ matrix.os }} (${{ matrix.arch }})
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -87,28 +77,18 @@ jobs:
             arch: 386
     needs: [golangci-lint, go-test]
     steps:
-      - uses: actions/setup-go@v3
-        with: {go-version: 1.19}
+      - uses: gacts/setup-go-with-cache@v1
+        with: {go-version-file: go.mod}
 
       - uses: actions/checkout@v3
 
-      - uses: gacts/github-slug@v1
-        id: slug
-
-      - name: Go modules Cache # Docs: <https://git.io/JfAKn#go---modules>
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
-      - run: go mod download
+      - {uses: gacts/github-slug@v1, id: slug}
 
       - env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
-          LDFLAGS: -s -w -X github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version.version=${{ steps.slug.outputs.branch-name-slug }}@${{ steps.slug.outputs.commit-hash-short }}
+          LDFLAGS: -s -w -X gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/version.version=${{ steps.slug.outputs.branch-name-slug }}@${{ steps.slug.outputs.commit-hash-short }}
         run: go build -trimpath -ldflags "$LDFLAGS" -o /tmp/mikrotik-hosts-parser ./cmd/mikrotik-hosts-parser/
 
       - name: Try to execute
@@ -125,7 +105,7 @@ jobs:
 
   e2e:
     name: End-to-End tests (cache in ${{ matrix.caching-engine }})
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -158,13 +138,12 @@ jobs:
 
   docker-image:
     name: Build docker image
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [golangci-lint, go-test]
     steps:
       - uses: actions/checkout@v3
 
-      - uses: gacts/github-slug@v1
-        id: slug
+      - {uses: gacts/github-slug@v1, id: slug}
 
       - name: Build image
         run: |
@@ -194,7 +173,7 @@ jobs:
 
   docker-image-e2e:
     name: Docker image End-to-End tests (cache in ${{ matrix.caching-engine }})
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:

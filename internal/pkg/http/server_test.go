@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
 	"go.uber.org/zap"
+
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
 )
 
 func getRandomTCPPort(t *testing.T) (int, error) {

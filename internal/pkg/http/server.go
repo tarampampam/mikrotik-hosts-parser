@@ -13,11 +13,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/logreq"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/panic"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/logreq"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/panic"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/metrics"
 )
 
 type (

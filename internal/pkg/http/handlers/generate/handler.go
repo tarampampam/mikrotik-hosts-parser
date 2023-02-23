@@ -19,11 +19,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/pkg/hostsfile"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/pkg/mikrotik"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/version"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/pkg/hostsfile"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/pkg/mikrotik"
 )
 
 type metrics interface {

@@ -17,8 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
 )
 
 type fakeHTTPClientFunc func(*http.Request) (*http.Response, error)

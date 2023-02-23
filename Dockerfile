@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.2
 
 # Image page: <https://hub.docker.com/_/golang>
-FROM golang:1.19-alpine as builder
+FROM golang:1.20-alpine as builder
 
 # can be passed with any prefix (like `v1.2.3@GITHASH`)
 # e.g.: `docker build --build-arg "APP_VERSION=v1.2.3@GITHASH" .`
@@ -19,7 +19,7 @@ WORKDIR /src
 COPY . .
 
 # arguments to pass on each go tool link invocation
-ENV LDFLAGS="-s -w -X github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version.version=$APP_VERSION"
+ENV LDFLAGS="-s -w -X gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/version.version=$APP_VERSION"
 
 RUN set -x \
     && go version \

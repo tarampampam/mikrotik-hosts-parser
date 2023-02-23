@@ -1,6 +1,6 @@
-module github.com/tarampampam/mikrotik-hosts-parser/v4
+module gh.tarampamp.am/mikrotik-hosts-parser/v4
 
-go 1.19
+go 1.20
 
 require (
 	github.com/a8m/envsubst v1.3.0

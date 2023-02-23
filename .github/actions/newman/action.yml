@@ -22,8 +22,8 @@ runs:
     - name: Pull newman docker image
       shell: bash
       run: |
-        if [[ "$(docker images -q postman/newman:5.2-alpine 2> /dev/null)" == "" ]]; then
-          docker pull postman/newman:5.2-alpine 1>/dev/null
+        if [[ "$(docker images -q postman/newman:5.3-alpine 2> /dev/null)" == "" ]]; then
+          docker pull postman/newman:5.3-alpine 1>/dev/null
         fi
 
     # Image page: <https://hub.docker.com/r/postman/newman>,
@@ -37,7 +37,7 @@ runs:
           --net host \
           --volume "$(pwd):/rootfs:ro" \
           --workdir "/rootfs" \
-            postman/newman:5.2-alpine run "${{ inputs.collection }}" \
+            postman/newman:5.3-alpine run "${{ inputs.collection }}" \
               --environment "${{ inputs.environment }}" \
               --env-var "base_url=${{ inputs.baseurl }}" \
               --color on

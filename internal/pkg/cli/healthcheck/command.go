@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/env"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/env"
 )
 
 type checker interface {
