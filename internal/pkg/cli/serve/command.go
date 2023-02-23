@@ -11,11 +11,12 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cobra"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/breaker"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
-	appHttp "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http"
 	"go.uber.org/zap"
+
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/breaker"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
+	appHttp "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http"
 )
 
 const cachingEngineMemory, cachingEngineRedis = "memory", "redis"

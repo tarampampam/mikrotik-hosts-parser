@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/cache"
-
 	"github.com/stretchr/testify/assert"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/config"
+
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
 )
 
 func TestNewHandler(t *testing.T) {

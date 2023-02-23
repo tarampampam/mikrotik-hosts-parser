@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog][keepachangelog] and this project adher
 
 ### Changed
 
-- Go version updated from `1.17.2` up to `1.19`
+- Go version updated from `1.17.2` up to `1.20`
+- Module name changed from `github.com/tarampampam/mikrotik-hosts-parser/v4` to `gh.tarampamp.am/mikrotik-hosts-parser/v4`
 
 ## v4.4.0
 

@@ -4,16 +4,17 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/checkers"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/fileserver"
-	apiSettings "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/settings"
-	apiVersion "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/version"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/generate"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/healthz"
-	metricsHandler "github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/metrics"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/nocache"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/version"
+
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/checkers"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/fileserver"
+	apiSettings "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/settings"
+	apiVersion "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/api/version"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/generate"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/healthz"
+	metricsHandler "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/handlers/metrics"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/http/middlewares/nocache"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/metrics"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/version"
 )
 
 func (s *Server) registerScriptGeneratorHandlers(registerer prometheus.Registerer) error {

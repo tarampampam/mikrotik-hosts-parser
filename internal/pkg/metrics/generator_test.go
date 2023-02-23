@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	dto "github.com/prometheus/client_model/go"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
-	"github.com/tarampampam/mikrotik-hosts-parser/v4/internal/pkg/metrics"
+
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/metrics"
 )
 
 func TestGenerator_Register(t *testing.T) {
