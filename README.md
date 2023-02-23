@@ -64,33 +64,33 @@ Download latest binary file for your os/arch from [releases page][link_releases]
 
 This application supports next sub-commands:
 
-Sub-command   | Description
-------------- | -----------
-`serve`       | Start HTTP server
-`healthcheck` | Health checker for the HTTP server (use case - docker healthcheck) _(hidden in CLI help)_
-`version`     | Display application version
+| Sub-command   | Description                                                                               |
+|---------------|-------------------------------------------------------------------------------------------|
+| `serve`       | Start HTTP server                                                                         |
+| `healthcheck` | Health checker for the HTTP server (use case - docker healthcheck) _(hidden in CLI help)_ |
+| `version`     | Display application version                                                               |
 
 And global flags:
 
-Flag              | Description
------------------ | -----------
-`--verbose`, `-v` | Verbose output
-`--debug`         | Debug output
-`--log-json`      | Logs in JSON format
+| Flag              | Description         |
+|-------------------|---------------------|
+| `--verbose`, `-v` | Verbose output      |
+| `--debug`         | Debug output        |
+| `--log-json`      | Logs in JSON format |
 
 ### HTTP server starting
 
 `serve` sub-command allows to use next flags:
 
-Flag                    | Description                              | Default value              | Environment variable
------------------------ | ---------------------------------------- | -------------------------- | --------------------
-`--listen`, `-l`        | IP address to listen on                  | `0.0.0.0` (all interfaces) | `LISTEN_ADDR`
-`--port`, `-p`          | TCP port number                          | `8080`                     | `LISTEN_PORT`
-`--resources-dir`, `-r` | Path to the directory with public assets | `./web`                    | `RESOURCES_DIR`
-`--config`, `-c`        | Config file path                         | `./configs/config.yml`     | `CONFIG_PATH`
-`--caching-engine`      | Caching engine (`memory` or `redis`)     | `memory`                   | `CACHING_ENGINE`
-`--cache-ttl`           | Cached entries lifetime (examples: `50s`, `1h30m`) | `30m`            | `CACHE_TTL`
-`--redis-dsn`           | Redis server DSN, required only if `redis` caching engine is enabled | `redis://127.0.0.1:6379/0` | `REDIS_DSN`
+| Flag                    | Description                                                          | Default value              | Environment variable |
+|-------------------------|----------------------------------------------------------------------|----------------------------|----------------------|
+| `--listen`, `-l`        | IP address to listen on                                              | `0.0.0.0` (all interfaces) | `LISTEN_ADDR`        |
+| `--port`, `-p`          | TCP port number                                                      | `8080`                     | `LISTEN_PORT`        |
+| `--resources-dir`, `-r` | Path to the directory with public assets                             | `./web`                    | `RESOURCES_DIR`      |
+| `--config`, `-c`        | Config file path                                                     | `./configs/config.yml`     | `CONFIG_PATH`        |
+| `--caching-engine`      | Caching engine (`memory` or `redis`)                                 | `memory`                   | `CACHING_ENGINE`     |
+| `--cache-ttl`           | Cached entries lifetime (examples: `50s`, `1h30m`)                   | `30m`                      | `CACHE_TTL`          |
+| `--redis-dsn`           | Redis server DSN, required only if `redis` caching engine is enabled | `redis://127.0.0.1:6379/0` | `REDIS_DSN`          |
 
 > Environment variables have higher priority then flag values.
 
