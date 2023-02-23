@@ -3,6 +3,7 @@ version: '3.8'
 volumes:
   tmp-data: {}
   redis-data: {}
+  golint-go: {}
   golint-cache: {}
 
 services:
@@ -17,6 +18,7 @@ services:
       - /etc/group:/etc/group:ro
       - .:/src:rw
       - tmp-data:/tmp:rw
+    security_opt: [no-new-privileges:true]
 
   web:
     <<: *app-service
@@ -36,12 +38,15 @@ services:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 500ms
       timeout: 1s
+    security_opt: [no-new-privileges:true]
 
   golint:
     image: golangci/golangci-lint:v1.51-alpine # Image page: <https://hub.docker.com/r/golangci/golangci-lint>
     environment:
       GOLANGCI_LINT_CACHE: /tmp/golint # <https://github.com/golangci/golangci-lint/blob/v1.33.0/internal/cache/default.go#L68>
     volumes:
-      - .:/src:ro
+      - golint-go:/go:rw # go dependencies will be downloaded on each run without this
       - golint-cache:/tmp/golint:rw
+      - .:/src:ro
     working_dir: /src
+    security_opt: [no-new-privileges:true]

@@ -1,11 +1,10 @@
-test
-.editorconfig
-.git
-.github
-.idea
-.vscode
-temp
-tmp
-LICENSE
-Makefile
-mikrotik-hosts-parser
+## Ignore everything
+*
+
+## Except the following files and directories
+!/cmd
+!/configs
+!/internal
+!/pkg
+!/web
+!/go.*
