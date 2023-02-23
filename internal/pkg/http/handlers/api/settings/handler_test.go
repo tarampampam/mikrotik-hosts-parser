@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
-
 	"github.com/stretchr/testify/assert"
 
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
 	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
 )
 

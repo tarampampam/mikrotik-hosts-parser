@@ -27,10 +27,10 @@ jobs:
     name: Golang-CI (lint)
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - uses: gacts/setup-go-with-cache@v1
         with: {go-version-file: go.mod}
-
-      - uses: actions/checkout@v3
 
       - uses: golangci/golangci-lint-action@v3 # Action page: <https://github.com/golangci/golangci-lint-action>
 
@@ -47,11 +47,11 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: gacts/setup-go-with-cache@v1
-        with: {go-version-file: go.mod}
-
       - uses: actions/checkout@v3
         with: {fetch-depth: 2} # Fixes codecov error 'Issue detecting commit SHA'
+
+      - uses: gacts/setup-go-with-cache@v1
+        with: {go-version-file: go.mod}
 
       - run: go test -race -covermode=atomic -coverprofile /tmp/coverage.txt ./...
 
@@ -77,10 +77,10 @@ jobs:
             arch: 386
     needs: [golangci-lint, go-test]
     steps:
+      - uses: actions/checkout@v3
+
       - uses: gacts/setup-go-with-cache@v1
         with: {go-version-file: go.mod}
-
-      - uses: actions/checkout@v3
 
       - {uses: gacts/github-slug@v1, id: slug}
 

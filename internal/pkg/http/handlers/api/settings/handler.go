@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cache"
-
 	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
 )
 

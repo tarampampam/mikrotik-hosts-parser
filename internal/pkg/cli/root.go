@@ -6,13 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/checkers"
 	healthcheckCmd "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cli/healthcheck"
 	serveCmd "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cli/serve"
 	versionCmd "gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/cli/version"
 	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/logger"
 	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/version"
-
-	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/checkers"
 )
 
 // NewCommand creates root command.
