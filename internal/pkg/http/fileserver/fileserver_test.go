@@ -12,18 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() { //nolint:gochecknoinits
-	rand.Seed(time.Now().UnixNano())
-}
-
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") //nolint:gochecknoglobals
 
 func RandStringRunes(t *testing.T, n int) string {
 	t.Helper()
 
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
+
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))] //nolint:gosec
+		b[i] = letterRunes[rnd.Intn(len(letterRunes))]
 	}
 
 	return string(b)
