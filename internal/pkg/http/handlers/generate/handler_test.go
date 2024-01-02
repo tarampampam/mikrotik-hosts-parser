@@ -85,16 +85,16 @@ func BenchmarkHandler_ServeHTTP(b *testing.B) {
 	h.(*handler).httpClient = httpMock
 
 	var (
-		req, _ = http.NewRequest(http.MethodGet, "http://testing?"+
+		req, _ = http.NewRequest(http.MethodGet, "http://testing?"+ //nolint:goconst
 			"format=routeros"+ //nolint:misspell
 			"&version=v0.0.666@1a0339c"+
 			"&redirect_to=127.0.0.5"+
 			"&limit=1234"+
-			"&sources_urls="+
-			"https%3A%2F%2Fmock%2Fad_servers.txt"+
+			"&sources_urls="+ //nolint:goconst
+			"https%3A%2F%2Fmock%2Fad_servers.txt"+ //nolint:goconst
 			",http://mock/hosts_adaway.txt"+
 			",http://non-existing-file.txt"+
-			"&excluded_hosts="+
+			"&excluded_hosts="+ //nolint:goconst
 			"d.com"+
 			",c.org"+
 			",localhost"+
