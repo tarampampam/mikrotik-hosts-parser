@@ -49,7 +49,7 @@ jobs:
 
       - name: Upload Coverage report to CodeCov
         continue-on-error: true
-        uses: codecov/codecov-action@v3 # https://github.com/codecov/codecov-action
+        uses: codecov/codecov-action@v4 # https://github.com/codecov/codecov-action
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: /tmp/coverage.txt
