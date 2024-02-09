@@ -228,7 +228,9 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 				for name, content := range tt.giveFiles {
 					file, createErr := os.Create(filepath.Join(tmpDir, name))
 					assert.NoError(t, createErr)
+
 					_, fileWritingErr := file.Write(content)
+
 					assert.NoError(t, fileWritingErr)
 					assert.NoError(t, file.Close())
 				}

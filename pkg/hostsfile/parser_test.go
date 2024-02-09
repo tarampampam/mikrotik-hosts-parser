@@ -32,9 +32,12 @@ func BenchmarkParse(b *testing.B) {
 
 			b.SetBytes(int64(len(raw)))
 			b.ResetTimer()
+
 			for n := 0; n < b.N; n++ {
 				b.StopTimer()
+
 				buf := bytes.NewBuffer(raw)
+
 				b.StartTimer()
 
 				_, e := Parse(buf)

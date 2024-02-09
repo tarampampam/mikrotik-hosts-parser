@@ -109,6 +109,7 @@ func TestMiddleware(t *testing.T) {
 			})
 
 			var asJSON map[string]interface{}
+
 			assert.NoError(t, json.Unmarshal([]byte(output), &asJSON), "logger output must be valid JSON")
 
 			tt.checkOutputFields(t, asJSON)
