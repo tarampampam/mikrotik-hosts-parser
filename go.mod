@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/a8m/envsubst v1.4.3
-	github.com/alicebob/miniredis/v2 v2.31.1
+	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/fatih/color v1.16.0
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/go-redis/redis/v8 v8.11.5
@@ -20,7 +20,6 @@ require (
 )
 
 require (
-	github.com/alicebob/gopher-json v0.0.0-20230218143504-906a9b012302 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -33,7 +32,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
-	github.com/yuin/gopher-lua v1.1.0 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/sys v0.35.0 // indirect
