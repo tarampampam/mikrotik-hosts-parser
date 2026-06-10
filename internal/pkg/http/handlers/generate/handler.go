@@ -207,6 +207,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			if records, err := hostsfile.Parse(data); err == nil {
 				//nolint:gosec // bounded by source size and used only for preallocation
 				atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
+
 				ch <- hostsFileData{url: url, records: records, cacheTTL: h.cacher.TTL()}
 			} else {
 				ch <- hostsFileData{url: url, err: err}
