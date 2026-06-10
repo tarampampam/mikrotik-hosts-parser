@@ -405,7 +405,7 @@ type reqParams struct {
 func newReqParams(redirect net.IP) reqParams {
 	return reqParams{
 		sources:  make([]string, 0, 8),
-		format:   formatRouterOS,        // default value
+		format:   formatRouterOS, // default value
 		excluded: make([]string, 0, 16),
 		redirect: redirect,
 	}

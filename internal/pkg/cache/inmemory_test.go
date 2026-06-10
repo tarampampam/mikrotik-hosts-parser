@@ -59,7 +59,7 @@ func TestInMemoryCache_GetPutDelete(t *testing.T) {
 }
 
 func TestInMemoryCache_CloserInterface(t *testing.T) {
-	cache := NewInMemoryCache(time.Minute, time.Second)
+	var cache Cacher = NewInMemoryCache(time.Minute, time.Second)
 	defer func() { assert.NoError(t, cache.(io.Closer).Close()) }()
 
 	_, ok := cache.(io.Closer)
