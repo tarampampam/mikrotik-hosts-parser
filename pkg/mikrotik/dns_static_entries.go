@@ -2,6 +2,8 @@ package mikrotik
 
 import "io"
 
+const renderBufferCapacity = 128
+
 // DNSStaticEntries is static DNS entries set.
 type DNSStaticEntries []DNSStaticEntry
 
@@ -14,7 +16,7 @@ type RenderingOptions struct {
 // if something goes wrong.
 func (se DNSStaticEntries) Render(to io.Writer, opts ...RenderingOptions) (int, error) {
 	var (
-		buf     = make([]byte, 0, 128) //nolint:gomnd // reusable
+		buf     = make([]byte, 0, renderBufferCapacity)
 		total   int
 		options RenderingOptions
 	)

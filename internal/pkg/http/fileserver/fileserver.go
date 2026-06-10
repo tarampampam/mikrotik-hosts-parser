@@ -75,7 +75,7 @@ func NewFileServer(s Settings) (*FileServer, error) {
 }
 
 func (fs *FileServer) handleError(w http.ResponseWriter, r *http.Request, errorCode int) {
-	if fs.ErrorHandlers != nil && len(fs.ErrorHandlers) > 0 {
+	if len(fs.ErrorHandlers) > 0 {
 		for _, handler := range fs.ErrorHandlers {
 			if handler(w, r, fs, errorCode) {
 				return

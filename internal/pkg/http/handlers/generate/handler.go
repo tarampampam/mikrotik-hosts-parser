@@ -89,7 +89,7 @@ func NewHandler(
 	if ip := net.ParseIP(cfg.RouterScript.Redirect.Address); ip != nil {
 		h.defaultRedirectIP = ip
 	} else {
-		h.defaultRedirectIP = net.IPv4(127, 0, 0, 1) //nolint:gomnd // config contains wrong value
+		h.defaultRedirectIP = net.IPv4(127, 0, 0, 1)
 	}
 
 	return h, nil
@@ -174,7 +174,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			if hit, data, ttl, err := h.cacher.Get(url); hit && err == nil {
 				records, parsingErr := hostsfile.Parse(bytes.NewReader(data))
 				if parsingErr == nil {
-					atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
+					atomic.AddUint32(&hostsRecordsCount, uint32(len(records))) //nolint:gosec // bounded by source size and used only for preallocation
 					ch <- hostsFileData{url: url, records: records, cacheHit: hit, cacheTTL: ttl}
 
 					return
@@ -201,7 +201,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			}
 
 			if records, err := hostsfile.Parse(data); err == nil {
-				atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
+				atomic.AddUint32(&hostsRecordsCount, uint32(len(records))) //nolint:gosec // bounded by source size and used only for preallocation
 				ch <- hostsFileData{url: url, records: records, cacheTTL: h.cacher.TTL()}
 			} else {
 				ch <- hostsFileData{url: url, err: err}

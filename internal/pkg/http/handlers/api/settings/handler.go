@@ -35,7 +35,7 @@ type (
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		ByDefault   bool   `json:"default"`
-		Count       int    `json:"count"`
+		Count       uint   `json:"count"`
 	}
 )
 
@@ -63,7 +63,7 @@ func NewHandler(cfg config.Config, cacher cache.Cacher) http.HandlerFunc {
 					Name:        source.Name,
 					Description: source.Description,
 					ByDefault:   source.EnabledByDefault,
-					Count:       int(source.RecordsCount),
+					Count:       source.RecordsCount,
 				})
 			}
 

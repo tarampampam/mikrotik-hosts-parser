@@ -30,9 +30,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: gacts/setup-go-with-cache@v1
+        with: {go-version-file: go.mod}
 
       - uses: golangci/golangci-lint-action@v9 # Action page: <https://github.com/golangci/golangci-lint-action>
-        with: {skip-pkg-cache: true, skip-build-cache: true}
+        with:
+          version: v1.64.8
+          install-mode: goinstall
+          skip-pkg-cache: true
+          skip-build-cache: true
 
   go-test:
     name: Unit tests

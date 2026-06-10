@@ -14,6 +14,8 @@ type checker interface {
 	Check(port uint16) error
 }
 
+const defaultPort = 8080
+
 // NewCommand creates `healthcheck` command.
 func NewCommand(checker checker) *cobra.Command {
 	var port uint16
@@ -43,7 +45,7 @@ func NewCommand(checker checker) *cobra.Command {
 		&port,
 		"port",
 		"p",
-		8080, //nolint:gomnd
+		defaultPort,
 		fmt.Sprintf("TCP port number [$%s]", env.ListenPort),
 	)
 

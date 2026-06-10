@@ -18,6 +18,11 @@ type response struct {
 
 const statusCode = http.StatusInternalServerError
 
+const (
+	initialStackBufferSize = 1024
+	stackBufferGrowthRate  = 2
+)
+
 // New creates mux.MiddlewareFunc for panics (inside HTTP handlers) logging using "zap" package. Also it allows
 // to respond with JSON-formatted error string instead empty response.
 func New(log *zap.Logger) mux.MiddlewareFunc {
@@ -31,7 +36,7 @@ func New(log *zap.Logger) mux.MiddlewareFunc {
 						err = fmt.Errorf("%v", rec)
 					}
 
-					stackBuf := make([]byte, 1024) //nolint:gomnd
+					stackBuf := make([]byte, initialStackBufferSize)
 					// do NOT use `debug.Stack()` here for skipping one unimportant call trace in stacktrace
 					for {
 						n := runtime.Stack(stackBuf, false)
@@ -41,7 +46,7 @@ func New(log *zap.Logger) mux.MiddlewareFunc {
 							break
 						}
 
-						stackBuf = make([]byte, 2*len(stackBuf)) //nolint:gomnd
+						stackBuf = make([]byte, stackBufferGrowthRate*len(stackBuf))
 					}
 
 					// log error with logger
