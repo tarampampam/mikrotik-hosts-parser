@@ -1,9 +1,9 @@
 module gh.tarampamp.am/mikrotik-hosts-parser/v4
 
-go 1.21
+go 1.24
 
 require (
-	github.com/a8m/envsubst v1.4.2
+	github.com/a8m/envsubst v1.4.3
 	github.com/alicebob/miniredis/v2 v2.31.1
 	github.com/fatih/color v1.16.0
 	github.com/felixge/httpsnoop v1.0.4
