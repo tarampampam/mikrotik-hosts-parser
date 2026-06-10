@@ -42,7 +42,7 @@ func getRandomTCPPort(t *testing.T) (uint16, error) {
 func checkTCPPortIsBusy(t *testing.T, port uint16) bool {
 	t.Helper()
 
-	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+	l, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
 		return true
 	}
