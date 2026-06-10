@@ -1,3 +1,4 @@
+//nolint:errcheck,goconst,gosec // test fixtures intentionally repeat values and use permissive temp dirs
 package fileserver
 
 import (

@@ -34,7 +34,7 @@ jobs:
 
       - uses: golangci/golangci-lint-action@v9 # Action page: <https://github.com/golangci/golangci-lint-action>
         with:
-          version: v1.64.8
+          version: latest
           install-mode: goinstall
           skip-pkg-cache: true
           skip-build-cache: true

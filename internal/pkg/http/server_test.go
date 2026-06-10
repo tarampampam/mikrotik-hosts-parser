@@ -36,7 +36,7 @@ func getRandomTCPPort(t *testing.T) (uint16, error) {
 		return 0, closingErr
 	}
 
-	return uint16(port), nil
+	return uint16(port), nil //nolint:gosec // range is validated above
 }
 
 func checkTCPPortIsBusy(t *testing.T, port uint16) bool {
@@ -138,7 +138,7 @@ func TestServer_Register(t *testing.T) {
 
 func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
 	c := cache.NewInMemoryCache(time.Second, time.Second)
-	defer c.Close()
+	defer func() { assert.NoError(t, c.Close()) }()
 
 	cfg := &config.Config{}
 	cfg.RouterScript.MaxSourcesCount = 1

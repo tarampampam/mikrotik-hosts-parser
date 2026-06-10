@@ -1,3 +1,4 @@
+//nolint:goconst // repeated version fixtures improve table readability
 package version
 
 import "testing"

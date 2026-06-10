@@ -1,3 +1,4 @@
+//nolint:goconst // repeated fixture values keep rendering expectations explicit
 package mikrotik
 
 import (
@@ -10,7 +11,7 @@ import (
 func BenchmarkDNSStaticEntries_Render(b *testing.B) {
 	b.ReportAllocs()
 
-	var data DNSStaticEntries
+	data := make(DNSStaticEntries, 0, 1000)
 
 	for i := 0; i < 1000; i++ {
 		data = append(data, DNSStaticEntry{

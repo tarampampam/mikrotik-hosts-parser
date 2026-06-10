@@ -6,6 +6,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const generatorNamespace = "generator"
+
 // Generator contains script generation metric collectors.
 type Generator struct {
 	cacheHit  prometheus.Counter
@@ -17,19 +19,19 @@ type Generator struct {
 func NewGenerator() Generator {
 	return Generator{
 		cacheHit: prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: "generator",
+			Namespace: generatorNamespace,
 			Subsystem: "cache",
 			Name:      "hits",
 			Help:      "The count of cache hits during script generation.",
 		}),
 		cacheMiss: prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: "generator",
+			Namespace: generatorNamespace,
 			Subsystem: "cache",
 			Name:      "misses",
 			Help:      "The count of cache misses during script generation.",
 		}),
 		duration: prometheus.NewHistogram(prometheus.HistogramOpts{
-			Namespace: "generator",
+			Namespace: generatorNamespace,
 			Subsystem: "time",
 			Name:      "duration",
 			Help:      "Time of script generation (in seconds).",

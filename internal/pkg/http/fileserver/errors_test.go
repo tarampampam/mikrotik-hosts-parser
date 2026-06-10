@@ -1,3 +1,4 @@
+//nolint:errcheck,gosec // temp-file setup and cleanup are intentionally lightweight in tests
 package fileserver
 
 import (

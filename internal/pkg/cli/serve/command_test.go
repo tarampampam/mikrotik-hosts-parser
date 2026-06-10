@@ -1,3 +1,4 @@
+//nolint:goconst // repeated CLI flags are intentional in these command tests
 package serve
 
 import (

@@ -101,7 +101,11 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if fs.Settings.RedirectIndexFileToRoot && len(fs.Settings.IndexFileName) > 0 {
 		// redirect .../index.html to .../
 		if strings.HasSuffix(r.URL.Path, "/"+fs.Settings.IndexFileName) {
-			http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fs.Settings.IndexFileName)], http.StatusMovedPermanently)
+			redirectURL := *r.URL
+			redirectURL.Path = path.Clean(
+				"/" + strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), fs.Settings.IndexFileName),
+			)
+			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
 
 			return
 		}
@@ -120,10 +124,14 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prepare target file path
-	filePath := path.Join(fs.Settings.FilesRoot, filepath.FromSlash(path.Clean(urlPath)))
+	filePath := filepath.Join(
+		fs.Settings.FilesRoot,
+		filepath.FromSlash(strings.TrimPrefix(path.Clean(urlPath), "/")),
+	)
 
 	// check for file existence
 	if stat, err := os.Stat(filePath); err == nil && stat.Mode().IsRegular() {
+		//nolint:gosec // filePath is constrained to FilesRoot by cleaning and trimming the request path
 		if file, err := os.Open(filePath); err == nil {
 			defer func() { _ = file.Close() }()
 

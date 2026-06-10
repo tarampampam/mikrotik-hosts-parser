@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+	"math"
 	"net"
 	"strconv"
 )
@@ -49,21 +50,21 @@ func (w *word) Reset() {
 // Parse input and return slice of records. Result order are same as in source.
 func Parse(in io.Reader) ([]Record, error) { //nolint:funlen,gocognit,gocyclo
 	var (
-		result    = make([]Record, 0, 5) //nolint:gomnd
+		result    = make([]Record, 0, 5)
 		scan      = bufio.NewScanner(in)
 		w         word
-		hostnames = make([]string, 0, 3) //nolint:gomnd
+		hostnames = make([]string, 0, 3)
 		ip        bytes.Buffer
 	)
 
-	w.buf.Grow(32) //nolint:gomnd
-	ip.Grow(7)     //nolint:gomnd
+	w.buf.Grow(32)
+	ip.Grow(7)
 
 scan: // read content "line by line"
 	for scan.Scan() {
 		line := scan.Bytes()
 
-		if len(line) <= 5 { //nolint:gomnd
+		if len(line) <= 5 {
 			continue scan // line is too short
 		}
 
@@ -79,9 +80,10 @@ scan: // read content "line by line"
 
 		for i, ll := 0, len(line); i < ll && !w.isLast; i++ { // loop over line runes
 			if char := line[i]; char != ' ' && char != '\t' {
-				if char == '.' {
+				switch char {
+				case '.':
 					w.flag.AddFlag(wordWithDot)
-				} else if char == ':' {
+				case ':':
 					w.flag.AddFlag(wordWithColon)
 				}
 
@@ -161,12 +163,12 @@ func validateIPv4(s []byte) bool {
 		}
 
 		n, c, ok := dtoi(s)
-		if !ok || n > 0xFF {
+		if !ok || n > math.MaxUint8 {
 			return false
 		}
 
 		s = s[c:]
-		p[i] = byte(n)
+		p[i] = uint8(n)
 	}
 
 	return len(s) == 0
@@ -175,8 +177,8 @@ func validateIPv4(s []byte) bool {
 // parseLongIP parses IP address in long format (0 - 4294967295).
 func parseLongIP(s string) (ip net.IP, ok bool) {
 	f, err := strconv.ParseUint(s, 10, 32)
-	if err == nil && f >= 0 && f <= 4294967295 { //nolint:staticcheck
-		ip, ok = make(net.IP, 4), true //nolint:gomnd
+	if err == nil {
+		ip, ok = make(net.IP, 4), true
 		binary.BigEndian.PutUint32(ip, uint32(f))
 
 		return
@@ -191,7 +193,7 @@ func dtoi(s []byte) (n int, i int, ok bool) {
 
 	n = 0
 	for i = 0; i < len(s) && '0' <= s[i] && s[i] <= '9'; i++ {
-		n = n*10 + int(s[i]-'0') //nolint:gomnd
+		n = n*10 + int(s[i]-'0')
 		if n >= big {
 			return big, i, false
 		}

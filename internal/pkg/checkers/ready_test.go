@@ -1,3 +1,4 @@
+//nolint:errcheck // test cleanup keeps the scenarios concise
 package checkers
 
 import (

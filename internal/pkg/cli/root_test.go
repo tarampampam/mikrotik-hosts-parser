@@ -1,3 +1,4 @@
+//nolint:goconst // repeated flag metadata keeps the table-driven test readable
 package cli
 
 import (

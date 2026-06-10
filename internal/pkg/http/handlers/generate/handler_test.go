@@ -1,3 +1,4 @@
+//nolint:errcheck,goconst // repeated request fragments and cleanup keep these tests focused
 package generate
 
 import (
@@ -94,7 +95,7 @@ func BenchmarkHandler_ServeHTTP(b *testing.B) {
 			"https%3A%2F%2Fmock%2Fad_servers.txt"+
 			",http://mock/hosts_adaway.txt"+
 			",http://non-existing-file.txt"+
-			"&excluded_hosts="+ //nolint:goconst
+			"&excluded_hosts="+
 			"d.com"+
 			",c.org"+
 			",localhost"+

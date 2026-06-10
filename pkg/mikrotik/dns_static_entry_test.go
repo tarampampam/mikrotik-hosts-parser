@@ -1,3 +1,4 @@
+//nolint:goconst // repeated fixture values keep rendering expectations explicit
 package mikrotik
 
 import (

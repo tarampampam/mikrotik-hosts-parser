@@ -174,7 +174,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			if hit, data, ttl, err := h.cacher.Get(url); hit && err == nil {
 				records, parsingErr := hostsfile.Parse(bytes.NewReader(data))
 				if parsingErr == nil {
-					atomic.AddUint32(&hostsRecordsCount, uint32(len(records))) //nolint:gosec // bounded by source size and used only for preallocation
+					//nolint:gosec // bounded by source size and used only for preallocation
+					atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
 					ch <- hostsFileData{url: url, records: records, cacheHit: hit, cacheTTL: ttl}
 
 					return
@@ -201,7 +202,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			}
 
 			if records, err := hostsfile.Parse(data); err == nil {
-				atomic.AddUint32(&hostsRecordsCount, uint32(len(records))) //nolint:gosec // bounded by source size and used only for preallocation
+				//nolint:gosec // bounded by source size and used only for preallocation
+				atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
 				ch <- hostsFileData{url: url, records: records, cacheTTL: h.cacher.TTL()}
 			} else {
 				ch <- hostsFileData{url: url, err: err}
@@ -402,16 +404,16 @@ type reqParams struct {
 
 func newReqParams(redirect net.IP) reqParams {
 	return reqParams{
-		sources:  make([]string, 0, 8),  //nolint:gomnd
+		sources:  make([]string, 0, 8),
 		format:   formatRouterOS,        // default value
-		excluded: make([]string, 0, 16), //nolint:gomnd
+		excluded: make([]string, 0, 16),
 		redirect: redirect,
 	}
 }
 
 func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,gocyclo
 	if urls, ok := v["sources_urls"]; ok {
-		m := make(map[string]struct{}, 8) //nolint:gomnd
+		m := make(map[string]struct{}, 8)
 
 		for i := 0; i < len(urls); i++ {
 			for list, j := strings.Split(urls[i], ","), 0; j < len(list); j++ {
@@ -443,7 +445,7 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 	}
 
 	if hosts, ok := v["excluded_hosts"]; ok { // optional
-		m := make(map[string]struct{}, 16) //nolint:gomnd
+		m := make(map[string]struct{}, 16)
 
 		for i := 0; i < len(hosts); i++ {
 			for list, j := strings.Split(hosts[i], ","), 0; j < len(list); j++ {
@@ -491,7 +493,7 @@ func (p *reqParams) validate(maxSources uint16) error {
 		return fmt.Errorf("too many sources (only %d is allowed)", maxSources)
 	}
 
-	if len(p.excluded) > 32 { //nolint:gomnd
+	if len(p.excluded) > 32 {
 		return errors.New("too many excluded hosts (more then 32)")
 	}
 

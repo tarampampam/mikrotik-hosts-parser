@@ -59,10 +59,8 @@ func TestInMemoryCache_GetPutDelete(t *testing.T) {
 }
 
 func TestInMemoryCache_CloserInterface(t *testing.T) {
-	var cache Cacher //nolint:gosimple
-
-	cache = NewInMemoryCache(time.Minute, time.Second)
-	defer cache.(io.Closer).Close()
+	cache := NewInMemoryCache(time.Minute, time.Second)
+	defer func() { assert.NoError(t, cache.(io.Closer).Close()) }()
 
 	_, ok := cache.(io.Closer)
 
@@ -73,7 +71,7 @@ func TestInMemoryCache_Expiration(t *testing.T) {
 	const testKeyName = "foo"
 
 	cache := NewInMemoryCache(time.Millisecond*100, time.Millisecond)
-	defer cache.Close()
+	defer func() { assert.NoError(t, cache.Close()) }()
 
 	assert.NoError(t, cache.Put(testKeyName, []byte{1, 2, 3}))
 
