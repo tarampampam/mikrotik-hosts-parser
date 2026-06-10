@@ -176,6 +176,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 				if parsingErr == nil {
 					//nolint:gosec // bounded by source size and used only for preallocation
 					atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
+
 					ch <- hostsFileData{url: url, records: records, cacheHit: hit, cacheTTL: ttl}
 
 					return
@@ -189,6 +190,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			data, srcErr := h.fetchRemoteSource(url)
 			if srcErr != nil {
 				h.log.Warn("remote source fetching failed", zap.Error(srcErr), zap.String("url", url))
+
 				ch <- hostsFileData{url: url, err: srcErr}
 
 				return
@@ -196,6 +198,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 
 			if err := h.cacher.Put(url, data.Bytes()); err != nil {
 				h.log.Error("cache writing error", zap.Error(err), zap.String("url", url))
+
 				ch <- hostsFileData{url: url, err: err}
 
 				return
