@@ -105,7 +105,7 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			redirectURL.Path = path.Clean(
 				"/" + strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), fs.Settings.IndexFileName),
 			)
-			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
+			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently) //nolint:gosec // redirect target is normalized to the current host path
 
 			return
 		}

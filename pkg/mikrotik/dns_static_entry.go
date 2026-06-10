@@ -1,3 +1,4 @@
+//nolint:wsl_v5 // compact buffer setup keeps this formatter straightforward
 package mikrotik
 
 // DNSStaticEntry is static DNS entry for RouterOS usage.

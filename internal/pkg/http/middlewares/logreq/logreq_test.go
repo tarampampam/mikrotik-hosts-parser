@@ -17,7 +17,7 @@ func TestMiddleware(t *testing.T) {
 		name              string
 		giveRequest       func() *http.Request
 		giveHandler       http.Handler
-		checkOutputFields func(t *testing.T, in map[string]interface{})
+		checkOutputFields func(t *testing.T, in map[string]any)
 	}{
 		{
 			name: "basic usage",
@@ -32,7 +32,7 @@ func TestMiddleware(t *testing.T) {
 
 				return
 			},
-			checkOutputFields: func(t *testing.T, in map[string]interface{}) {
+			checkOutputFields: func(t *testing.T, in map[string]any) {
 				assert.Equal(t, http.MethodGet, in["method"])
 				assert.NotZero(t, in["duration_micro"])
 				assert.Equal(t, "info", in["level"])
@@ -57,7 +57,7 @@ func TestMiddleware(t *testing.T) {
 
 				return
 			},
-			checkOutputFields: func(t *testing.T, in map[string]interface{}) {
+			checkOutputFields: func(t *testing.T, in map[string]any) {
 				assert.Equal(t, "10.1.1.1", in["remote_addr"])
 			},
 		},
@@ -74,7 +74,7 @@ func TestMiddleware(t *testing.T) {
 
 				return
 			},
-			checkOutputFields: func(t *testing.T, in map[string]interface{}) {
+			checkOutputFields: func(t *testing.T, in map[string]any) {
 				assert.Equal(t, "10.0.1.1", in["remote_addr"])
 			},
 		},
@@ -90,14 +90,13 @@ func TestMiddleware(t *testing.T) {
 
 				return
 			},
-			checkOutputFields: func(t *testing.T, in map[string]interface{}) {
+			checkOutputFields: func(t *testing.T, in map[string]any) {
 				assert.Equal(t, "10.0.0.1", in["remote_addr"])
 			},
 		},
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			var rr = httptest.NewRecorder()
 
@@ -108,7 +107,7 @@ func TestMiddleware(t *testing.T) {
 				New(log).Middleware(tt.giveHandler).ServeHTTP(rr, tt.giveRequest())
 			})
 
-			var asJSON map[string]interface{}
+			var asJSON map[string]any
 
 			assert.NoError(t, json.Unmarshal([]byte(output), &asJSON), "logger output must be valid JSON")
 

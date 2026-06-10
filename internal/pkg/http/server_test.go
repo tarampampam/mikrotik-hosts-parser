@@ -57,7 +57,7 @@ func TestServer_StartAndStop(t *testing.T) {
 	assert.NoError(t, err)
 
 	cacher := cache.NewInMemoryCache(time.Second, time.Second)
-	defer cacher.Close()
+	defer func() { assert.NoError(t, cacher.Close()) }()
 
 	srv := NewServer(context.Background(), zap.NewNop(), cacher, ".", &config.Config{}, nil)
 
@@ -104,7 +104,7 @@ func TestServer_Register(t *testing.T) {
 	}
 
 	cacher := cache.NewInMemoryCache(time.Second, time.Second)
-	defer cacher.Close()
+	defer func() { assert.NoError(t, cacher.Close()) }()
 
 	cfg := &config.Config{}
 	cfg.RouterScript.MaxSourcesCount = 1

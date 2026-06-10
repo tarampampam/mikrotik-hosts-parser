@@ -98,7 +98,6 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := tt.giveEntry.Format(tt.givePrefix, tt.givePostfix)
 

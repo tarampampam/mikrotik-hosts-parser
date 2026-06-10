@@ -1,3 +1,4 @@
+//nolint:wsl_v5 // compact parser control flow is easier to follow without extra blank lines
 package hostsfile
 
 import (
@@ -149,7 +150,7 @@ scan: // read content "line by line"
 func validateIPv4(s []byte) bool {
 	var p [net.IPv4len]byte
 
-	for i := 0; i < net.IPv4len; i++ {
+	for i := range net.IPv4len {
 		if len(s) == 0 {
 			return false // missing octets
 		}
@@ -168,7 +169,7 @@ func validateIPv4(s []byte) bool {
 		}
 
 		s = s[c:]
-		p[i] = uint8(n)
+		p[i] = uint8(n) //nolint:gosec // range is bounded by MaxUint8 above
 	}
 
 	return len(s) == 0

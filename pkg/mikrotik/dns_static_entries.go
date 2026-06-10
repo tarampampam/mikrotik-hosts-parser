@@ -25,7 +25,7 @@ func (se DNSStaticEntries) Render(to io.Writer, opts ...RenderingOptions) (int, 
 		options = opts[0]
 	}
 
-	for i := 0; i < len(se); i++ {
+	for i := range se {
 		// append line breaker only for non-first entries
 		if total > 0 {
 			buf = append(buf, "\n"...)

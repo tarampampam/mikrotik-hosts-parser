@@ -1,3 +1,4 @@
+//nolint:errcheck // test cleanup paths intentionally ignore close failures
 package cache
 
 import (

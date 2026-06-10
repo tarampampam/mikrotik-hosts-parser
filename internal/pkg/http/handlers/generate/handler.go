@@ -176,7 +176,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 				if parsingErr == nil {
 					//nolint:gosec // bounded by source size and used only for preallocation
 					atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
-					ch <- hostsFileData{url: url, records: records, cacheHit: hit, cacheTTL: ttl}
+					ch <- hostsFileData{url: url, records: records, cacheHit: hit, cacheTTL: ttl} //nolint:wsl_v5 // direct send keeps the success path compact
 
 					return
 				}
@@ -196,7 +196,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 
 			if err := h.cacher.Put(url, data.Bytes()); err != nil {
 				h.log.Error("cache writing error", zap.Error(err), zap.String("url", url))
-				ch <- hostsFileData{url: url, err: err}
+				ch <- hostsFileData{url: url, err: err} //nolint:wsl_v5 // direct send keeps the failure path compact
 
 				return
 			}
@@ -204,7 +204,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			if records, err := hostsfile.Parse(data); err == nil {
 				//nolint:gosec // bounded by source size and used only for preallocation
 				atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
-				ch <- hostsFileData{url: url, records: records, cacheTTL: h.cacher.TTL()}
+				ch <- hostsFileData{url: url, records: records, cacheTTL: h.cacher.TTL()} //nolint:wsl_v5 // direct send keeps the success path compact
 			} else {
 				ch <- hostsFileData{url: url, err: err}
 			}
@@ -337,7 +337,7 @@ func containsIllegalSymbols(s string) bool {
 }
 
 func (h *handler) writeComment(w io.Writer, comments ...string) {
-	for i := 0; i < len(comments); i++ {
+	for i := range comments {
 		_, _ = w.Write([]byte("## " + comments[i] + "\n"))
 	}
 }
@@ -415,7 +415,7 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 	if urls, ok := v["sources_urls"]; ok {
 		m := make(map[string]struct{}, 8)
 
-		for i := 0; i < len(urls); i++ {
+		for i := range urls {
 			for list, j := strings.Split(urls[i], ","), 0; j < len(list); j++ {
 				if u, err := url.ParseRequestURI(list[j]); err == nil {
 					m[u.String()] = struct{}{}
@@ -447,7 +447,7 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 	if hosts, ok := v["excluded_hosts"]; ok { // optional
 		m := make(map[string]struct{}, 16)
 
-		for i := 0; i < len(hosts); i++ {
+		for i := range hosts {
 			for list, j := strings.Split(hosts[i], ","), 0; j < len(list); j++ {
 				if host := list[j]; host != "" {
 					m[strings.Trim(host, " '\"\n\r")] = struct{}{}

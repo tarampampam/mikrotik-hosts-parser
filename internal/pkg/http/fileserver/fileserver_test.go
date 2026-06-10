@@ -1,4 +1,4 @@
-//nolint:errcheck,goconst,gosec // test fixtures intentionally repeat values and use permissive temp dirs
+//nolint:errcheck,goconst,gosec,wsl_v5 // test fixtures intentionally repeat values and use permissive temp dirs
 package fileserver
 
 import (
@@ -214,7 +214,6 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir, tmpDirErr := os.MkdirTemp("", "test-")
 			assert.NoError(t, tmpDirErr)

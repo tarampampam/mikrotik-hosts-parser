@@ -1,4 +1,4 @@
-//nolint:errcheck,goconst // repeated request fragments and cleanup keep these tests focused
+//nolint:errcheck,goconst,gosec // repeated request fragments and fixture file reads keep these tests focused
 package generate
 
 import (

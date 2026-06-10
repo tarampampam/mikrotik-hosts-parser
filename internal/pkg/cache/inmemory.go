@@ -1,3 +1,4 @@
+//nolint:wsl_v5 // compact maintenance loop is easier to read without extra blank lines
 package cache
 
 import (

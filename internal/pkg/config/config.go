@@ -76,7 +76,6 @@ func FromYaml(in []byte, expandEnv bool) (*Config, error) {
 
 // FromYamlFile creates new config instance using YAML file.
 func FromYamlFile(filename string, expandEnv bool) (*Config, error) {
-	//nolint:gosec // config path is an explicit application input and cleaned before reading
 	bytes, err := os.ReadFile(filepath.Clean(filename))
 	if err != nil {
 		return nil, err

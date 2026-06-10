@@ -47,7 +47,6 @@ func TestFlags(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			flag := cmd.Flag(tt.giveName)
 
@@ -326,7 +325,7 @@ func startAndStopServer(t *testing.T, port int, args []string) string {
 	go func(ch chan<- struct{}) {
 		defer close(ch)
 
-		for i := 0; i < 2000; i++ {
+		for range 2000 {
 			if checkTCPPortIsBusy(t, port) {
 				ch <- struct{}{}
 
