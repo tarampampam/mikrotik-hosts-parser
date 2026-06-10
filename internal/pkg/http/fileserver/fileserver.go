@@ -103,6 +103,7 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/"+fs.Settings.IndexFileName) {
 			redirectURL := *r.URL
 			redirectPath := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), fs.Settings.IndexFileName)
+
 			redirectURL.Path = "/" + strings.Trim(strings.TrimSpace(redirectPath), "/")
 			if redirectURL.Path != "/" {
 				redirectURL.Path += "/"
