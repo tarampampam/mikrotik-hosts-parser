@@ -102,10 +102,14 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// redirect .../index.html to .../
 		if strings.HasSuffix(r.URL.Path, "/"+fs.Settings.IndexFileName) {
 			redirectURL := *r.URL
-			redirectURL.Path = path.Clean(
-				"/" + strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), fs.Settings.IndexFileName),
-			)
-			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently) //nolint:gosec // redirect target is normalized to the current host path
+			redirectPath := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), fs.Settings.IndexFileName)
+			redirectURL.Path = "/" + strings.Trim(strings.TrimSpace(redirectPath), "/")
+			if redirectURL.Path != "/" {
+				redirectURL.Path += "/"
+			}
+
+			//nolint:gosec // redirect target is normalized to the current host path
+			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
 
 			return
 		}

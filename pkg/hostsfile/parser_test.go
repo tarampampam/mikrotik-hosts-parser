@@ -20,7 +20,6 @@ var benchDataset = []struct{ filePath string }{ //nolint:gochecknoglobals
 
 func BenchmarkParse(b *testing.B) {
 	for _, tt := range benchDataset {
-
 		b.Run(filepath.Base(tt.filePath), func(b *testing.B) {
 			b.ReportAllocs()
 
