@@ -1,4 +1,3 @@
-//nolint:goconst // repeated fixture values keep rendering expectations explicit
 package mikrotik
 
 import (
@@ -7,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:goconst // repeated fixture values keep rendering expectations explicit
 func BenchmarkDNSStaticEntry_Format(b *testing.B) {
 	b.ReportAllocs()
 
@@ -24,6 +24,7 @@ func BenchmarkDNSStaticEntry_Format(b *testing.B) {
 	}
 }
 
+//nolint:goconst // repeated fixture values keep rendering expectations explicit
 func TestDNSStaticEntry_Format(t *testing.T) {
 	cases := []struct {
 		name        string

@@ -1,4 +1,3 @@
-//nolint:errcheck // test cleanup keeps the scenarios concise
 package checkers
 
 import (
@@ -22,7 +21,7 @@ func TestReadyChecker_CheckSuccessWithRedisClient(t *testing.T) {
 	defer mini.Close()
 
 	rdb := redis.NewClient(&redis.Options{Addr: mini.Addr()})
-	defer rdb.Close()
+	defer func() { assert.NoError(t, rdb.Close()) }()
 
 	assert.NoError(t, NewReadyChecker(context.Background(), rdb).Check())
 }
@@ -35,7 +34,7 @@ func TestReadyChecker_CheckFailedWithRedisClient(t *testing.T) {
 	defer mini.Close()
 
 	rdb := redis.NewClient(&redis.Options{Addr: mini.Addr()})
-	defer rdb.Close()
+	defer func() { assert.NoError(t, rdb.Close()) }()
 
 	mini.SetError("foo err")
 	assert.Error(t, NewReadyChecker(context.Background(), rdb).Check())

@@ -1,4 +1,3 @@
-//nolint:errcheck,gosec // temp-file setup and cleanup are intentionally lightweight in tests
 package fileserver
 
 import (
@@ -23,10 +22,14 @@ func TestErrorPageTemplate_Build(t *testing.T) {
 }
 
 func TestJSONErrorHandler(t *testing.T) {
-	tmpDir, _ := os.MkdirTemp("", "test-")
+	tmpDir, tmpDirErr := os.MkdirTemp("", "test-")
+	assert.NoError(t, tmpDirErr)
+
 	defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)
 
-	fs, _ := NewFileServer(Settings{FilesRoot: tmpDir})
+	fs, fsErr := NewFileServer(Settings{FilesRoot: tmpDir})
+	assert.NoError(t, fsErr)
+
 	assert.NotNil(t, fs)
 
 	handler := JSONErrorHandler()
@@ -49,12 +52,16 @@ func TestJSONErrorHandler(t *testing.T) {
 }
 
 func TestStaticHtmlPageErrorHandler(t *testing.T) {
-	tmpDir, _ := os.MkdirTemp("", "test-")
+	tmpDir, tmpDirErr := os.MkdirTemp("", "test-")
+	assert.NoError(t, tmpDirErr)
+
 	defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)
 
-	fs, _ := NewFileServer(Settings{
+	fs, fsErr := NewFileServer(Settings{
 		FilesRoot: tmpDir,
 	})
+	assert.NoError(t, fsErr)
+
 	assert.NotNil(t, fs)
 
 	handler := StaticHTMLPageErrorHandler()
@@ -67,9 +74,11 @@ func TestStaticHtmlPageErrorHandler(t *testing.T) {
 	assert.False(t, handler(rr, req, fs, http.StatusNotFound))
 
 	// create template file
-	file, _ := os.Create(filepath.Join(tmpDir, "error.html"))
+	file, createErr := os.Create(filepath.Join(tmpDir, "error.html")) //nolint:gosec
+	assert.NoError(t, createErr)
+
 	_, _ = file.Write([]byte("template: {{ message }} | {{ code }}"))
-	file.Close()
+	assert.NoError(t, file.Close())
 
 	fs.Settings.ErrorFileName = "error.html"
 

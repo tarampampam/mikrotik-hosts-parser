@@ -34,7 +34,7 @@ fmt: ## Run source code formatter tools
 	docker-compose run $(DC_RUN_ARGS) --no-deps app go mod tidy
 
 lint: ## Run app linters
-	docker-compose run $(DC_RUN_ARGS) --no-deps app sh -c 'go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest && $$GOPATH/bin/golangci-lint run'
+	docker-compose run --rm --no-deps golint golangci-lint run
 
 gotest: ## Run app tests
 	docker-compose run $(DC_RUN_ARGS) --no-deps app go test -v -race -timeout 10s ./...

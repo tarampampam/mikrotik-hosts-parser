@@ -1,4 +1,3 @@
-//nolint:goconst,wsl_v5 // repeated fixture values keep rendering expectations explicit
 package mikrotik
 
 import (
@@ -8,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:goconst // repeated fixture values keep rendering expectations explicit
 func BenchmarkDNSStaticEntries_Render(b *testing.B) {
 	b.ReportAllocs()
 
@@ -42,6 +42,7 @@ func BenchmarkDNSStaticEntries_Render(b *testing.B) {
 	}
 }
 
+//nolint:goconst // repeated fixture values keep rendering expectations explicit
 func TestDNSStaticEntries_Render(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -129,6 +130,7 @@ func TestDNSStaticEntries_Render(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			l, err := tt.giveEntries.Render(&buf, tt.giveOptions)
 
 			assert.Equal(t, len(tt.wantResult), l)

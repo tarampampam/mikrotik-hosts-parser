@@ -1,4 +1,3 @@
-//nolint:errcheck,goconst,gosec,wsl_v5 // test fixtures intentionally repeat values and use permissive temp dirs
 package fileserver
 
 import (
@@ -37,10 +36,14 @@ func TestNewFileServer_WrongDirectoryError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not exists")
 
-	tmpDir, _ := os.MkdirTemp("", "test-")
+	tmpDir, tmpDirErr := os.MkdirTemp("", "test-")
+	assert.NoError(t, tmpDirErr)
+
 	defer func(d string) { assert.NoError(t, os.RemoveAll(d)) }(tmpDir)
-	file, _ := os.Create(filepath.Join(tmpDir, "foo"))
-	file.Close()
+
+	file, createErr := os.Create(filepath.Join(tmpDir, "foo")) //nolint:gosec
+	assert.NoError(t, createErr)
+	assert.NoError(t, file.Close())
 
 	fs, err = NewFileServer(Settings{
 		FilesRoot: file.Name(),
@@ -51,6 +54,7 @@ func TestNewFileServer_WrongDirectoryError(t *testing.T) {
 	assert.Contains(t, err.Error(), "not directory")
 }
 
+//nolint:goconst // table-driven fixture values stay explicit here
 func TestFileServer_ServeHTTP(t *testing.T) {
 	var cases = []struct {
 		name                   string
@@ -222,11 +226,11 @@ func TestFileServer_ServeHTTP(t *testing.T) {
 
 			if len(tt.giveDirs) > 0 || len(tt.giveFiles) > 0 {
 				for _, d := range tt.giveDirs {
-					assert.NoError(t, os.Mkdir(filepath.Join(tmpDir, d), 0777))
+					assert.NoError(t, os.Mkdir(filepath.Join(tmpDir, d), 0777)) //nolint:gosec
 				}
 
 				for name, content := range tt.giveFiles {
-					file, createErr := os.Create(filepath.Join(tmpDir, name))
+					file, createErr := os.Create(filepath.Join(tmpDir, name)) //nolint:gosec
 					assert.NoError(t, createErr)
 
 					_, fileWritingErr := file.Write(content)

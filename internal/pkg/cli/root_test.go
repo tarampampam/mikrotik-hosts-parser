@@ -1,4 +1,3 @@
-//nolint:goconst // repeated flag metadata keeps the table-driven test readable
 package cli
 
 import (
@@ -7,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
+
+const defaultFalse = "false"
 
 func TestSubcommands(t *testing.T) {
 	cmd := NewCommand("unit test")
@@ -41,9 +42,9 @@ func TestFlags(t *testing.T) {
 		wantShorthand string
 		wantDefault   string
 	}{
-		{giveName: "verbose", wantShorthand: "v", wantDefault: "false"},
-		{giveName: "debug", wantShorthand: "", wantDefault: "false"},
-		{giveName: "log-json", wantShorthand: "", wantDefault: "false"},
+		{giveName: "verbose", wantShorthand: "v", wantDefault: defaultFalse},
+		{giveName: "debug", wantShorthand: "", wantDefault: defaultFalse},
+		{giveName: "log-json", wantShorthand: "", wantDefault: defaultFalse},
 	}
 
 	for _, tt := range cases {

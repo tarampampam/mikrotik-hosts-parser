@@ -1,4 +1,3 @@
-//nolint:errcheck // test cleanup paths intentionally ignore close failures
 package cache
 
 import (
@@ -27,7 +26,7 @@ func BenchmarkInMemoryCache_Put(b *testing.B) {
 
 func TestInMemoryCache_GetPutDelete(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Second)
-	defer cache.Close()
+	defer func() { assert.NoError(t, cache.Close()) }()
 
 	const testKeyName = "foo"
 
@@ -92,7 +91,6 @@ func TestInMemoryCache_Expiration(t *testing.T) {
 
 func TestInMemoryCache_ConcurrentAccess(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Microsecond)
-	defer cache.Close()
 
 	testCtx, testCancel := context.WithCancel(context.Background())
 
@@ -140,7 +138,6 @@ func TestInMemoryCache_Close(t *testing.T) {
 	const testKeyName = "foo"
 
 	cache := NewInMemoryCache(time.Millisecond*100, time.Millisecond)
-	defer cache.Close()
 
 	assert.NoError(t, cache.Put(testKeyName, []byte{1, 2, 3}))
 
@@ -165,7 +162,7 @@ func TestInMemoryCache_Close(t *testing.T) {
 
 func TestInMemoryCache_GetWithEmptyKey(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Second)
-	defer cache.Close()
+	defer func() { assert.NoError(t, cache.Close()) }()
 
 	found, data, ttl, err := cache.Get("")
 	assert.False(t, found)
@@ -176,7 +173,7 @@ func TestInMemoryCache_GetWithEmptyKey(t *testing.T) {
 
 func TestInMemoryCache_PutWithEmptyKey(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Second)
-	defer cache.Close()
+	defer func() { assert.NoError(t, cache.Close()) }()
 
 	err := cache.Put("", []byte{1})
 	assert.Error(t, err)
@@ -185,7 +182,7 @@ func TestInMemoryCache_PutWithEmptyKey(t *testing.T) {
 
 func TestInMemoryCache_PutWithEmptyData(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Second)
-	defer cache.Close()
+	defer func() { assert.NoError(t, cache.Close()) }()
 
 	err := cache.Put("foo", []byte{})
 	assert.Error(t, err)
@@ -198,7 +195,7 @@ func TestInMemoryCache_PutWithEmptyData(t *testing.T) {
 
 func TestInMemoryCache_DeleteWithEmptyKey(t *testing.T) {
 	cache := NewInMemoryCache(time.Minute, time.Second)
-	defer cache.Close()
+	defer func() { assert.NoError(t, cache.Close()) }()
 
 	deleted, err := cache.Delete("")
 	assert.False(t, deleted)

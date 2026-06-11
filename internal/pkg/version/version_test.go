@@ -1,8 +1,8 @@
-//nolint:goconst // repeated version fixtures improve table readability
 package version
 
 import "testing"
 
+//nolint:goconst // repeated version fixtures improve table readability
 func TestVersion(t *testing.T) {
 	for give, want := range map[string]string{
 		// without changes

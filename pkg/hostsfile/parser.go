@@ -1,4 +1,3 @@
-//nolint:wsl_v5 // compact parser control flow is easier to follow without extra blank lines
 package hostsfile
 
 import (
@@ -49,7 +48,9 @@ func (w *word) Reset() {
 }
 
 // Parse input and return slice of records. Result order are same as in source.
-func Parse(in io.Reader) ([]Record, error) { //nolint:funlen,gocognit,gocyclo
+//
+//nolint:funlen,gocognit,gocyclo,wsl_v5 // compact parser control flow is easier to follow without extra blank lines
+func Parse(in io.Reader) ([]Record, error) {
 	var (
 		result    = make([]Record, 0, 5)
 		scan      = bufio.NewScanner(in)
