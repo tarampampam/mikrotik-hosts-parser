@@ -17,7 +17,7 @@ func TestMiddleware(t *testing.T) {
 		name        string
 		giveHandler http.Handler
 		giveRequest func() *http.Request
-		checkResult func(t *testing.T, in map[string]interface{}, rr *httptest.ResponseRecorder)
+		checkResult func(t *testing.T, in map[string]any, rr *httptest.ResponseRecorder)
 	}{
 		{
 			name: "panic with error",
@@ -29,7 +29,7 @@ func TestMiddleware(t *testing.T) {
 
 				return rq
 			},
-			checkResult: func(t *testing.T, in map[string]interface{}, rr *httptest.ResponseRecorder) {
+			checkResult: func(t *testing.T, in map[string]any, rr *httptest.ResponseRecorder) {
 				// check log entry
 				assert.Equal(t, "foo error", in["error"])
 				assert.Contains(t, in["stacktrace"], "/panic.go:")
@@ -59,14 +59,13 @@ func TestMiddleware(t *testing.T) {
 
 				return rq
 			},
-			checkResult: func(t *testing.T, in map[string]interface{}, rr *httptest.ResponseRecorder) {
+			checkResult: func(t *testing.T, in map[string]any, rr *httptest.ResponseRecorder) {
 				assert.Equal(t, "bar error", in["error"])
 			},
 		},
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			var rr = httptest.NewRecorder()
 
@@ -77,7 +76,7 @@ func TestMiddleware(t *testing.T) {
 				New(log).Middleware(tt.giveHandler).ServeHTTP(rr, tt.giveRequest())
 			})
 
-			var asJSON map[string]interface{}
+			var asJSON map[string]any
 
 			assert.NoError(t, json.Unmarshal([]byte(output), &asJSON), "logger output must be valid JSON")
 

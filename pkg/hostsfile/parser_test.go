@@ -20,8 +20,6 @@ var benchDataset = []struct{ filePath string }{ //nolint:gochecknoglobals
 
 func BenchmarkParse(b *testing.B) {
 	for _, tt := range benchDataset {
-		tt := tt
-
 		b.Run(filepath.Base(tt.filePath), func(b *testing.B) {
 			b.ReportAllocs()
 
@@ -41,7 +39,6 @@ func BenchmarkParse(b *testing.B) {
 				b.StartTimer()
 
 				_, e := Parse(buf)
-
 				if e != nil {
 					b.Fatal(e)
 				}
@@ -101,7 +98,6 @@ func TestParseUsingHostsFileContent(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt // reason: <https://git.io/fj8L6>
 		t.Run("Hosts file: "+tt.giveFilePath, func(t *testing.T) {
 			t.Parallel()
 
@@ -116,7 +112,7 @@ func TestParseUsingHostsFileContent(t *testing.T) {
 
 			var hostsCount = 0
 
-			for i := 0; i < len(records); i++ {
+			for i := range records {
 				if records[i].Host != "" {
 					hostsCount++
 				}

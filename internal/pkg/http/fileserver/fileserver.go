@@ -75,7 +75,7 @@ func NewFileServer(s Settings) (*FileServer, error) {
 }
 
 func (fs *FileServer) handleError(w http.ResponseWriter, r *http.Request, errorCode int) {
-	if fs.ErrorHandlers != nil && len(fs.ErrorHandlers) > 0 {
+	if len(fs.ErrorHandlers) > 0 {
 		for _, handler := range fs.ErrorHandlers {
 			if handler(w, r, fs, errorCode) {
 				return
@@ -101,7 +101,16 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if fs.Settings.RedirectIndexFileToRoot && len(fs.Settings.IndexFileName) > 0 {
 		// redirect .../index.html to .../
 		if strings.HasSuffix(r.URL.Path, "/"+fs.Settings.IndexFileName) {
-			http.Redirect(w, r, r.URL.Path[0:len(r.URL.Path)-len(fs.Settings.IndexFileName)], http.StatusMovedPermanently)
+			redirectURL := *r.URL
+			redirectPath := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/"), fs.Settings.IndexFileName)
+
+			redirectURL.Path = "/" + strings.Trim(strings.TrimSpace(redirectPath), "/")
+			if redirectURL.Path != "/" {
+				redirectURL.Path += "/"
+			}
+
+			//nolint:gosec // redirect target is normalized to the current host path
+			http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
 
 			return
 		}
@@ -120,10 +129,14 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prepare target file path
-	filePath := path.Join(fs.Settings.FilesRoot, filepath.FromSlash(path.Clean(urlPath)))
+	filePath := filepath.Join(
+		fs.Settings.FilesRoot,
+		filepath.FromSlash(strings.TrimPrefix(path.Clean(urlPath), "/")),
+	)
 
 	// check for file existence
 	if stat, err := os.Stat(filePath); err == nil && stat.Mode().IsRegular() {
+		//nolint:gosec // filePath is constrained to FilesRoot by cleaning and trimming the request path
 		if file, err := os.Open(filePath); err == nil {
 			defer func() { _ = file.Close() }()
 

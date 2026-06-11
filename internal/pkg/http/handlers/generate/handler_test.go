@@ -30,6 +30,11 @@ type fakeMetrics struct {
 	d    time.Duration
 }
 
+const (
+	contentTypeHeader    = "Content-Type"
+	plainTextContentType = "text/plain; charset=utf-8"
+)
+
 func (f *fakeMetrics) IncrementCacheHits()                       { f.h++ }
 func (f *fakeMetrics) IncrementCacheMisses()                     { f.m++ }
 func (f *fakeMetrics) ObserveGenerationDuration(d time.Duration) { f.d = d }
@@ -41,7 +46,7 @@ var httpMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error
 	}
 
 	if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
-		raw, readingErr := os.ReadFile(path)
+		raw, readingErr := os.ReadFile(path) //nolint:gosec
 		if readingErr != nil {
 			panic(readingErr)
 		}
@@ -49,8 +54,8 @@ var httpMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Header: http.Header{
-				"Content-Type":   []string{"text/plain; charset=utf-8"},
-				"Content-Length": []string{strconv.FormatInt(info.Size(), 10)},
+				contentTypeHeader: []string{plainTextContentType},
+				"Content-Length":  []string{strconv.FormatInt(info.Size(), 10)},
 			},
 			Body: io.NopCloser(bytes.NewReader(raw)),
 		}, nil
@@ -58,7 +63,7 @@ var httpMock fakeHTTPClientFunc = func(req *http.Request) (*http.Response, error
 
 	return &http.Response{
 		StatusCode: http.StatusNotFound,
-		Header:     http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		Header:     http.Header{contentTypeHeader: []string{plainTextContentType}},
 		Body:       io.NopCloser(bytes.NewReader([]byte("Requested file was not found: " + path))),
 	}, nil
 }
@@ -74,6 +79,7 @@ func createConfig() *config.Config {
 	return cfg
 }
 
+//nolint:errcheck // cache cleanup keeps this benchmark focused
 func BenchmarkHandler_ServeHTTP(b *testing.B) {
 	b.ReportAllocs()
 
@@ -85,16 +91,16 @@ func BenchmarkHandler_ServeHTTP(b *testing.B) {
 	h.(*handler).httpClient = httpMock
 
 	var (
-		req, _ = http.NewRequest(http.MethodGet, "http://testing?"+ //nolint:goconst
+		req, _ = http.NewRequest(http.MethodGet, "http://testing?"+
 			"format=routeros"+ //nolint:misspell
 			"&version=v0.0.666@1a0339c"+
 			"&redirect_to=127.0.0.5"+
 			"&limit=1234"+
-			"&sources_urls="+ //nolint:goconst
-			"https%3A%2F%2Fmock%2Fad_servers.txt"+ //nolint:goconst
+			"&sources_urls="+
+			"https%3A%2F%2Fmock%2Fad_servers.txt"+
 			",http://mock/hosts_adaway.txt"+
 			",http://non-existing-file.txt"+
-			"&excluded_hosts="+ //nolint:goconst
+			"&excluded_hosts="+
 			"d.com"+
 			",c.org"+
 			",localhost"+
@@ -109,6 +115,7 @@ func BenchmarkHandler_ServeHTTP(b *testing.B) {
 	}
 }
 
+//nolint:errcheck // cache cleanup keeps this test focused
 func TestHandler_ServeHTTP(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
@@ -170,6 +177,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	assert.Equal(t, 2, m.h)
 }
 
+//nolint:errcheck // cache cleanup keeps this test focused
 func TestHandler_ServeHTTPHostnamesExcluding(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
@@ -228,6 +236,7 @@ broken line format
 	assert.Equal(t, 1, m.m)
 }
 
+//nolint:errcheck // cache cleanup is not the focus of this test
 func TestHandler_ServeHTTPWithoutRequest(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
@@ -248,6 +257,7 @@ func TestHandler_ServeHTTPWithoutRequest(t *testing.T) {
 	assert.Equal(t, 0, m.m)
 }
 
+//nolint:errcheck // cache cleanup is not the focus of this test
 func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
@@ -271,6 +281,7 @@ func TestHandler_ServeHTTPRequestWithoutSourcesURLs(t *testing.T) {
 	assert.Equal(t, 0, m.m)
 }
 
+//nolint:errcheck // cache cleanup is not the focus of this test
 func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()
@@ -294,6 +305,7 @@ func TestHandler_ServeHTTPRequestEmptySourcesURLs(t *testing.T) {
 	assert.Equal(t, 0, m.m)
 }
 
+//nolint:errcheck // cache cleanup is not the focus of this test
 func TestHandler_ServeHTTPRequestWrongFormat(t *testing.T) {
 	cacher := cache.NewInMemoryCache(time.Minute, time.Second)
 	defer cacher.Close()

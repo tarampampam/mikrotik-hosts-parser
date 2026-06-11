@@ -89,7 +89,7 @@ func NewHandler(
 	if ip := net.ParseIP(cfg.RouterScript.Redirect.Address); ip != nil {
 		h.defaultRedirectIP = ip
 	} else {
-		h.defaultRedirectIP = net.IPv4(127, 0, 0, 1) //nolint:gomnd // config contains wrong value
+		h.defaultRedirectIP = net.IPv4(127, 0, 0, 1)
 	}
 
 	return h, nil
@@ -174,7 +174,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			if hit, data, ttl, err := h.cacher.Get(url); hit && err == nil {
 				records, parsingErr := hostsfile.Parse(bytes.NewReader(data))
 				if parsingErr == nil {
+					//nolint:gosec // bounded by source size and used only for preallocation
 					atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
+
 					ch <- hostsFileData{url: url, records: records, cacheHit: hit, cacheTTL: ttl}
 
 					return
@@ -188,6 +190,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 			data, srcErr := h.fetchRemoteSource(url)
 			if srcErr != nil {
 				h.log.Warn("remote source fetching failed", zap.Error(srcErr), zap.String("url", url))
+
 				ch <- hostsFileData{url: url, err: srcErr}
 
 				return
@@ -195,13 +198,16 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:f
 
 			if err := h.cacher.Put(url, data.Bytes()); err != nil {
 				h.log.Error("cache writing error", zap.Error(err), zap.String("url", url))
+
 				ch <- hostsFileData{url: url, err: err}
 
 				return
 			}
 
 			if records, err := hostsfile.Parse(data); err == nil {
+				//nolint:gosec // bounded by source size and used only for preallocation
 				atomic.AddUint32(&hostsRecordsCount, uint32(len(records)))
+
 				ch <- hostsFileData{url: url, records: records, cacheTTL: h.cacher.TTL()}
 			} else {
 				ch <- hostsFileData{url: url, err: err}
@@ -335,7 +341,7 @@ func containsIllegalSymbols(s string) bool {
 }
 
 func (h *handler) writeComment(w io.Writer, comments ...string) {
-	for i := 0; i < len(comments); i++ {
+	for i := range comments {
 		_, _ = w.Write([]byte("## " + comments[i] + "\n"))
 	}
 }
@@ -402,18 +408,18 @@ type reqParams struct {
 
 func newReqParams(redirect net.IP) reqParams {
 	return reqParams{
-		sources:  make([]string, 0, 8),  //nolint:gomnd
-		format:   formatRouterOS,        // default value
-		excluded: make([]string, 0, 16), //nolint:gomnd
+		sources:  make([]string, 0, 8),
+		format:   formatRouterOS, // default value
+		excluded: make([]string, 0, 16),
 		redirect: redirect,
 	}
 }
 
 func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,gocyclo
 	if urls, ok := v["sources_urls"]; ok {
-		m := make(map[string]struct{}, 8) //nolint:gomnd
+		m := make(map[string]struct{}, 8)
 
-		for i := 0; i < len(urls); i++ {
+		for i := range urls {
 			for list, j := strings.Split(urls[i], ","), 0; j < len(list); j++ {
 				if u, err := url.ParseRequestURI(list[j]); err == nil {
 					m[u.String()] = struct{}{}
@@ -443,9 +449,9 @@ func (p *reqParams) fromValues(v url.Values) error { //nolint:funlen,gocognit,go
 	}
 
 	if hosts, ok := v["excluded_hosts"]; ok { // optional
-		m := make(map[string]struct{}, 16) //nolint:gomnd
+		m := make(map[string]struct{}, 16)
 
-		for i := 0; i < len(hosts); i++ {
+		for i := range hosts {
 			for list, j := strings.Split(hosts[i], ","), 0; j < len(list); j++ {
 				if host := list[j]; host != "" {
 					m[strings.Trim(host, " '\"\n\r")] = struct{}{}
@@ -491,7 +497,7 @@ func (p *reqParams) validate(maxSources uint16) error {
 		return fmt.Errorf("too many sources (only %d is allowed)", maxSources)
 	}
 
-	if len(p.excluded) > 32 { //nolint:gomnd
+	if len(p.excluded) > 32 {
 		return errors.New("too many excluded hosts (more then 32)")
 	}
 

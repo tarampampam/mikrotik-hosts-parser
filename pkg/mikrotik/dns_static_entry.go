@@ -12,6 +12,8 @@ type DNSStaticEntry struct {
 
 // Format entry as a text in RouterOS script format.
 // Important: keep im mind that any unexpected characters will be formatted as-is (without escaping or filtering).
+//
+//nolint:wsl_v5 // compact buffer setup keeps this formatter straightforward
 func (s *DNSStaticEntry) Format(prefix, postfix string) ([]byte, error) {
 	const overSize = 96 // pre-allocation reserve
 	buf := make([]byte, 0, len(s.Address)+len(s.Comment)+len(s.Name)+len(s.Regexp)+len(s.TTL)+overSize)

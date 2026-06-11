@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const defaultFalse = "false"
+
 func TestSubcommands(t *testing.T) {
 	cmd := NewCommand("unit test")
 
@@ -24,7 +26,6 @@ func TestSubcommands(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			if _, exists := subcommands[tt.giveName]; !exists {
 				assert.Failf(t, "command not found", "command [%s] was not found", tt.giveName)
@@ -41,13 +42,12 @@ func TestFlags(t *testing.T) {
 		wantShorthand string
 		wantDefault   string
 	}{
-		{giveName: "verbose", wantShorthand: "v", wantDefault: "false"},
-		{giveName: "debug", wantShorthand: "", wantDefault: "false"},
-		{giveName: "log-json", wantShorthand: "", wantDefault: "false"},
+		{giveName: "verbose", wantShorthand: "v", wantDefault: defaultFalse},
+		{giveName: "debug", wantShorthand: "", wantDefault: defaultFalse},
+		{giveName: "log-json", wantShorthand: "", wantDefault: defaultFalse},
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			flag := cmd.Flag(tt.giveName)
 

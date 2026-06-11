@@ -46,7 +46,6 @@ func TestFlags(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.giveName, func(t *testing.T) {
 			flag := cmd.Flag(tt.giveName)
 
@@ -64,9 +63,22 @@ func TestFlags(t *testing.T) {
 
 const configFilePath = "../../../../configs/config.yml"
 
+const (
+	flagResourcesDir = "-r"
+	flagConfig       = "-c"
+	flagListen       = "-l"
+	flagPort         = "-p"
+	flagPortLong     = "--port"
+	flagCaching      = "--caching-engine"
+	flagRedisDSN     = "--redis-dsn"
+	logServerStart   = "Server starting"
+	logStoppingOS    = "Stopping by OS signal"
+	logServerStop    = "Server stopping"
+)
+
 func TestSuccessfulFlagsPreparing(t *testing.T) {
 	cmd := NewCommand(context.Background(), zap.NewNop())
-	cmd.SetArgs([]string{"-r", "", "-c", configFilePath})
+	cmd.SetArgs([]string{flagResourcesDir, "", flagConfig, configFilePath})
 
 	var executed bool
 
@@ -107,9 +119,9 @@ func executeCommandWithoutRunning(t *testing.T, args []string) string {
 
 func TestListenFlagWrongArgument(t *testing.T) {
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"-l", "256.256.256.256", // 255 is max
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagListen, "256.256.256.256", // 255 is max
 	})
 
 	assert.Contains(t, output, "wrong IP address")
@@ -122,9 +134,9 @@ func TestListenFlagWrongEnvValue(t *testing.T) {
 	defer func() { assert.NoError(t, os.Unsetenv("LISTEN_ADDR")) }()
 
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"-l", "0.0.0.0", // `-l` flag must be ignored
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagListen, "0.0.0.0", // `-l` flag must be ignored
 	})
 
 	assert.Contains(t, output, "wrong IP address")
@@ -133,9 +145,9 @@ func TestListenFlagWrongEnvValue(t *testing.T) {
 
 func TestPortFlagWrongArgument(t *testing.T) {
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"-p", "65536", // 65535 is max
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagPort, "65536", // 65535 is max
 	})
 
 	assert.Contains(t, output, "invalid argument")
@@ -149,9 +161,9 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 	defer func() { assert.NoError(t, os.Unsetenv("LISTEN_PORT")) }()
 
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"-p", "8090", // `-p` flag must be ignored
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagPort, "8090", // `-p` flag must be ignored
 	})
 
 	assert.Contains(t, output, "wrong TCP port")
@@ -161,8 +173,8 @@ func TestPortFlagWrongEnvValue(t *testing.T) {
 
 func TestResourcesDirFlagWrongArgument(t *testing.T) {
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "/tmp/nonexistent/bar/baz",
-		"-c", configFilePath,
+		flagResourcesDir, "/tmp/nonexistent/bar/baz",
+		flagConfig, configFilePath,
 	})
 
 	assert.Contains(t, output, "wrong resources directory")
@@ -175,8 +187,8 @@ func TestResourcesDirFlagWrongEnvValue(t *testing.T) {
 	defer func() { assert.NoError(t, os.Unsetenv("RESOURCES_DIR")) }()
 
 	output := executeCommandWithoutRunning(t, []string{
-		"-c", configFilePath,
-		"-r", ".", // `-r` flag must be ignored
+		flagConfig, configFilePath,
+		flagResourcesDir, ".", // `-r` flag must be ignored
 	})
 
 	assert.Contains(t, output, "wrong resources directory")
@@ -185,9 +197,9 @@ func TestResourcesDirFlagWrongEnvValue(t *testing.T) {
 
 func TestCachingEngineFlagWrongArgument(t *testing.T) {
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"--caching-engine", "foobarEngine",
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagCaching, "foobarEngine",
 	})
 
 	assert.Contains(t, output, "unsupported caching engine")
@@ -200,9 +212,9 @@ func TestCachingEngineFlagWrongEnvValue(t *testing.T) {
 	defer func() { assert.NoError(t, os.Unsetenv("CACHING_ENGINE")) }()
 
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"--caching-engine", "foobarEngine",
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagCaching, "foobarEngine",
 	})
 
 	assert.Contains(t, output, "unsupported caching engine")
@@ -211,10 +223,10 @@ func TestCachingEngineFlagWrongEnvValue(t *testing.T) {
 
 func TestRedisDSNFlagWrongArgument(t *testing.T) {
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"--caching-engine", "redis",
-		"--redis-dsn", "foo://bar",
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagCaching, cachingEngineRedis,
+		flagRedisDSN, "foo://bar",
 	})
 
 	assert.Contains(t, output, "wrong redis DSN")
@@ -227,10 +239,10 @@ func TestRedisDSNFlagWrongEnvValue(t *testing.T) {
 	defer func() { assert.NoError(t, os.Unsetenv("REDIS_DSN")) }()
 
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath,
-		"--caching-engine", "redis",
-		"--redis-dsn", "foo://bar", // `--redis-dsn` flag must be ignored
+		flagResourcesDir, "",
+		flagConfig, configFilePath,
+		flagCaching, cachingEngineRedis,
+		flagRedisDSN, "foo://bar", // `--redis-dsn` flag must be ignored
 	})
 
 	assert.Contains(t, output, "wrong redis DSN")
@@ -239,8 +251,8 @@ func TestRedisDSNFlagWrongEnvValue(t *testing.T) {
 
 func TestConfigFlagWrongArgument(t *testing.T) {
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", "/tmp/nonexistent/bar.baz",
+		flagResourcesDir, "",
+		flagConfig, "/tmp/nonexistent/bar.baz",
 	})
 
 	assert.Contains(t, output, "config file")
@@ -254,8 +266,8 @@ func TestConfigFlagWrongEnvValue(t *testing.T) {
 	defer func() { assert.NoError(t, os.Unsetenv("CONFIG_PATH")) }()
 
 	output := executeCommandWithoutRunning(t, []string{
-		"-r", "",
-		"-c", configFilePath, // `-c` flag must be ignored
+		flagResourcesDir, "",
+		flagConfig, configFilePath, // `-c` flag must be ignored
 	})
 
 	assert.Contains(t, output, "config file")
@@ -325,7 +337,7 @@ func startAndStopServer(t *testing.T, port int, args []string) string {
 	go func(ch chan<- struct{}) {
 		defer close(ch)
 
-		for i := 0; i < 2000; i++ {
+		for range 2000 {
 			if checkTCPPortIsBusy(t, port) {
 				ch <- struct{}{}
 
@@ -362,16 +374,16 @@ func TestSuccessfulCommandRunningUsingRedisCacheEngine(t *testing.T) {
 	defer mini.Close()
 
 	output := startAndStopServer(t, port, []string{
-		"-r", "",
-		"--port", strconv.Itoa(port),
-		"-c", configFilePath,
-		"--caching-engine", "redis",
-		"--redis-dsn", fmt.Sprintf("redis://127.0.0.1:%s/0", mini.Port()),
+		flagResourcesDir, "",
+		flagPortLong, strconv.Itoa(port),
+		flagConfig, configFilePath,
+		flagCaching, cachingEngineRedis,
+		flagRedisDSN, fmt.Sprintf("redis://127.0.0.1:%s/0", mini.Port()),
 	})
 
-	assert.Contains(t, output, "Server starting")
-	assert.Contains(t, output, "Stopping by OS signal")
-	assert.Contains(t, output, "Server stopping")
+	assert.Contains(t, output, logServerStart)
+	assert.Contains(t, output, logStoppingOS)
+	assert.Contains(t, output, logServerStop)
 }
 
 func TestSuccessfulCommandRunningUsingDefaultCacheEngine(t *testing.T) {
@@ -380,14 +392,14 @@ func TestSuccessfulCommandRunningUsingDefaultCacheEngine(t *testing.T) {
 	assert.NoError(t, err)
 
 	output := startAndStopServer(t, port, []string{
-		"-r", "",
-		"--port", strconv.Itoa(port),
-		"-c", configFilePath,
+		flagResourcesDir, "",
+		flagPortLong, strconv.Itoa(port),
+		flagConfig, configFilePath,
 	})
 
-	assert.Contains(t, output, "Server starting")
-	assert.Contains(t, output, "Stopping by OS signal")
-	assert.Contains(t, output, "Server stopping")
+	assert.Contains(t, output, logServerStart)
+	assert.Contains(t, output, logStoppingOS)
+	assert.Contains(t, output, logServerStop)
 }
 
 func TestRunningUsingBusyPortFailing(t *testing.T) {
@@ -403,7 +415,7 @@ func TestRunningUsingBusyPortFailing(t *testing.T) {
 	// create command with valid flags to run
 	cmd := NewCommand(context.Background(), zap.NewNop())
 	cmd.SilenceUsage = true
-	cmd.SetArgs([]string{"-r", "", "--port", strconv.Itoa(port), "-c", configFilePath})
+	cmd.SetArgs([]string{flagResourcesDir, "", flagPortLong, strconv.Itoa(port), flagConfig, configFilePath})
 
 	executedCh := make(chan struct{})
 

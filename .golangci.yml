@@ -1,86 +1,92 @@
-# Documentation: <https://github.com/golangci/golangci-lint#config-file>
+version: "2"
 
 run:
-  timeout: 1m
-  skip-dirs:
-    - .github
-    - .git
   modules-download-mode: readonly
+  relative-path-mode: cfg
   allow-parallel-runners: true
 
 output:
-  format: colored-line-number # colored-line-number|line-number|json|tab|checkstyle|code-climate
+  formats:
+    text:
+      path: stdout
+      colors: true
 
-linters-settings:
-  govet:
-    check-shadowing: true
-  gocyclo:
-    min-complexity: 15
-  godot:
-    scope: declarations
-    capital: true
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 3
-  misspell:
-    locale: US
-  lll:
-    line-length: 120
-  prealloc:
-    simple: true
-    range-loops: true
-    for-loops: true
-  nolintlint:
-    allow-leading-space: false
-    require-specific: true
-
-linters: # All available linters list: <https://golangci-lint.run/usage/linters/>
-  disable-all: true
+linters:
+  default: none
   enable:
-    - asciicheck # Simple linter to check that your code does not contain non-ASCII identifiers
-    - dogsled # Checks assignments with too many blank identifiers (e.g. x, _, _, _, := f())
-    - dupl # Tool for code clone detection
-    - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
-    - errorlint # find code that will cause problems with the error wrapping scheme introduced in Go 1.13
-    - exhaustive # check exhaustiveness of enum switch statements
-    - exportloopref # checks for pointers to enclosing loop variables
-    - funlen # Tool for detection of long functions
-    - gochecknoglobals # Checks that no globals are present in Go code
-    - gochecknoinits # Checks that no init functions are present in Go code
-    - gocognit # Computes and checks the cognitive complexity of functions
-    - goconst # Finds repeated strings that could be replaced by a constant
-    - gocritic # The most opinionated Go source code linter
-    - gocyclo # Computes and checks the cyclomatic complexity of functions
-    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
-    - goimports # Goimports does everything that gofmt does. Additionally it checks unused imports
-    - gomnd # An analyzer to detect magic numbers
-    - goprintffuncname # Checks that printf-like functions are named with `f` at the end
-    - gosec # Inspects source code for security problems
-    - gosimple # Linter for Go source code that specializes in simplifying a code
-    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
-    - ineffassign # Detects when assignments to existing variables are not used
-    - lll # Reports long lines
-    - misspell # Finds commonly misspelled English words in comments
-    - nakedret # Finds naked returns in functions greater than a specified function length
-    - nestif # Reports deeply nested if statements
-    - nlreturn # checks for a new line before return and branch statements to increase code clarity
-    - nolintlint # Reports ill-formed or insufficient nolint directives
-    - prealloc # Finds slice declarations that could potentially be preallocated
-    - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks
-    - stylecheck # Stylecheck is a replacement for golint
-    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
-    - unconvert # Remove unnecessary type conversions
-    - unused # Checks Go code for unused constants, variables, functions and types
-    - whitespace # Tool for detection of leading and trailing whitespace
-    - wsl # Whitespace Linter - Forces you to use empty lines!
+    - asciicheck
+    - dogsled
+    - dupl
+    - errcheck
+    - errorlint
+    - exhaustive
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - goprintffuncname
+    - gosec
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - nestif
+    - nlreturn
+    - nolintlint
+    - prealloc
+    - staticcheck
+    - unconvert
+    - unused
+    - whitespace
+    - wsl_v5
+  settings:
+    dupl:
+      threshold: 100
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    gocyclo:
+      min-complexity: 15
+    godot:
+      scope: declarations
+      capital: true
+    govet:
+      enable:
+        - shadow
+    lll:
+      line-length: 120
+    misspell:
+      locale: US
+    nolintlint:
+      require-specific: true
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: true
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+  exclusions:
+    paths:
+      - .github
+      - .git
+    rules:
+      - path: _test\.go
+        linters:
+          - dupl
+          - funlen
+          - gocognit
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - dupl
-        - funlen
-        - scopelint
-        - gocognit
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    paths:
+      - .github
+      - .git
