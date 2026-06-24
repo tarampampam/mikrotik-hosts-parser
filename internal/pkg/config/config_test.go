@@ -139,7 +139,6 @@ router_script:
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.giveEnv != nil {
 				for key, value := range tt.giveEnv {
@@ -196,7 +195,6 @@ router_script:
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			file, err := os.CreateTemp("", "unit-test-")
 			assert.NoError(t, err)

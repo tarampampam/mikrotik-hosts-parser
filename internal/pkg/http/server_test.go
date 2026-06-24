@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"math"
 	"mime"
 	"net"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 	"gh.tarampamp.am/mikrotik-hosts-parser/v4/internal/pkg/config"
 )
 
-func getRandomTCPPort(t *testing.T) (int, error) {
+func getRandomTCPPort(t *testing.T) (uint16, error) {
 	t.Helper()
 
 	// zero port means randomly (os) chosen port
@@ -27,18 +28,21 @@ func getRandomTCPPort(t *testing.T) (int, error) {
 	}
 
 	port := l.Addr().(*net.TCPAddr).Port
+	if port > math.MaxUint16 {
+		return 0, errors.New("random TCP port is out of uint16 range")
+	}
 
 	if closingErr := l.Close(); closingErr != nil {
 		return 0, closingErr
 	}
 
-	return port, nil
+	return uint16(port), nil //nolint:gosec // range is validated above
 }
 
-func checkTCPPortIsBusy(t *testing.T, port int) bool {
+func checkTCPPortIsBusy(t *testing.T, port uint16) bool {
 	t.Helper()
 
-	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+	l, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
 		return true
 	}
@@ -53,14 +57,14 @@ func TestServer_StartAndStop(t *testing.T) {
 	assert.NoError(t, err)
 
 	cacher := cache.NewInMemoryCache(time.Second, time.Second)
-	defer cacher.Close()
+	defer func() { assert.NoError(t, cacher.Close()) }()
 
 	srv := NewServer(context.Background(), zap.NewNop(), cacher, ".", &config.Config{}, nil)
 
 	assert.False(t, checkTCPPortIsBusy(t, port))
 
 	go func() {
-		startingErr := srv.Start("", uint16(port))
+		startingErr := srv.Start("", port)
 
 		if !errors.Is(startingErr, http.ErrServerClosed) {
 			assert.NoError(t, startingErr)
@@ -100,7 +104,7 @@ func TestServer_Register(t *testing.T) {
 	}
 
 	cacher := cache.NewInMemoryCache(time.Second, time.Second)
-	defer cacher.Close()
+	defer func() { assert.NoError(t, cacher.Close()) }()
 
 	cfg := &config.Config{}
 	cfg.RouterScript.MaxSourcesCount = 1
@@ -134,7 +138,7 @@ func TestServer_Register(t *testing.T) {
 
 func TestServer_RegisterWithoutResourcesDir(t *testing.T) {
 	c := cache.NewInMemoryCache(time.Second, time.Second)
-	defer c.Close()
+	defer func() { assert.NoError(t, c.Close()) }()
 
 	cfg := &config.Config{}
 	cfg.RouterScript.MaxSourcesCount = 1

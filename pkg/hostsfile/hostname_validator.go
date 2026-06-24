@@ -4,6 +4,7 @@ package hostsfile
 
 import "unicode/utf8"
 
+//nolint:dogsled,funlen,gocognit,gocyclo,gocritic,lll,nakedret,nlreturn,staticcheck,wsl_v5 // generated DFA code
 func validateHostname(s []byte) (end int) {
 	end = -1
 	var r rune

@@ -31,7 +31,6 @@ func TestEnvVariable_Lookup(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.giveEnv.String(), func(t *testing.T) {
 			defer func() { assert.NoError(t, os.Unsetenv(tt.giveEnv.String())) }()
 

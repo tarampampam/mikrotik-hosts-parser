@@ -3,6 +3,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/a8m/envsubst"
 	"gopkg.in/yaml.v2"
@@ -75,7 +76,7 @@ func FromYaml(in []byte, expandEnv bool) (*Config, error) {
 
 // FromYamlFile creates new config instance using YAML file.
 func FromYamlFile(filename string, expandEnv bool) (*Config, error) {
-	bytes, err := os.ReadFile(filename)
+	bytes, err := os.ReadFile(filepath.Clean(filename))
 	if err != nil {
 		return nil, err
 	}

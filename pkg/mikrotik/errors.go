@@ -3,6 +3,8 @@ package mikrotik
 // Error is a special type for package-specific errors.
 type Error uint8
 
+const unknownError = "unknown error"
+
 // Error returns error in a string representation.
 func (err Error) Error() string {
 	switch err {
@@ -10,7 +12,7 @@ func (err Error) Error() string {
 		return "required fields does not filled"
 
 	default:
-		return "unknown error"
+		return unknownError
 	}
 }
 

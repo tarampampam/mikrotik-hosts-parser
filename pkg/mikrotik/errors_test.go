@@ -16,17 +16,16 @@ func TestConstErr_Error(t *testing.T) {
 		{
 			name:       "0",
 			giveConst:  Error(0),
-			wantString: "unknown error",
+			wantString: unknownError,
 		},
 		{
 			name:       "255",
 			giveConst:  Error(255),
-			wantString: "unknown error",
+			wantString: unknownError,
 		},
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.giveConst.Error(); tt.wantString != got {
 				t.Errorf(`want: "%s", got: "%s"`, tt.wantString, got)

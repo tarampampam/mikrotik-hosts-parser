@@ -50,7 +50,7 @@ func (f *flags) init(flagSet *pflag.FlagSet) {
 		&f.listen.port,
 		"port",
 		"p",
-		8080, //nolint:gomnd
+		8080,
 		fmt.Sprintf("TCP port number [$%s]", env.ListenPort),
 	)
 	flagSet.StringVarP(

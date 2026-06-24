@@ -33,6 +33,7 @@ func NewInMemoryCache(ttl time.Duration, ci time.Duration) *InMemoryCache {
 	return cache
 }
 
+//nolint:wsl_v5 // compact maintenance loop is easier to read without extra blank lines
 func (c *InMemoryCache) cleanup() {
 	defer close(c.close)
 
