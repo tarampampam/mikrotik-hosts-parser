@@ -3,6 +3,7 @@ module gh.tarampamp.am/mikrotik-hosts-parser/v4
 go 1.26.0
 
 require (
+	gh.tarampamp.am/mikrotik-hosts-parser/v4/pkg v0.0.0-00010101000000-000000000000
 	github.com/a8m/envsubst v1.4.3
 	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/fatih/color v1.19.0
@@ -39,3 +40,5 @@ require (
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace gh.tarampamp.am/mikrotik-hosts-parser/v4/pkg => ./pkg
