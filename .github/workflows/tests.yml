@@ -110,7 +110,7 @@ jobs:
         run: docker run --rm -d -p "6379:6379/tcp" redis:7-alpine
 
       - name: Download compiled binary file
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: mikrotik-hosts-parser-linux-amd64
           path: .artifact
@@ -181,7 +181,7 @@ jobs:
         run: docker run --rm -d --network "app-network" -p "6379:6379/tcp" --name=redis redis:7-alpine
 
       - name: Download builded docker image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: .artifact
