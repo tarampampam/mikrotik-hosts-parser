@@ -29,7 +29,7 @@ services:
       redis: {condition: service_healthy}
 
   redis:
-    image: redis:7-alpine # Image page: <https://hub.docker.com/_/redis>
+    image: redis:8-alpine # Image page: <https://hub.docker.com/_/redis>
     volumes:
       - redis-data:/data:rw
     ports:
