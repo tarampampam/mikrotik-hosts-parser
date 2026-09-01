@@ -3,207 +3,273 @@ package hostsfile
 import (
 	"bufio"
 	"bytes"
-	"encoding/binary"
 	"io"
-	"math"
-	"net"
+	"net/netip"
 	"strconv"
+	"strings"
+	"unsafe"
 )
 
-// Hostname validator generation (execute in linux shell) using <https://gitlab.com/opennota/re2dfa>:
-//	$ cd ./pkg/hostsfile
-//	$ docker run --rm -ti -v $(pwd):/rootfs:rw -w /rootfs golang:1.16-buster
-//	$ go get -u gitlab.com/opennota/re2dfa
-//	$ re2dfa -o hostname_validator.go \
-//	'(?i)^((-?)(xn--|_)?[a-z0-9-_]{0,61}[a-z0-9-_]\.)*(xn--)?([a-z0-9][a-z0-9\-]{0,60}|[a-z0-9-]{1,30}\.[a-z]{2,})$' \
-//	hostsfile.validateHostname []byte
-//	$ exit
-//	$ sudo chown "$(id -u):$(id -g)" ./hostname_validator.go
+const lineP95SizeBytes = 36
 
-type wordFlag uint8
-
-func (f wordFlag) HasFlag(flag wordFlag) bool { return f&flag != 0 }
-func (f *wordFlag) AddFlag(flag wordFlag)     { *f |= flag }
-func (f *wordFlag) ClearFlag(flag wordFlag)   { *f &= ^flag }
-func (f *wordFlag) Reset()                    { *f = wordFlag(0) }
-
-const (
-	wordEnded wordFlag = 1 << iota
-	wordWithDot
-	wordWithColon
-)
-
-type word struct {
-	buf    bytes.Buffer
-	count  uint
-	flag   wordFlag
-	isLast bool
+// Record is a hosts file record.
+type Record struct {
+	IP              string
+	Host            string
+	AdditionalHosts []string
 }
 
-func (w *word) Reset() {
-	w.count = 0
-	w.flag.Reset()
-	w.isLast = false
-	w.buf.Reset()
+type ParseOption func(*parseOptions)
+type parseOptions struct {
+	bufferSize   int
+	recordsCount int
+}
+
+func WithBufferSize(size int) ParseOption {
+	return func(opts *parseOptions) {
+		opts.bufferSize = size
+	}
+}
+
+func WithRecordsCount(count int) ParseOption {
+	return func(opts *parseOptions) {
+		opts.recordsCount = count
+	}
 }
 
 // Parse input and return slice of records. Result order are same as in source.
 //
-//nolint:funlen,gocognit,gocyclo,wsl_v5 // compact parser control flow is easier to follow without extra blank lines
-func Parse(in io.Reader) ([]Record, error) {
+// You can pass additional options to optimize memory usage and performance.
+// For example, if you know the number of records in advance,
+// you can use `WithRecordsCount` to preallocate memory for the records slice.
+//
+// Similarly, you can use `WithBufferSize` to preallocate the internal output buffer
+// (used by the parser's strings.Builder).
+func Parse(in io.Reader, opts ...ParseOption) ([]Record, error) { //nolint:gocognit,gocyclo,funlen
+	var opt parseOptions
+
+	for _, o := range opts {
+		o(&opt)
+	}
+
+	if opt.recordsCount == 0 {
+		if opt.bufferSize != 0 {
+			opt.recordsCount = opt.bufferSize / lineP95SizeBytes
+		} else {
+			opt.recordsCount = 100
+		}
+	}
+
+	if opt.bufferSize == 0 {
+		opt.bufferSize = opt.recordsCount * lineP95SizeBytes
+	}
+
+	scan := bufio.NewScanner(in)
+	scan.Split(bufio.ScanLines)
+	scan.Buffer(make([]byte, 10<<10), 10<<20)
+
 	var (
-		result    = make([]Record, 0, 5)
-		scan      = bufio.NewScanner(in)
-		w         word
-		hostnames = make([]string, 0, 3)
-		ip        bytes.Buffer
+		ip     bytes.Buffer
+		domain bytes.Buffer
 	)
 
-	w.buf.Grow(32)
-	ip.Grow(7)
+	ip.Grow(64)
+	domain.Grow(64)
 
-scan: // read content "line by line"
+	var wrt writer
+
+	wrt.Init(opt)
+
+scan:
 	for scan.Scan() {
 		line := scan.Bytes()
 
-		if len(line) <= 5 {
+		if len(line) <= 5 { //nolint:gomnd
 			continue scan // line is too short
 		}
 
-		if line[0] == '#' {
-			continue scan // skip any lines, that looks like comments in format: `# Any comment text`
-		}
-
-		w.Reset()
 		ip.Reset()
-		if len(hostnames) > 0 {
-			hostnames = hostnames[:0]
-		}
+		domain.Reset()
 
-		for i, ll := 0, len(line); i < ll && !w.isLast; i++ { // loop over line runes
-			if char := line[i]; char != ' ' && char != '\t' {
-				switch char {
-				case '.':
-					w.flag.AddFlag(wordWithDot)
-				case ':':
-					w.flag.AddFlag(wordWithColon)
-				}
+		var step int
+		const (
+			lineStarted = iota
+			ipBlock
+			betweenBlock
+			domainBlock
+		)
 
-				w.buf.WriteByte(char)
-				w.flag.ClearFlag(wordEnded)
-			} else {
-				w.flag.AddFlag(wordEnded)
+		for i, r := range line {
+			var isLast bool
+
+			if i == len(line)-1 {
+				isLast = true
 			}
 
-			if w.flag.HasFlag(wordEnded) || i == ll-1 { //nolint:nestif // word filled completely
-				if w.buf.Len() == 0 {
-					continue // skip any empty words
+		parseRune:
+			switch step {
+			case lineStarted, betweenBlock:
+				switch {
+				case isLast || r == '#': // no records here
+					continue scan
+				case isSpace(r): // skip spaces
+					continue
+				default: // block started
+					step++ // to ip or to domain
+
+					goto parseRune
+				}
+			case ipBlock:
+				switch {
+				case isLast || r == '#':
+					continue scan // there is no domain names, skip line
+				case isSpace(r):
+					// Write ip after then we will find a domain
+					step = betweenBlock
+				default:
+					ip.WriteByte(r)
 				}
 
-				w.count++
-
-				if w.count == 1 && w.buf.Bytes()[0] == '#' {
-					continue scan // skip if first word starts with comment char
+			case domainBlock:
+				if !isSpace(r) && r != '#' {
+					domain.WriteByte(r)
 				}
 
-				if w.count == 1 {
-					if (w.flag.HasFlag(wordWithDot) && validateIPv4(w.buf.Bytes())) ||
-						(w.flag.HasFlag(wordWithColon) && net.ParseIP(w.buf.String()) != nil) {
-						ip.Write(w.buf.Bytes())
-					} else if !w.flag.HasFlag(wordWithDot) && !w.flag.HasFlag(wordWithColon) {
-						if long, ok := parseLongIP(w.buf.String()); ok {
-							ip.WriteString(long.To4().String())
+				if isSpace(r) || r == '#' || isLast {
+					parsedDomain, ok := parseDomain(domain)
+					domain.Reset()
+					if !ok {
+						continue
+					}
+
+					if ip.Len() > 0 { // first time sow domain
+						parsedIP, ok := parseIP(ip)
+						ip.Reset() // reset buffer to avoid double writes
+						if !ok {
+							continue scan // invalid IP means invalid line
 						}
+
+						wrt.NewRecord()
+						wrt.Write(parsedIP)
 					}
-				} else {
-					if w.buf.Bytes()[0] == '#' { // comment at the end of line
-						w.isLast = true
-					} else if ip.Len() > 0 && validateHostname(w.buf.Bytes()) > 0 {
-						hostnames = append(hostnames, w.buf.String()) // +1 memory allocation here
-					}
+
+					wrt.Write(parsedDomain)
+					step = betweenBlock
+
+					goto parseRune
 				}
-
-				w.buf.Reset()
-				w.flag.Reset()
 			}
-		}
-
-		if ip.Len() > 0 && len(hostnames) > 0 {
-			rec := Record{IP: ip.String(), Host: hostnames[0]} // +1 memory allocation here
-
-			if l := len(hostnames); l > 1 {
-				rec.AdditionalHosts = make([]string, 0, l-1) // +1 memory allocation here (but not for each record)
-				rec.AdditionalHosts = append(rec.AdditionalHosts, hostnames[1:]...)
-			}
-
-			result = append(result, rec)
-		}
-	}
+		} // line parsed
+	} // scan finished
 
 	if err := scan.Err(); err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	records := wrt.BuildOutput()
+
+	return records, nil
 }
 
-// validateIPv4 address (d.d.d.d).
-func validateIPv4(s []byte) bool {
-	var p [net.IPv4len]byte
+type writer struct {
+	buf *strings.Builder // buf accumulate all IPs and domains in one string to slice it in a future
 
-	for i := range net.IPv4len {
-		if len(s) == 0 {
-			return false // missing octets
+	// records count point how many offsets belongs to the record.
+	// For example, if record has 3 offsets (IP + Host + AdditionalHost), then recordsCounts will have 3 for this record.
+	recordsCounts []int
+	offsets       []int // offsets of strings, first one should be 0
+	currentRecord int
+}
+
+func (w *writer) Init(opt parseOptions) {
+	w.recordsCounts = make([]int, 0, opt.recordsCount)
+	w.offsets = make([]int, 0, opt.recordsCount*2+1) // IP + Host per record + 1 for 0
+	w.buf = new(strings.Builder)
+	w.buf.Grow(opt.bufferSize)
+	w.currentRecord = -1
+
+	w.offsets = append(w.offsets, 0)
+}
+
+func (w *writer) NewRecord() {
+	w.currentRecord++
+	if len(w.recordsCounts)-1 < w.currentRecord {
+		w.recordsCounts = append(w.recordsCounts, 0)
+	}
+}
+
+func (w *writer) Write(p []byte) {
+	w.recordsCounts[w.currentRecord]++
+	w.buf.Write(p)
+	w.offsets = append(w.offsets, w.buf.Len())
+}
+
+func (w *writer) BuildOutput() []Record {
+	var (
+		result    = make([]Record, len(w.recordsCounts))
+		stringMem = w.buf.String() // GC will handle all buffer memory till any link to the string exists
+	)
+
+	for i, count := range w.recordsCounts {
+		if count > 2 {
+			result[i].AdditionalHosts = make([]string, 0, count-2)
 		}
 
-		if i > 0 {
-			if s[0] != '.' {
-				return false
+		for j := range count {
+			rec := stringMem[w.offsets[j]:w.offsets[j+1]]
+
+			switch j {
+			case 0:
+				result[i].IP = rec
+			case 1:
+				result[i].Host = rec
+			default:
+				result[i].AdditionalHosts = append(result[i].AdditionalHosts, rec)
 			}
-
-			s = s[1:]
 		}
 
-		n, c, ok := dtoi(s)
-		if !ok || n > math.MaxUint8 {
-			return false
-		}
-
-		s = s[c:]
-		p[i] = uint8(n) //nolint:gosec // range is bounded by MaxUint8 above
+		w.offsets = w.offsets[count:] // shift offsets
 	}
 
-	return len(s) == 0
+	return result
+}
+
+func parseIP(in bytes.Buffer) ([]byte, bool) {
+	_, err := netip.ParseAddr(unsafe.String(unsafe.SliceData(in.Bytes()), in.Len()))
+	if err != nil {
+		if longIp := parseLongIP(in.Bytes()); longIp.IsValid() {
+			return []byte(longIp.String()), true
+		}
+
+		return nil, false
+	}
+
+	return in.Bytes(), true
+}
+
+func parseDomain(in bytes.Buffer) ([]byte, bool) {
+	if validateHostname(in.Bytes()) {
+		return in.Bytes(), true
+	}
+
+	return nil, false
 }
 
 // parseLongIP parses IP address in long format (0 - 4294967295).
-func parseLongIP(s string) (ip net.IP, ok bool) {
-	f, err := strconv.ParseUint(s, 10, 32)
-	if err == nil {
-		ip, ok = make(net.IP, 4), true
-		binary.BigEndian.PutUint32(ip, uint32(f))
-
-		return
+func parseLongIP(s []byte) (ip netip.Addr) {
+	f, err := strconv.ParseUint(unsafe.String(unsafe.SliceData(s), len(s)), 10, 32)
+	if err == nil && f >= 0 && f <= 4294967295 {
+		return netip.AddrFrom4([4]byte{
+			byte(f >> 24),
+			byte(f >> 16),
+			byte(f >> 8),
+			byte(f),
+		})
 	}
 
 	return
 }
 
-// dtoi converts decimal to integer. Returns number, characters consumed, success.
-func dtoi(s []byte) (n int, i int, ok bool) {
-	const big = 0xFFFFFF
-
-	n = 0
-	for i = 0; i < len(s) && '0' <= s[i] && s[i] <= '9'; i++ {
-		n = n*10 + int(s[i]-'0')
-		if n >= big {
-			return big, i, false
-		}
-	}
-
-	if i == 0 {
-		return 0, 0, false
-	}
-
-	return n, i, true
+func isSpace(r byte) bool {
+	return r == ' ' || r == '\t'
 }

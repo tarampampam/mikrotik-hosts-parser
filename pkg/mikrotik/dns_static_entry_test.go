@@ -2,8 +2,6 @@ package mikrotik
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 //nolint:goconst // repeated fixture values keep rendering expectations explicit
@@ -103,12 +101,16 @@ func TestDNSStaticEntry_Format(t *testing.T) {
 			res, err := tt.giveEntry.Format(tt.givePrefix, tt.givePostfix)
 
 			if tt.wantError == nil {
-				assert.NoError(t, err)
+				noError(t, err)
 			} else {
-				assert.EqualError(t, err, tt.wantError.Error())
+				if err == nil {
+					t.Errorf("expected error %s, got nothing", tt.wantError.Error())
+				} else {
+					equal(t, err.Error(), tt.wantError.Error())
+				}
 			}
 
-			assert.Equal(t, tt.wantString, string(res))
+			equal(t, tt.wantString, string(res))
 		})
 	}
 }

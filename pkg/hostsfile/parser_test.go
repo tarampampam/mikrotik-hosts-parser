@@ -1,49 +1,75 @@
-package hostsfile
+package hostsfile_test
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gh.tarampamp.am/mikrotik-hosts-parser/v4/pkg/hostsfile"
 )
 
-var benchDataset = []struct{ filePath string }{ //nolint:gochecknoglobals
-	{"../../test/testdata/hosts/foo.txt"},
-	{"../../test/testdata/hosts/ad_servers.txt"},
-	{"../../test/testdata/hosts/block_shit.txt"},
-	{"../../test/testdata/hosts/hosts_adaway.txt"},
-	{"../../test/testdata/hosts/serverlist.txt"},
-	{"../../test/testdata/hosts/spy.txt"},
-}
-
 func BenchmarkParse(b *testing.B) {
-	for _, tt := range benchDataset {
-		b.Run(filepath.Base(tt.filePath), func(b *testing.B) {
-			b.ReportAllocs()
+	var benchDataset = []string{
+		"../../test/testdata/hosts/ad_servers.txt",
+		"../../test/testdata/hosts/foo.txt",
+		"../../test/testdata/hosts/block_shit.txt",
+		"../../test/testdata/hosts/hosts_adaway.txt",
+		"../../test/testdata/hosts/serverlist.txt",
+		"../../test/testdata/hosts/spy.txt",
+	}
 
-			raw, err := os.ReadFile(tt.filePath)
-			if err != nil {
-				panic(err)
-			}
-
-			b.SetBytes(int64(len(raw)))
-			b.ResetTimer()
-
-			for n := 0; n < b.N; n++ {
-				b.StopTimer()
-
-				buf := bytes.NewBuffer(raw)
-
-				b.StartTimer()
-
-				_, e := Parse(buf)
-				if e != nil {
-					b.Fatal(e)
+	for _, file := range benchDataset {
+		for _, tc := range []struct {
+			name       string
+			isBuffered bool
+		}{
+			{"non buffered", false},
+			{"buffered", true},
+		} {
+			name := strings.Join([]string{filepath.Base(file), tc.name}, " ")
+			b.Run(name, func(b *testing.B) {
+				fp, err := os.Open(file)
+				if err != nil {
+					b.Fatal(err)
 				}
-			}
-		})
+				defer fp.Close()
+
+				raw, err := io.ReadAll(fp)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				buf := bytes.NewReader(raw)
+
+				opts := make([]hostsfile.ParseOption, 0, 2)
+
+				if tc.isBuffered {
+					opts = append(
+						opts,
+						hostsfile.WithBufferSize(len(raw)),
+						hostsfile.WithRecordsCount(len(raw)/36),
+					)
+				}
+
+				b.SetBytes(int64(len(raw)))
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for b.Loop() {
+					b.StopTimer()
+					buf.Seek(0, io.SeekStart)
+					b.StartTimer()
+
+					if _, e := hostsfile.Parse(buf, opts...); e != nil {
+						b.Fatal(e)
+					}
+				}
+			})
+		}
 	}
 }
 
@@ -98,21 +124,22 @@ func TestParseUsingHostsFileContent(t *testing.T) {
 	}
 
 	for _, tt := range cases {
+		tt := tt // reason: <https://git.io/fj8L6>
 		t.Run("Hosts file: "+tt.giveFilePath, func(t *testing.T) {
 			t.Parallel()
 
 			file, err := os.Open(tt.giveFilePath)
-			assert.NoError(t, err)
+			must(t, noError(t, err))
+			defer file.Close()
 
-			records, parseErr := Parse(file)
-			assert.NoError(t, file.Close())
-			assert.NoError(t, parseErr)
+			records, parseErr := hostsfile.Parse(file)
+			must(t, noError(t, parseErr))
 
-			assert.Len(t, records, tt.wantRecords)
+			must(t, equal(t, tt.wantRecords, len(records)))
 
 			var hostsCount = 0
 
-			for i := range records {
+			for i := 0; i < len(records); i++ {
 				if records[i].Host != "" {
 					hostsCount++
 				}
@@ -120,7 +147,7 @@ func TestParseUsingHostsFileContent(t *testing.T) {
 				hostsCount += len(records[i].AdditionalHosts)
 			}
 
-			assert.Equal(t, tt.wantHostNames, hostsCount)
+			equal(t, tt.wantHostNames, hostsCount)
 		})
 	}
 }
@@ -154,57 +181,100 @@ next line with IP only (spaces and tabs after)
 4294967296 too-big.long.integer.ip  # invalid
 -1 too-small.long.integer.ip        # invalid
 4294N67295 broken.long.integer.ip   # invalid
+# Space at the enc
+127.0.0.1 ads.n-ws.org
 
 the end
 `))
 
-	records, err := Parse(buf)
-	assert.NoError(t, err)
+	records, err := hostsfile.Parse(buf)
+	must(t, equal(t, nil, err))
 
-	assert.Len(t, records, 11)
+	var tt = [...]hostsfile.Record{
+		{
+			IP:   "1.2.3.4",
+			Host: "dns.google",
+		},
+		{
+			IP:   "4.3.2.1",
+			Host: "bar.com",
+		},
+		{
+			IP:   "4.3.2.1",
+			Host: "___id___.c.mystat-in.net",
+		},
+		{
+			IP:              "1.1.1.1",
+			Host:            "a.cn",
+			AdditionalHosts: []string{"b.cn", "a.cn"},
+		},
+		{
+			IP:   "::1",
+			Host: "localfoo",
+		},
+		{
+			IP:   "2606:4700:4700::1111",
+			Host: "cloudflare",
+		},
+		{
+			IP:   "0.0.0.1",
+			Host: "example.com",
+		},
+		{
+			IP:   "0.0.0.1",
+			Host: "example.com",
+		},
+		{ // "тест.рф" must be encoded as `xn--e1aybc.xn--p1ai`
+			IP:   "3.3.3.3",
+			Host: "xn--e1aybc.xn--p1ai",
+		},
+		{
+			IP:   "0.0.0.0",
+			Host: "min.long.integer.ip",
+		},
+		{
+			IP:   "255.255.255.255",
+			Host: "max.long.integer.ip",
+		},
+		{
+			IP:   "127.0.0.1",
+			Host: "ads.n-ws.org",
+		},
+	}
 
-	assert.Equal(t, "1.2.3.4", records[0].IP)
-	assert.Equal(t, "dns.google", records[0].Host)
-	assert.Nil(t, records[0].AdditionalHosts)
+	must(t, equal(t, len(tt), len(records)))
 
-	assert.Equal(t, "4.3.2.1", records[1].IP)
-	assert.Equal(t, "bar.com", records[1].Host)
-	assert.Nil(t, records[1].AdditionalHosts)
+	for i, want := range tt {
+		equal(t, want, records[i])
+	}
+}
 
-	assert.Equal(t, "4.3.2.1", records[2].IP)
-	assert.Equal(t, "___id___.c.mystat-in.net", records[2].Host)
-	assert.Nil(t, records[2].AdditionalHosts)
+func equal(t *testing.T, want any, got any) bool {
+	t.Helper()
 
-	assert.Equal(t, "1.1.1.1", records[3].IP)
-	assert.Equal(t, "a.cn", records[3].Host)
-	assert.ElementsMatch(t, []string{"b.cn", "a.cn"}, records[3].AdditionalHosts)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("\nwant:\n%v\ngot:\n%v", want, got)
 
-	assert.Equal(t, "::1", records[4].IP)
-	assert.Equal(t, "localfoo", records[4].Host)
-	assert.Nil(t, records[4].AdditionalHosts)
+		return false
+	}
 
-	assert.Equal(t, "2606:4700:4700::1111", records[5].IP)
-	assert.Equal(t, "cloudflare", records[5].Host)
-	assert.Nil(t, records[5].AdditionalHosts)
+	return true
+}
 
-	assert.Equal(t, "0.0.0.1", records[6].IP)
-	assert.Equal(t, "example.com", records[6].Host)
-	assert.Nil(t, records[6].AdditionalHosts)
+func noError(t *testing.T, err error) bool {
+	t.Helper()
 
-	assert.Equal(t, "0.0.0.1", records[7].IP)
-	assert.Equal(t, "example.com", records[7].Host)
-	assert.Nil(t, records[7].AdditionalHosts)
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
 
-	// "тест.рф" must be encoded as `xn--e1aybc.xn--p1ai`
-	assert.Equal(t, "3.3.3.3", records[8].IP)
-	assert.Equal(t, "xn--e1aybc.xn--p1ai", records[8].Host)
-	assert.Nil(t, records[8].AdditionalHosts)
+		return false
+	}
 
-	assert.Equal(t, "0.0.0.0", records[9].IP) // long: 0
-	assert.Equal(t, "min.long.integer.ip", records[9].Host)
-	assert.Nil(t, records[7].AdditionalHosts)
+	return true
+}
 
-	assert.Equal(t, "255.255.255.255", records[10].IP) // long: 4294967295
-	assert.Equal(t, "max.long.integer.ip", records[10].Host)
-	assert.Nil(t, records[7].AdditionalHosts)
+func must(t *testing.T, in bool) {
+	if !in {
+		t.FailNow()
+	}
 }

@@ -2,9 +2,8 @@ package mikrotik
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 //nolint:goconst // repeated fixture values keep rendering expectations explicit
@@ -133,15 +132,41 @@ func TestDNSStaticEntries_Render(t *testing.T) {
 
 			l, err := tt.giveEntries.Render(&buf, tt.giveOptions)
 
-			assert.Equal(t, len(tt.wantResult), l)
+			equal(t, len(tt.wantResult), l)
 
 			if tt.wantError != nil {
-				assert.EqualError(t, err, tt.wantError.Error())
+				if err == nil {
+					t.Errorf("got error %v, want error nil", tt.wantError)
+				} else {
+					equal(t, err.Error(), tt.wantError.Error())
+				}
 			} else {
-				assert.NoError(t, err)
+				noError(t, err)
 			}
 
-			assert.Equal(t, tt.wantResult, buf.String())
+			equal(t, tt.wantResult, buf.String())
 		})
 	}
+}
+
+func equal(t *testing.T, got, want any) bool {
+	t.Helper()
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+		return false
+	}
+
+	return true
+}
+
+func noError(t *testing.T, err error) bool {
+	t.Helper()
+
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+		return false
+	}
+
+	return true
 }
